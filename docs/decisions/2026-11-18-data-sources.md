@@ -11,7 +11,8 @@
 1. **Order of preference for the option chain: Cboe, then Tradier, then the latest daily snapshot.** The change of source is automatic and the screen names the source that answered. The user sees a failure screen only when all three fail.
 2. **Tradier** is reached with `TRADIER_TOKEN` in `.env`, added by the operator the same morning (a production token on a brokerage account; quotes are real-time). It is the first source in the project that is tied to a personal brokerage account. Tradecraft only reads market data from it; no tool can reach an order or an account address.
 3. **Financial Modeling Prep serves no option quotes on the premium key** (checked the same morning: six current addresses not found).
-4. **Unchanged:** the daily snapshot job and the liquidity census stay on Cboe alone, so the archive stays on one feed. If Cboe stays blocked the archive stops growing; whether the job should also fall back is for the operator to decide.
+4. **The daily snapshot job falls back to Tradier too (operator decision, later the same morning).** It runs Cboe first and takes from Tradier any name Cboe does not serve; each row says which source it came from. The two feeds are not shown to be comparable, so anything read from the archive later must separate them.
+5. **A rolling "latest" snapshot (operator decision, the same morning).** The operator's reason: if both live sources fail, the application would otherwise show quotes from 11:00 the day before. A second job refreshes one file every hour in market hours (07:00 to 10:00 and 12:00 Pacific; first built half-hourly and changed the same day, because at full pace it held nearly all of Tradier's 120 requests a minute; it now runs at about 65 a minute) and the application falls back to whichever snapshot is newer. The 11:00 archive file is not replaced and keeps its fixed time. When both sources are down the refresh fails as well, so the file is as fresh as the last refresh before the outage. Detail: `ops/README.md`.
 
 | | Cboe | Tradier | Daily snapshot |
 |---|---|---|---|
@@ -20,7 +21,7 @@
 | Key | None | `TRADIER_TOKEN` | None |
 | Requests for one chain | One | One for the price, one for the expirations, one per expiration up to 190 days out | None (a file on disk) |
 | Greeks and implied volatility | The feed's | Tradier's (mid IV), updated about hourly | The feed's, as captured |
-| Result marked | Live | Live, source named | PROVISIONAL |
+| Result marked | Live | Live, source named | PROVISIONAL, with the snapshot's date and time |
 
 Measured on 20 November with Cboe refusing: AMZN, SPY and MSFT from Tradier in 1.1 to 1.6 seconds each, every contract with Greeks. Contracts passing the default gate, Tradier against the snapshot of 19 November: AMZN 17 (18), MSFT 29 (33), **SPY 169 (429), a difference not yet looked into.** Rules, wording and the build's own choices: `docs/decisions/2026-11-17-stage-3-contract-selection.md`, last section. Settings: `config/data_sources.json`, `config/limits.json` (allowlist and 100 requests a minute).
 

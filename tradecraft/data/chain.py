@@ -101,7 +101,8 @@ def live_tradier(symbol: str, store: Store | None = None) -> dict:
     """The live chain from Tradier: the expirations, then one request for each."""
     if not settings.secret("TRADIER_TOKEN"):
         raise ChainUnavailable("Tradier: TRADIER_TOKEN is not set in .env")
-    sym, feed = symbol.upper(), feed_symbol(symbol)
+    feed = feed_symbol(symbol)
+    sym = symbol.upper().replace(".", "/")       # Tradier writes a share class with a slash: BRK/B
     now_et = dt.datetime.now(ET)
 
     def ask(path: str, **params):
@@ -114,7 +115,8 @@ def live_tradier(symbol: str, store: Store | None = None) -> dict:
         spot = _num(quote.get("last")) or _num(quote.get("close"))
         if not spot:
             raise ChainUnavailable("Tradier: no price for the underlying")
-        dates = ((ask("options/expirations", symbol=sym).get("expirations") or {}).get("date")) or []
+        dates = ((ask("options/expirations", symbol=sym, includeAllRoots="true").get("expirations") or {})
+                 .get("date")) or []                 # all roots: BRK/B lists none without it
         dates = [dates] if isinstance(dates, str) else dates
         wanted = [d for d in dates if 0 <= (dt.date.fromisoformat(d) - now_et.date()).days <= TRADIER_MAX_DTE]
 
@@ -137,7 +139,7 @@ def live_tradier(symbol: str, store: Store | None = None) -> dict:
             rows.append(c)
     if not rows:
         raise ChainUnavailable("Tradier: no option contracts listed")
-    return {"symbol": sym, "source": "live", "provider": "Tradier", "delay": "real-time",
+    return {"symbol": symbol.upper(), "source": "live", "provider": "Tradier", "delay": "real-time",
             "as_of": now_et.isoformat(timespec="minutes"), "feed_timestamp": "", "spot": spot, "contracts": rows}
 
 
@@ -165,8 +167,12 @@ def live_cboe(symbol: str, store: Store | None = None) -> dict:
 
 
 def latest_snapshot_path():
-    files = sorted((settings.ROOT / "snapshots").glob("chain_snapshot_*.csv.gz"))
-    return files[-1] if files else None
+    """The newest snapshot on disk: the daily archive file in snapshots/ (11:00 PT), or the
+    rolling file in snapshots/latest/ that the half-hourly job replaces in market hours,
+    whichever was taken later (operator decision, 20 November 2026). The time is in the name."""
+    root = settings.ROOT / "snapshots"
+    files = list(root.glob("chain_snapshot_*.csv.gz")) + list((root / "latest").glob("chain_snapshot_*.csv.gz"))
+    return max(files, key=lambda p: p.name) if files else None
 
 
 def snapshot_info() -> dict | None:

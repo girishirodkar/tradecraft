@@ -4,7 +4,7 @@ Reorganised on 18 November 2026. Every script used to sit at the project root.
 
 | Folder | Scripts | What they are |
 |---|---|---|
-| `daily/` | `chain_census.py`, `spread_ladder.py` | Run by the scheduled job every weekday at 11:00 Pacific, through `ops/snapshot_cron.sh` |
+| `daily/` | `chain_census.py`, `spread_ladder.py` | Run by the scheduled job every weekday at 11:00 Pacific, through `ops/snapshot_cron.sh` (from 20 November 2026 with `--source auto`: Cboe, then Tradier). `chain_census.py` is also run every hour in market hours by `ops/latest_cron.sh`, which writes the rolling `snapshots/latest/` file |
 | `tests/` | `vrp_test_a.py`, `vrp_test_b.py`, `vrp_test_c.py`, `range_test_r.py` | The four pre-registered tests. **Frozen** |
 | `analysis/` | `label_frequency.py`, `lean_frequency.py`, `probe_fmp.py` | One-off measurements and the data-provider probe |
 

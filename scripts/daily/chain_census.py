@@ -413,8 +413,30 @@ def tradier_get(path: str, params: dict, token: str) -> dict:
         "Accept": "application/json",
         "User-Agent": "chain-census/1.0",
     })
-    with urllib.request.urlopen(req, timeout=20) as r:
-        return json.loads(r.read().decode("utf-8"))
+    # Tradier allows 120 market-data requests a minute. A full snapshot is one request
+    # per expiration per name, well over a thousand, so every request is paced
+    # (TRADIER_PACE seconds after each) and a 429 waits and is tried once more.
+    for attempt in (1, 2):
+        try:
+            with urllib.request.urlopen(req, timeout=20) as r:
+                body = json.loads(r.read().decode("utf-8"))
+            time.sleep(TRADIER_PACE)
+            return body
+        except urllib.error.HTTPError as e:
+            if e.code != 429 or attempt == 2:
+                raise
+            time.sleep(20)
+    return {}
+
+
+TRADIER_PACE = 0.35
+
+
+def tradier_symbol(symbol: str) -> str:
+    """Cboe and the snapshot name the index roots _SPX and _XSP; Tradier names them SPX and XSP.
+    A share class is written with a dot here and a slash there: BRK.B is BRK/B (and its
+    expirations are listed only with includeAllRoots, which fetch_expirations sends)."""
+    return (symbol[1:] if symbol.startswith("_") else symbol).replace(".", "/")
 
 
 def fetch_spot(symbol: str, token: str) -> float | None:
@@ -440,7 +462,7 @@ def fetch_expirations(symbol: str, token: str) -> list[str]:
 def fetch_chain(symbol: str, expiration: str, token: str) -> list[dict]:
     d = tradier_get(
         "/markets/options/chains",
-        {"symbol": symbol, "expiration": expiration, "greeks": "false"},
+        {"symbol": symbol, "expiration": expiration, "greeks": "true"},
         token,
     )
     opts = (d.get("options") or {}).get("option") or []
@@ -450,11 +472,12 @@ def fetch_chain(symbol: str, expiration: str, token: str) -> list[dict]:
 def records_for_symbol(symbol: str, token: str, cfg: GateConfig,
                        asof: dt.datetime) -> Iterator[ContractRecord]:
     asof_date = asof.date()
-    spot = fetch_spot(symbol, token)
+    feed = tradier_symbol(symbol)          # the row keeps `symbol` as the snapshot names it
+    spot = fetch_spot(feed, token)
     if not spot:
         return
 
-    exps = fetch_expirations(symbol, token)
+    exps = fetch_expirations(feed, token)
     # Only pull expirations that could land in the band. Each chain call costs a
     # request, and the whole point is to stay inside a free tier's rate limit.
     wanted = []
@@ -468,7 +491,8 @@ def records_for_symbol(symbol: str, token: str, cfg: GateConfig,
             wanted.append(e)
 
     for e in wanted:
-        for o in fetch_chain(symbol, e, token):
+        for o in fetch_chain(feed, e, token):
+            g = o.get("greeks") or {}
             rec = ContractRecord(
                 asof=asof.isoformat(timespec="seconds"),
                 symbol=symbol,
@@ -485,6 +509,15 @@ def records_for_symbol(symbol: str, token: str, cfg: GateConfig,
                 volume=_i(o.get("volume")),
                 open_interest=_i(o.get("open_interest")),
                 source="tradier",
+                # Tradier's model outputs (ORATS, refreshed about hourly), in the columns the
+                # Cboe rows use. iv is its mid IV. It gives no theoretical value: theo stays empty.
+                source_ts=str(g.get("updated_at") or ""),
+                iv=_f(g.get("mid_iv")),
+                delta=_f(g.get("delta")),
+                gamma=_f(g.get("gamma")),
+                theta=_f(g.get("theta")),
+                vega=_f(g.get("vega")),
+                rho=_f(g.get("rho")),
             )
             yield apply_gate(derive(rec, asof_date), cfg)
 
@@ -745,7 +778,16 @@ def main(argv: list[str]) -> int:
     p.add_argument("--synthetic", action="store_true",
                    help="run on generated chains; no token or network needed")
     p.add_argument("--synthetic-n", type=int, default=600)
-    p.add_argument("--source", choices=("cboe", "tradier"), default="cboe",
+    p.add_argument("--tradier-pace", type=float, default=None,
+                   help="seconds to wait after each Tradier request (default 0.35, about 110 a "
+                        "minute of the 120 allowed). The rolling job uses a slower pace so that "
+                        "the application always has room for its own requests.")
+    p.add_argument("--latest-dir",
+                   help="write the snapshot into this folder as the ONLY file there, replacing the "
+                        "one before it; nothing is replaced unless at least half the names returned "
+                        "rows. For the rolling 'latest' snapshot the application falls back to; "
+                        "never point it at the archive folder. Implies --snapshot-only.")
+    p.add_argument("--source", choices=("cboe", "tradier", "auto"), default="cboe",
                    help="cboe: free delayed quotes, no key (default); "
                         "tradier: needs TRADIER_TOKEN")
     p.add_argument("--snapshot-only", action="store_true",
@@ -762,6 +804,9 @@ def main(argv: list[str]) -> int:
                    help="seconds between symbols; respect the free-tier rate limit")
     p.add_argument("--seed", type=int, default=7)
     args = p.parse_args(argv)
+    if args.tradier_pace is not None:
+        global TRADIER_PACE
+        TRADIER_PACE = max(0.0, args.tradier_pace)
 
     cfg = GateConfig(
         max_spread_pct=args.max_spread_pct,
@@ -790,6 +835,8 @@ def main(argv: list[str]) -> int:
             summaries.append(summarise(sym, recs))
     else:
         token = os.environ.get("TRADIER_TOKEN")
+        if args.source == "auto" and not token:
+            print("TRADIER_TOKEN not set: --source auto runs on Cboe alone.", file=sys.stderr)
         if args.source == "tradier" and not token:
             print("TRADIER_TOKEN not set. Use --source cboe (no key needed),\n"
                   "--synthetic to verify the logic, or export a Tradier Lite token.\n\n"
@@ -809,20 +856,62 @@ def main(argv: list[str]) -> int:
                   "Run the census during the session (ideally 11:00-15:45 ET).",
                   file=sys.stderr)
         print(f"real run ({args.source}): {len(syms)} names", file=sys.stderr)
+        # --source auto (operator decision, 20 November 2026): Cboe first; a name Cboe does not
+        # serve is taken from Tradier. After three names in a row have failed on Cboe it is not
+        # asked again in this run. Every row says which source it came from (`source`).
+        cboe_misses, cboe_off, by_source = 0, False, {"cboe": 0, "tradier": 0, "none": 0}
         for i, sym in enumerate(syms, 1):
-            try:
-                if args.source == "cboe":
-                    recs = list(records_for_symbol_cboe(sym, cfg, asof))
-                else:
-                    recs = list(records_for_symbol(sym, token, cfg, asof))
-            except Exception as e:                      # noqa: BLE001
-                print(f"  {sym}: FAILED {type(e).__name__}: {e}", file=sys.stderr)
-                recs = []
+            recs, tried = [], []
+            order = {"cboe": ["cboe"], "tradier": ["tradier"],
+                     "auto": ([] if cboe_off else ["cboe"]) + (["tradier"] if token else [])}[args.source]
+            for src in order:
+                try:
+                    if src == "cboe":
+                        recs = list(records_for_symbol_cboe(sym, cfg, asof))
+                    else:
+                        recs = list(records_for_symbol(sym, token, cfg, asof))
+                except Exception as e:                      # noqa: BLE001
+                    print(f"  {sym}: {src} FAILED {type(e).__name__}: {e}", file=sys.stderr)
+                    recs = []
+                tried.append(src)
+                if src == "cboe" and args.source == "auto":
+                    cboe_misses = 0 if recs else cboe_misses + 1
+                    if cboe_misses >= 3 and not cboe_off and token:
+                        cboe_off = True
+                        print("  Cboe failed for three names in a row: the rest of this run uses Tradier.",
+                              file=sys.stderr)
+                if recs:
+                    break
+            by_source[tried[-1] if recs and tried else "none"] += 1
             all_recs.extend(recs)
             summaries.append(summarise(sym, recs))
             if i % 25 == 0:
                 print(f"  {i}/{len(syms)}", file=sys.stderr)
             time.sleep(args.sleep)
+
+    if not args.synthetic:
+        print(f"names by source: {by_source}", file=sys.stderr)
+
+    if args.latest_dir:
+        # The rolling "latest" snapshot: one file, replaced only by a usable one.
+        served = sum(1 for s_ in summaries if getattr(s_, "contracts_seen", 0))
+        if not summaries or served * 2 < len(summaries):
+            print(f"latest: NOT replaced, only {served} of {len(summaries)} names returned rows",
+                  file=sys.stderr)
+            return 3
+        os.makedirs(args.latest_dir, exist_ok=True)
+        tmp = os.path.join(args.latest_dir, f".writing_{stamp}.tmp")
+        final = os.path.join(args.latest_dir, f"chain_snapshot_{stamp}.csv.gz")
+        n = write_snapshot(tmp, all_recs)
+        os.replace(tmp, final)
+        for old in os.listdir(args.latest_dir):
+            if old != os.path.basename(final):
+                try:
+                    os.remove(os.path.join(args.latest_dir, old))
+                except OSError:
+                    pass
+        print(f"latest: {n} contract rows -> {final}", file=sys.stderr)
+        return 0
 
     n = write_snapshot(snap_path, all_recs)
     print(f"snapshot: {n} contract rows -> {snap_path}", file=sys.stderr)

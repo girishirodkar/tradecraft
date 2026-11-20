@@ -93,7 +93,7 @@
 > step; settings in `config/stage3.json`. The operator's 22 rulings, and the choices the
 > build made beside them ("As built, for the operator to correct"), are in
 > `docs/decisions/2026-11-17-stage-3-contract-selection.md`. Legs leave out the DTE
-> criterion; **there is no override in stage 3**; events are shown, not filtered; **option quotes come from Cboe, then Tradier (`TRADIER_TOKEN`), then the snapshot, automatically, in stages 1, 3 and 4, and the screen names the source (operator decision, 20 November; `data/chain.py` `live`); a failure screen appears only when all three fail**; the
+> criterion; **there is no override in stage 3**; events are shown, not filtered; **option quotes come from Cboe, then Tradier (`TRADIER_TOKEN`), then the snapshot, automatically, in stages 1, 3 and 4, and the screen names the source (operator decision, 20 November; `data/chain.py` `live`); a failure screen appears only when all three fail; the snapshot used is the newer of the 11:00 archive file and the hourly `snapshots/latest/` file**; the
 > first-ranked candidate is `best_fit_id`. **The cost cap is an on-screen slider** (2% to
 > 10%, default 5%; operator decision, 19 November, after 35 of 72 candidates across 33
 > saved views were over the cap). **Ruled on 19 November (afternoon):** an expiration may serve a horizon from up to three
@@ -558,6 +558,16 @@ are unaffected.
   thresholds, by expiry).
 - The liquidity criteria are adjustable controls in Mode 3:
   `docs/decisions/2026-11-15-liquidity-controls.md`.
+
+## Two changes to the snapshot job on 20 Nov 2026
+
+- **Rows may come from Tradier.** The 11:00 job runs `--source auto`: Cboe first, Tradier for any
+  name Cboe does not serve (Cboe refused every request that morning). The `source` column says
+  which. Tradier quotes are real-time, its Greeks are its own and it gives no `theo`. **Filter or
+  split by `source` before comparing days;** the two feeds are not shown to be comparable.
+- **`snapshots/latest/` is not the archive.** A second launchd job (`ops/latest_cron.sh`) replaces
+  one file there every hour in market hours, at a slowed pace; only the application reads it, as its last
+  fallback. Never read it into an analysis. `ops/README.md` has the detail.
 
 ## Snapshots taken on NYSE holidays and early-close days are in the archive
 
