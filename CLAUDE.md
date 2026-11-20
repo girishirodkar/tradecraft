@@ -138,10 +138,11 @@
 > `data/publish/tradecraft/` and runs section 12's checks; re-run it after any commit. The
 > operator creates the remotes, commits under a no-reply address and pushes.
 >
-> **The product manual** (19 November) is three pages with one shared header:
-> `docs/site/manual.html` (the logic of each stage), `manual-architecture.html` (four
-> levels, written from the code as built) and `manual-stages.html` (the four stage pages
-> shown in full). The header is repeated in the three files: change it in all three. When the code
+> **The product manual** (19 November; part 1 added 20 November) is four pages with one
+> shared header: `docs/site/manual.html` (what Tradecraft is), `manual-logic.html` (the
+> logic of each stage), `manual-architecture.html` (four levels, written from the code as
+> built) and `manual-stages.html` (the four stage pages shown in full). The header is
+> repeated in the four files: change it in all four. When the code
 > changes, check the manual's tables (agents and limits, module map, state keys) against it.
 >
 > **Videos (19 November, night; all under `data/video/`, git-ignored).** The pitch

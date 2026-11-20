@@ -4,7 +4,7 @@ A personal options research tool, and the capstone for an agentic-AI course. You
 
 **Tradecraft places no orders and gives no investment advice.** It has no connection to a broker. It states no probability for a view, labels every system thesis "no demonstrated predictive edge", and calls its first-ranked strategy the "best fit", never a recommendation. The research behind it (`docs/factor-spec.md`) concludes that predicting direction is close to worthless at retail scale and that trading costs dominate; the tool is built around cost, execution and honest evidence, not around a signal.
 
-- **The manual:** read it at **[https://girishirodkar.github.io/tradecraft/site/manual.html](https://girishirodkar.github.io/tradecraft/site/manual.html)**. Three pages with one header: the logic of each stage, the architecture at four levels of depth, and the four detailed stage manuals in full. Clicking `docs/site/manual.html` on GitHub shows its source code, not the page; use the link above, or clone the repository and open that file in a browser.
+- **The manual:** read it at **[https://girishirodkar.github.io/tradecraft/site/manual.html](https://girishirodkar.github.io/tradecraft/site/manual.html)**. Four pages with one header: what Tradecraft is, the logic of each stage, the architecture at four levels of depth, and the four detailed stage manuals in full. Clicking `docs/site/manual.html` on GitHub shows its source code, not the page; use the link above, or clone the repository and open that file in a browser.
 - **Elevator pitch video (1 min 22 s, narrated):** watch it at **[https://girishirodkar.github.io/tradecraft/media/tradecraft-pitch.mp4](https://girishirodkar.github.io/tradecraft/media/tradecraft-pitch.mp4)**. The file is [`docs/media/tradecraft-pitch.mp4`](docs/media/tradecraft-pitch.mp4).
 - **Demo video:** *link to be added*
 - **Demo data repository:** [https://github.com/girishirodkar/tradecraft-demo-data](https://github.com/girishirodkar/tradecraft-demo-data)
@@ -103,7 +103,7 @@ The full table is in `docs/build-plan.md`, section 11.
 | `tradecraft/demo.py`, `dev_replay.py` | The recorded demo and the development replay |
 | `config/` | Run limits, model per agent, rejected signals, stage settings |
 | `tests/` | 373 tests |
-| `docs/site/manual.html` | **The product manual:** why each stage works as it does, and the architecture from a one-page overview down to the modules |
+| `docs/site/manual.html` | **The product manual:** what Tradecraft is, why each stage works as it does, and the architecture from a one-page overview down to the modules |
 | `docs/` | The design: `on-demand-mode-design.md`, `product-shell.md`, `decisions/`, `build-plan.md`, `build-log.md`, the approved mock-up `site/tradecraft-prototype.html` (open it in a browser), and the research in `research/` and `factor-spec.md` |
 | `scripts/`, `vrp_out/` | The liquidity census (`docs/liquidity-census.md`), the daily snapshot scripts and four frozen, pre-registered tests with their append-only trial log |
 | `CLAUDE.md` | The build's working status, kept for the AI coding assistant that helped build it |

@@ -40,7 +40,7 @@ h1 span { color: var(--accent); }
 h2 { font-size: 1.5rem; font-weight: 600; margin-top: 56px; scroll-margin-top: 16px; }
 h3 { font-size: 1.0625rem; font-weight: 600; margin-top: 28px; }
 h4 { font-size: 0.9375rem; font-weight: 600; }
-p { margin: 12px 0 0; max-width: 68ch; }
+p { margin: 12px 0 0; }
 a { color: var(--accent); }
 .lede { font-size: 1.125rem; color: var(--ink-2); }
 .meta { font-family: var(--mono); font-size: 0.8125rem; color: var(--ink-3); letter-spacing: 0.02em; }
@@ -50,14 +50,14 @@ code { font-size: 0.875em; background: var(--band); border-radius: 3px; padding:
 .mode { font: inherit; font-size: 0.8125rem; padding: 6px 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); cursor: pointer; }
 .mode:hover { border-color: var(--accent); }
 .mode:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-ul, ol.plain { margin: 12px 0 0; padding-left: 20px; max-width: 68ch; }
+ul, ol.plain { margin: 12px 0 0; padding-left: 20px; }
 li + li { margin-top: 6px; }
 strong { font-weight: 600; }
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 20px; margin-top: 20px; min-width: 0; }
 .panel > :first-child { margin-top: 0; }
 .sub { color: var(--ink-3); font-size: 0.875rem; max-width: none; margin-top: 4px; }
 figure { margin: 0; }
-figcaption { color: var(--ink-3); font-size: 0.875rem; margin-top: 12px; max-width: 68ch; }
+figcaption { color: var(--ink-3); font-size: 0.875rem; margin-top: 12px; }
 .scroll { overflow-x: auto; }
 .scroll svg { display: block; height: auto; min-width: 620px; width: 100%; }
 table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
@@ -86,7 +86,6 @@ td.k { font-weight: 600; white-space: nowrap; }
 .io div { border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; background: var(--surface); font-size: 0.9375rem; }
 .io b { display: block; font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; color: var(--ink-3); font-weight: 500; margin-bottom: 4px; }
 .note { border-top: 1px solid var(--line); margin-top: 56px; padding-top: 20px; color: var(--ink-3); font-size: 0.875rem; }
-.note p { max-width: 72ch; }
 
 /* diagrams: every colour is a theme token, so they follow the light and dark themes */
 svg text { font-family: var(--text); font-size: 13px; fill: var(--ink); }
@@ -102,8 +101,9 @@ svg .ld { stroke: var(--ink-3); stroke-width: 1.5; fill: none; stroke-dasharray:
 svg .ah { fill: var(--ink-3); }
 svg .aha { fill: var(--accent); }
 
-/* The manual is three pages with one header. The tabs move between pages; the pills move within a page. */
-.tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 26px; }
+/* The manual is four pages with one header. The tabs move between pages; the pills move within a page. */
+.tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 26px; }
+@media (max-width: 820px) { .tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .tabs a { display: grid; gap: 3px; align-content: start; padding: 12px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); text-decoration: none; min-width: 0; }
 .tabs a b { font-family: var(--display); font-weight: 600; font-size: 1rem; line-height: 1.25; }
 .tabs a i { font-style: normal; font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; color: var(--ink-3); }
@@ -156,14 +156,15 @@ h2 { scroll-margin-top: 16px; }
 <div class="wrap" id="top">
   <div class="top"><div class="meta">TRADECRAFT · PRODUCT MANUAL · AS BUILT, 19 NOVEMBER 2026</div><button type="button" class="mode" id="mode">Switch to dark</button></div>
   <h1>Trade<span>craft</span> manual</h1>
-  <p class="lede">What Tradecraft does at each of its four stages and why, and how the system is built, from a one-page overview down to the modules. Everything here describes the application as it is built. Where something is designed but not built, the manual says so.</p>
-  <nav class="tabs" aria-label="The three parts of the manual">
-    <a href="manual.html"><i>PART 1</i><b>The logic of each stage</b><small>Why each stage works as it does, and what it will not do</small></a>
-    <a href="manual-architecture.html"><i>PART 2</i><b>The architecture</b><small>How it is built, at four levels of depth</small></a>
-    <a href="manual-stages.html" aria-current="page"><i>PART 3</i><b>Detailed stage manuals</b><small>The four stage manuals in full</small></a>
+  <p class="lede">What Tradecraft is, what it does at each of its four stages and why, and how the system is built, from a one-page overview down to the modules. Everything here describes the application as it is built. Where something is designed but not built, the manual says so.</p>
+  <nav class="tabs" aria-label="The four parts of the manual">
+    <a href="manual.html"><i>PART 1</i><b>What is Tradecraft</b><small>What the product is, what it will not do, and why</small></a>
+    <a href="manual-logic.html"><i>PART 2</i><b>The logic of each stage</b><small>Why each stage works as it does, and what it will not do</small></a>
+    <a href="manual-architecture.html"><i>PART 3</i><b>The architecture</b><small>How it is built, at four levels of depth</small></a>
+    <a href="manual-stages.html" aria-current="page"><i>PART 4</i><b>Detailed stage manuals</b><small>The four stage manuals in full</small></a>
   </nav>
 
-  <div class="part"><div class="meta">PART 3 OF 3</div><h2>Detailed stage manuals</h2></div>
+  <div class="part"><div class="meta">PART 4 OF 4</div><h2>Detailed stage manuals</h2></div>
   <p>The four stage manuals written during design, in full and unchanged: every rule, worked example and figure for each stage. Choose a stage below; each can also be opened as a page of its own.</p>
   <p class="sub">These pages were written before the build. Where one differs from the application, the decision records in <code>docs/decisions/</code> govern; the Challenge page predates the operator's build decisions of 19 November.</p>
 
@@ -193,12 +194,12 @@ h2 { scroll-margin-top: 16px; }
   </div>
 
   <nav class="pages" aria-label="Previous and next part">
-    <a class="prev" href="manual-architecture.html"><small>&larr; PART 2</small>The architecture</a>
+    <a class="prev" href="manual-architecture.html"><small>&larr; PART 3</small>The architecture</a>
     <a class="up" href="#top">Top &uarr;</a>
   </nav>
 
   <div class="note">
-    <p>This manual describes the application as built on 19 November 2026 and was checked against the code. Rules are cited from the decision records in <code>docs/decisions/</code>, which govern wherever an older page differs. The stage pages linked from Part 1 were written during design; the Challenge page predates the operator's build decisions of 19 November.</p>
+    <p>This manual describes the application as built on 19 November 2026 and was checked against the code. Rules are cited from the decision records in <code>docs/decisions/</code>, which govern wherever an older page differs. The stage pages shown in Part 4 were written during design; the Challenge page predates the operator's build decisions of 19 November.</p>
     <p>Tradecraft is a personal research tool and a course capstone. It places no orders and gives no investment advice.</p>
   </div>
 </div>
