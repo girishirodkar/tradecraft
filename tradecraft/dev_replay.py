@@ -34,7 +34,7 @@ def _mode() -> str:
     """A switch for states that cannot be had on demand, read on every call from
     data/replay_mode.txt: "closed" (the market is closed: the snapshot is used),
     "nosnap" (closed, and the snapshot does not hold the symbol), "fail" (the live
-    chain cannot be fetched). For stage 4: "critic_fail" (the Critic times out),
+    chain cannot be fetched from Cboe or Tradier, so stage 3 uses the snapshot). For stage 4: "critic_fail" (the Critic times out),
     "critic_reject" (its output fails the output check twice), "nopassages"
     (nothing is retrieved). Anything else, or no file: as things are."""
     p = settings.data_dir() / SWITCH
@@ -51,7 +51,7 @@ def _install_switch() -> None:
 
     def forced_live(symbol, store=None):
         if _mode() == "fail":
-            raise chain.ChainUnavailable("Cboe delayed quotes: replay switch set to fail")
+            raise chain.ChainUnavailable("Cboe and Tradier: replay switch set to fail")
         return live(symbol, store)
 
     def forced_snapshot(symbol):

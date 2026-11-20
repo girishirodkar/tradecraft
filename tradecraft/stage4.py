@@ -513,7 +513,7 @@ def t10_overrides(c: Case, records: list[dict]) -> dict:
     if prov:
         items.append({"stage": 1 if gate.get("provisional") else 3, "what": "Provisional data",
                       "proposed": "live quotes", "chosen": f"the latest snapshot, for {' and '.join(prov)}",
-                      "reason": "market closed, or live quotes unavailable"})
+                      "reason": "market closed, or live quotes unavailable from Cboe and Tradier"})
     missing = c.thesis.get("inputs_unavailable") or []
     as_flag = config()["thesis_checks"]["unavailable_inputs_are_a_flag"]
     if items or (missing and as_flag):
@@ -785,7 +785,8 @@ def c11_price_moved(c: Case, fresh: dict) -> dict:
 # ---- the fresh quotes (operator decision, 19 November 2026) ------------------------------
 
 def fresh_quotes(state: dict, ctx) -> dict:
-    """One fetch of the option chain when stage 4 starts: the current price for thesis
+    """One fetch of the live option chain (Cboe, then Tradier; never the snapshot, which is
+    not a fresh quote) when stage 4 starts: the current price for thesis
     check 11 and the selected legs' mids for contract check C11. It does not replace
     the chain stage 3 holds. A failure here is "could not be checked", never a stop."""
     market = session.status()
@@ -798,7 +799,7 @@ def fresh_quotes(state: dict, ctx) -> dict:
     try:
         data = chain_data.live(state["symbol"], ctx.store)
     except chain_data.ChainUnavailable as e:
-        return {**out, "reason": f"the live option chain could not be retrieved ({e})"}
+        return {**out, "reason": f"the live option chain could not be retrieved from Cboe or Tradier ({e})"}
     want = {l.get("occ") for l in (sel.get("candidate") or {}).get("legs") or []}
     legs = {}
     for c in data["contracts"]:

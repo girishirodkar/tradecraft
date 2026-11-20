@@ -15,7 +15,7 @@
 | 6.3 | The outcomes when stage 3 cannot offer a selection; the build decisions of 19 November 2026 (events shown and not filtered, 60-day high and low, "before slippage" and "approximate" labels, filtered-out rows, PROVISIONAL, no override in stage 3) |
 | 6.4 | The line shown when the Critic's output is rejected twice; the build decisions of 19 November 2026 (working panel, the "More detail" fold, how checks are counted, Not ready wording, the no-passages line, the end panel) |
 | 6.5 | The buttons when a stage stops on a failure |
-| Section 4, 6.1, 6.3 | **The source of option quotes (operator decision, 20 November 2026):** Cboe, then Tradier, then the snapshot, automatically. The request header and the stage 1 and stage 3 source lines name the source; the mock-up draws "15-minute delayed quotes" only |
+| Section 4, 6.1, 6.3 | **The source of option quotes (operator decision, 20 November 2026):** Cboe, then Tradier, then the snapshot, automatically. The request header and the stage 1 and stage 3 source lines name the source; the mock-up draws "15-minute delayed quotes" only, and by operator decision of 20 November it is kept as it is |
 
 The mock-up file itself has not been redrawn to show these.
 
