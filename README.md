@@ -5,6 +5,7 @@ A personal options research tool, and the capstone for an agentic-AI course. You
 **Tradecraft places no orders and gives no investment advice.** It has no connection to a broker. It states no probability for a view, labels every system thesis "no demonstrated predictive edge", and calls its first-ranked strategy the "best fit", never a recommendation. The research behind it (`docs/factor-spec.md`) concludes that predicting direction is close to worthless at retail scale and that trading costs dominate; the tool is built around cost, execution and honest evidence, not around a signal.
 
 - **The manual:** read it at **[https://girishirodkar.github.io/tradecraft/site/manual.html](https://girishirodkar.github.io/tradecraft/site/manual.html)**. Three pages with one header: the logic of each stage, the architecture at four levels of depth, and the four detailed stage manuals in full. Clicking `docs/site/manual.html` on GitHub shows its source code, not the page; use the link above, or clone the repository and open that file in a browser.
+- **Elevator pitch video (1 min 22 s, narrated):** watch it at **[https://girishirodkar.github.io/tradecraft/media/tradecraft-pitch.mp4](https://girishirodkar.github.io/tradecraft/media/tradecraft-pitch.mp4)**. The file is [`docs/media/tradecraft-pitch.mp4`](docs/media/tradecraft-pitch.mp4).
 - **Demo video:** *link to be added*
 - **Demo data repository:** [https://github.com/girishirodkar/tradecraft-demo-data](https://github.com/girishirodkar/tradecraft-demo-data)
 

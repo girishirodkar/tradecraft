@@ -145,7 +145,7 @@
 > changes, check the manual's tables (agents and limits, module map, state keys) against it.
 >
 > **Videos (19 November, night; all under `data/video/`, git-ignored).** The pitch
-> (`pitch/tradecraft-pitch.mp4`, 1 min 22 s; two stand-in frames still to replace) and the
+> (`pitch/tradecraft-pitch.mp4`, 1 min 22 s; a copy is tracked at `docs/media/tradecraft-pitch.mp4` and linked from the README: copy it again after a rebuild) and the
 > demo are narrated by the macOS voice Nathan (Enhanced); `imageio-ffmpeg` is a development
 > dependency for this. **`data/video/demo/make_demo_motion.py dry|live`** records the demo
 > as live screen action in headless Chrome and writes the narrated video, a silent copy and
