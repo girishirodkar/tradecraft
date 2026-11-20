@@ -9,11 +9,11 @@ For evaluators. It lets all four stages be clicked through in a browser with no 
 Requirements: Python 3.12 and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-git clone <main repository URL> tradecraft && cd tradecraft
+git clone https://github.com/girishirodkar/tradecraft.git tradecraft && cd tradecraft
 ```
 
 ```bash
-git clone <demo-data repository URL> data/demo-bundle
+git clone https://github.com/girishirodkar/tradecraft-demo-data.git data/demo-bundle
 ```
 
 ```bash

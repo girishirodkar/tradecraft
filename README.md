@@ -4,9 +4,9 @@ A personal options research tool, and the capstone for an agentic-AI course. You
 
 **Tradecraft places no orders and gives no investment advice.** It has no connection to a broker. It states no probability for a view, labels every system thesis "no demonstrated predictive edge", and calls its first-ranked strategy the "best fit", never a recommendation. The research behind it (`docs/factor-spec.md`) concludes that predicting direction is close to worthless at retail scale and that trading costs dominate; the tool is built around cost, execution and honest evidence, not around a signal.
 
-- **The manual:** open [`docs/site/manual.html`](docs/site/manual.html) in a browser. Three pages with one header: the logic of each stage, the architecture at four levels of depth, and the four detailed stage manuals in full.
+- **The manual:** read it at **[https://girishirodkar.github.io/tradecraft/site/manual.html](https://girishirodkar.github.io/tradecraft/site/manual.html)**. Three pages with one header: the logic of each stage, the architecture at four levels of depth, and the four detailed stage manuals in full. Clicking `docs/site/manual.html` on GitHub shows its source code, not the page; use the link above, or clone the repository and open that file in a browser.
 - **Demo video:** *link to be added*
-- **Demo data repository:** *link to be added*
+- **Demo data repository:** [https://github.com/girishirodkar/tradecraft-demo-data](https://github.com/girishirodkar/tradecraft-demo-data)
 
 ## Try it in five minutes, with no API key
 
@@ -15,11 +15,11 @@ The recorded demo runs all four stages in a browser on bundled data. Full notes:
 Requirements: Python 3.12 and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-git clone <this repository's URL> tradecraft && cd tradecraft
+git clone https://github.com/girishirodkar/tradecraft.git tradecraft && cd tradecraft
 ```
 
 ```bash
-git clone <demo-data repository URL> data/demo-bundle
+git clone https://github.com/girishirodkar/tradecraft-demo-data.git data/demo-bundle
 ```
 
 ```bash

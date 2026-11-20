@@ -2,6 +2,10 @@
 
 A running record of what is built, what is next and what was decided, session by session. The design documents hold the rules; this file says where the build stands. Newest session first.
 
+## 20 November 2026 (early): both repositories published by the operator
+
+The operator created a GitHub account and two public repositories and pushed each as a single commit under the account's no-reply address: `github.com/girishirodkar/tradecraft` (the clean copy from `python -m tradecraft.publish`, 146 files) and `github.com/girishirodkar/tradecraft-demo-data` (the demo bundle, 17 files). The author and committer of both commits were checked before the push. `tradecraft.publish` now refreshes the copy in place and keeps its `.git` folder, so later changes are committed and pushed from `data/publish/tradecraft/`. The README and `docs/recorded-demo.md` now carry the real clone addresses, the demo-data link and the manual's GitHub Pages address. **Still to do:** switch on GitHub Pages (branch `main`, folder `/docs`) and check the manual link; add the demo video link; push those changes.
+
 ## Session of 19 November 2026 (night): the product manual
 
 **On the operator's word:** `docs/site/manual.html`, one self-contained page in the stage pages' theme. Part 1 gives one short chapter per stage and links to the stage pages instead of restating them. Part 2 is the architecture as built, at four levels: 100 (one page for anyone), 200 (components and the path of a request, with a diagram), 300 (each agent's contract and limits, the harness loop, the workflow, the stores, the guardrails), 400 (module map, the request's state, how to add an agent or a check, how the tests stand in for models). It ends with the course's concepts and where each occurs, and what is not built. Chain of Thought is deliberately not claimed.

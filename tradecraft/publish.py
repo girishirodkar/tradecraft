@@ -66,9 +66,11 @@ def build(out: Path | None = None) -> dict:
     problems += demo.scan(out)                                   # secrets, home-folder paths, email addresses
     names = _operator_names()
     NAME = re.compile("|".join(re.escape(n) for n in names), re.IGNORECASE) if names else re.compile(r"(?!x)x")
+    # The address of the published repository is public by nature, so the account name inside it is not a leak.
+    address = re.compile(r"github\.com/[A-Za-z0-9-]+|[A-Za-z0-9-]+\.github\.io")
     for p in files:
         rel = p.relative_to(out)
-        if NAME.search(str(rel)) or NAME.search(p.read_text(errors="replace")):
+        if NAME.search(str(rel)) or NAME.search(address.sub("", p.read_text(errors="replace"))):
             problems.append(f"{rel}: holds the operator's name")
     example = (out / ".env.example").read_text()
     filled = [l for l in example.splitlines() if "=" in l and not l.startswith("#") and l.split("=", 1)[1].strip()]
