@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "updated": "2026-11-19",
+  "purpose": "Signals that were researched or measured for this project and rejected as a basis for direction. Used by the supplied-thesis check in stage 2 and by the thesis checklist and the critic in stage 4. A match is a flag, never a block.",
+  "matching": "Case-insensitive regular expressions, tested against the thesis basis and the text of each cited finding.",
+  "signals": [
+    {
+      "id": "options_flow",
+      "name": "Unusual options flow",
+      "basis": "research",
+      "reason": "Large or unusual option trades did not give a usable signal of direction at retail scale. Factor specification, section 10.",
+      "patterns": ["unusual (options? )?(activity|flow|volume)", "options? flow", "smart money", "(big|heavy|large|huge) (call|put) (buying|volume|sweeps?)", "call sweeps?", "put sweeps?", "whales? (are|is)? ?(buying|loading)", "dark pool"]
+    },
+    {
+      "id": "iv_rank_verdict",
+      "name": "Implied-volatility rank as a cheap or expensive verdict",
+      "basis": "research",
+      "reason": "Where implied volatility sits in its own past range does not show that options are cheap or expensive. Factor specification, section 10.",
+      "patterns": ["iv rank", "iv percentile", "ivr\\b", "implied vol(atility)? (rank|percentile)", "options? (are|look|is) (cheap|expensive)", "(vol|volatility|iv) is (cheap|low|high|rich|elevated)"]
+    },
+    {
+      "id": "options_market_direction",
+      "name": "Put/call ratio, skew or put-call parity as direction",
+      "basis": "research",
+      "reason": "These option-market readings did not give a usable signal of direction. Factor specification, section 10.",
+      "patterns": ["put[ /-]?call ratio", "p/c ratio", "\\bskew\\b", "put[ -]call parity", "risk reversal"]
+    },
+    {
+      "id": "dealer_gamma",
+      "name": "Dealer gamma exposure",
+      "basis": "research",
+      "reason": "Estimates of dealer positioning available to a retail user are unreliable and did not predict direction. Factor specification, section 10.",
+      "patterns": ["gamma squeeze", "gamma exposure", "\\bgex\\b", "dealers? (are|is) (short|long) gamma", "(short|long) gamma", "gamma flip", "gamma wall", "dealer (positioning|hedging)"]
+    },
+    {
+      "id": "max_pain",
+      "name": "Max pain",
+      "basis": "research",
+      "reason": "The price at which most options expire worthless did not predict where the stock closes. Factor specification, section 10.",
+      "patterns": ["max(imum)? pain", "\\bpin(s|ned|ning)? (to|at|near)\\b", "pin risk"]
+    },
+    {
+      "id": "chart_patterns",
+      "name": "Chart patterns and candlesticks",
+      "basis": "research",
+      "reason": "Named chart and candlestick patterns are display only in this system and may not support a direction. Factor specification, section 9b.",
+      "patterns": ["head and shoulders", "double (top|bottom)", "(bull|bear) flag", "cup and handle", "\\b(ascending|descending|symmetrical) triangle", "\\bwedge\\b", "\\bpennant\\b", "candle(stick)?s?", "\\bdoji\\b", "\\bhammer\\b", "engulfing", "golden cross", "death cross", "breakout pattern"]
+    },
+    {
+      "id": "fib_elliott",
+      "name": "Fibonacci and Elliott wave",
+      "basis": "research",
+      "reason": "Display only in this system; not accepted as support for a direction. Factor specification, section 9b.",
+      "patterns": ["fib(onacci)?", "(?<![\\d.,$])61\\.8(?!\\d)", "(?<![\\d.,$])38\\.2(?!\\d)", "retracement", "elliott", "wave (1|2|3|4|5|iii|iv|v)\\b"]
+    },
+    {
+      "id": "timeframe_agreement",
+      "name": "Agreement across timeframes",
+      "basis": "research",
+      "reason": "Counting how many timeframes agree adds no information beyond the trend itself. Timeframes are shown side by side and never combined.",
+      "patterns": ["(multi|multiple)[ -]?time ?frames?", "time ?frames? (all )?(agree|align|line up|confirm)", "daily,? weekly,? and monthly", "all time ?frames", "confluence"]
+    },
+    {
+      "id": "price_trend",
+      "name": "Price trend or momentum as direction",
+      "basis": "measured",
+      "reason": "Measured 16 November 2026 on 20 years of prices for 105 names: trend shifted the chance of closing higher by under a point, in the mean-reverting direction, and not consistently for any one name. Trend is description only.",
+      "patterns": ["up ?trend", "down ?trend", "trending (up|down|higher|lower)", "\\bmomentum\\b", "(above|below|over|under) (the |its )?(\\d+)[ -]?((day|week)( (simple |exponential )?(moving )?average| ?[sedw]?ma)\\b|dma|ema|sma)", "moving average", "\\b(50|100|200)[ -]?(dma|ema|sma)\\b", "\\brsi\\b", "\\bmacd\\b", "overbought", "oversold", "relative strength", "higher highs", "lower lows", "new (52[ -]week )?(high|low)s?"]
+    },
+    {
+      "id": "support_resistance",
+      "name": "Support or resistance as a reason for direction",
+      "basis": "measured",
+      "reason": "Chart levels are description only. They were withdrawn as a basis for direction and for exits on 17 November 2026: their definition is arbitrary and nothing measured shows that they hold.",
+      "patterns": ["\\bsupport (and|or) resistance\\b", "\\bresistance (and|or) support\\b", "\\b(support|resistance) (level|zone|line)s?\\b", "\\b(support|resistance) (at|near|around) \\$?\\d", "bounc(e|ed|ing) off", "broke (out|through|above|below)", "break ?out", "break ?down", "held the level", "key level"]
+    },
+    {
+      "id": "social_sentiment",
+      "name": "Social media sentiment",
+      "basis": "research",
+      "reason": "Sentiment on social platforms did not give a usable signal of direction. Factor specification, section 10.",
+      "patterns": ["reddit", "wall ?street ?bets", "\\bwsb\\b", "twitter", "\\bx\\.com\\b", "stocktwits", "fin ?twit", "social (media )?sentiment", "everyone is (bullish|bearish)", "retail (is|are) (piling|buying|bullish|bearish)", "going viral", "meme stock"]
+    },
+    {
+      "id": "institutional_holdings",
+      "name": "Institutional holdings filings",
+      "basis": "research",
+      "reason": "Quarterly holdings filings are months old when published and did not give a usable signal. Factor specification, section 10.",
+      "patterns": ["\\b13[- ]?f\\b", "(hedge )?funds? (bought|added|increased|initiated|took a stake)", "institutional (buying|ownership|accumulation)", "(buffett|berkshire|ackman|burry) (bought|is buying|added|owns)"]
+    },
+    {
+      "id": "accruals",
+      "name": "Accounting accruals",
+      "basis": "research",
+      "reason": "The accruals effect did not survive as a usable signal in liquid names. Factor specification, section 10.",
+      "patterns": ["accruals?", "earnings quality", "quality of earnings"]
+    },
+    {
+      "id": "sector_rotation",
+      "name": "Sector rotation or industry momentum",
+      "basis": "research",
+      "reason": "Sector rotation and industry momentum did not add a usable signal. Sector evidence may qualify a view; it may not start one. Factor specification, sections 9c and 10.",
+      "patterns": ["sector rotation", "rotat(e|es|ing|ion) (into|out of)", "money is (moving|flowing|rotating) (into|out of)", "industry momentum", "sector momentum", "the sector is (hot|leading|in favou?r)"]
+    }
+  ]
+}

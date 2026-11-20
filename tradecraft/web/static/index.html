@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tradecraft</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<link rel="stylesheet" href="/static/tradecraft.css">
+</head>
+<body>
+
+<header class="appbar gut"><div class="col">
+  <button type="button" class="brand" id="brand" aria-label="Tradecraft home">Trade<span>craft</span></button>
+  <nav class="nav" aria-label="Main">
+    <button type="button" id="navHome">Home</button>
+    <button type="button" disabled title="Not designed yet">Records</button>
+    <button type="button" disabled title="Not designed yet">Settings</button>
+  </nav>
+  <span class="chip fl" id="tfMark" hidden>TEST FAILURE ON</span>
+  <span class="chip un" id="demoMark" hidden></span>
+  <button type="button" class="ghost" id="mode">Dark</button>
+</div></header>
+
+<div class="reqbar gut" id="reqbar" hidden><div class="col">
+  <div class="reqhead"><h1 class="mono" id="reqT"></h1><span class="sub" id="reqSub"></span></div>
+  <div class="stages" role="group" aria-label="Stages of this request" id="stages"></div>
+</div></div>
+
+<main class="gut"><div class="col">
+
+  <div class="review" id="leave" role="alertdialog" aria-labelledby="leaveMsg"><span id="leaveMsg"><strong>Leave this analysis?</strong> It will be stopped.</span><button type="button" class="btn" id="leaveStay">Stay</button><button type="button" class="btn pri" id="leaveGo">Stop and leave</button></div>
+  <div class="askmsg" id="appMsg" role="status"></div>
+
+  <!-- HOME -->
+  <section class="screen" data-s="home">
+    <div class="hero">
+      <h1>Which underlying do you want to research?</h1>
+      <p>One ticker per request. Tradecraft screens the option chain for liquidity, builds a directional thesis, proposes defined-risk strategies and then stress-tests the trade.</p>
+      <form class="ask" id="ask"><div class="combo"><label class="sub" for="tk" style="position:absolute;left:-9999px">Symbol or company name</label><input id="tk" type="text" placeholder="Symbol or company name" maxlength="40" autocomplete="off" autocapitalize="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sugg"><ul class="sugg" id="sugg" role="listbox" aria-label="Matching symbols" hidden></ul></div><button class="btn pri" type="submit" id="run">Run analysis</button></form>
+      <div class="askmsg" id="askMsg" role="status"></div>
+      <div class="status" id="chips"></div>
+    </div>
+    <div class="recent">
+      <div class="panel">
+        <h2>Recent analyses</h2>
+        <div id="recent"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STAGE 1 -->
+  <section class="screen" data-s="s1">
+    <div class="review" data-review><span><strong>You are reviewing a completed stage.</strong> It is read-only.</span><button type="button" class="btn" data-back>Back to the current stage</button></div>
+    <div class="panel">
+      <div style="display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center"><span class="chip ok" id="gChip"></span><span class="chip un" id="gProv" hidden>PROVISIONAL</span><strong style="font-size:1.0625rem" id="gHead"></strong><span class="sub" id="gSrc"></span></div>
+      <p class="sub" style="margin-top:6px" id="gLine2" hidden></p>
+      <p class="sub" style="margin-top:6px" id="gWithheld">Premiums are withheld at this stage so that pricing cannot anchor the thesis.</p>
+    </div>
+    <div class="panel" id="critPanel"><h2>Screen criteria <span class="chip" style="margin-left:6px" id="sChip">ALL AT DEFAULT</span></h2>
+      <div class="kv"><div><span>Max bid-ask spread</span><b id="vGap"></b><span>Default 5%</span></div><div><span>Min open interest</span><b id="vOi"></b><span>Default 100</span></div><div><span>Days to expiration (DTE)</span><b id="vDte"></b><span>Default 42 to 90</span></div><div><span>Max strike distance</span><b id="vK"></b><span>from spot · default 10%</span></div><div><span>Min premium (mid)</span><b id="vPx"></b><span>Default $0.20</span></div></div>
+      <p class="sub" style="margin-top:8px">A contract passes when it meets all five criteria. "Adjust criteria" changes them for this request.</p>
+    </div>
+    <div class="panel" id="ctl" hidden>
+      <div style="display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline"><strong id="ctlHead" tabindex="-1">Adjust screen criteria</strong><span class="sub">Applies to this request only. Saved defaults live in Settings. DTE range 7 to 180.</span></div>
+      <div class="ctls">
+        <div class="ctl"><label for="cGap">Max bid-ask spread</label><output id="oGap" for="cGap">5%</output><input type="range" id="cGap" min="2" max="10" step="0.5" value="5"><span class="rng"><i>2%</i><i>default 5%</i><i>10%</i></span></div>
+        <div class="ctl"><label for="cOi">Min open interest</label><output id="oOi" for="cOi">100</output><input type="range" id="cOi" min="0" max="6" step="1" value="3"><span class="rng"><i>10</i><i>default 100</i><i>1,000</i></span></div>
+        <div class="ctl"><label for="cD1">Days to expiration (DTE)</label><output id="oDte">42 to 90</output><div class="dte"><select id="cPre" aria-label="DTE preset"><option value="7-21">Short-dated, 7 to 21</option><option value="22-41">Front month, 22 to 41</option><option value="42-90" selected>Default, 42 to 90</option><option value="91-180">Long-dated, 91 to 180</option><option value="7-180">All, 7 to 180</option><option value="c">Custom</option></select><span class="pair"><input type="number" id="cD1" min="7" max="180" value="42" aria-label="Minimum DTE"> to <input type="number" id="cD2" min="7" max="180" value="90" aria-label="Maximum DTE"></span></div></div>
+        <div class="ctl"><label for="cK">Max strike distance from spot</label><output id="oK" for="cK">10%</output><input type="range" id="cK" min="5" max="30" step="1" value="10"><span class="rng"><i>5%</i><i>default 10%</i><i>30%</i></span></div>
+        <div class="ctl"><label for="cPx">Min premium (mid)</label><output id="oPx" for="cPx">$0.20</output><input type="range" id="cPx" min="0.05" max="1" step="0.05" value="0.2"><span class="rng"><i>$0.05</i><i>default $0.20</i><i>$1.00</i></span></div>
+        <div class="ctl act"><button type="button" class="btn" id="ctlReset">Reset</button><button type="button" class="btn" id="ctlCancel">Cancel</button><button type="button" class="btn pri" id="ctlApply">Apply and re-screen</button></div>
+      </div>
+    </div>
+    <div class="grid2" id="liqGrid">
+      <div class="panel"><h2>Liquidity by expiration</h2>
+        <div class="bars" id="bars"></div>
+        <p class="sub" style="margin-top:8px">Each bar is the number of contracts in that DTE bucket that pass the other four criteria. A longer bar means a deeper market: more strikes you can enter and exit close to mid.</p>
+        <p class="sub" style="margin-top:4px" id="barsNote"></p>
+      </div>
+      <div class="panel"><h2>Bid-ask spread</h2>
+        <div class="kv"><div><span>Median</span><b id="spMed"></b></div><div><span>Tightest</span><b id="spMin"></b></div><div><span>Widest</span><b id="spMax"></b></div></div>
+        <p class="sub" style="margin-top:8px">The spread is the ask minus the bid, shown as a percentage of the mid price, across the contracts that pass. It is the transaction cost of a round trip.</p><p class="sub" style="margin-top:4px"><strong>Tight</strong> (under about 2%): an actively quoted contract; fills land near mid and slippage is small.</p><p class="sub" style="margin-top:4px"><strong>Wide</strong> (above 5%): a thin market. A $2.00 option with a 10% spread gives up about $20 per contract on a round trip, before the underlying moves at all.</p>
+      </div>
+    </div>
+    <div class="panel" id="outPanel"><h2>Contracts screened out, by reason</h2>
+      <p class="sub" id="outLine"></p>
+      <div class="kv" id="outTiles"></div>
+    </div>
+    <div class="panel" id="ovr" hidden>
+      <div class="mxl" style="margin-top:0"><label for="ovrText">Rationale <small>required</small></label><span class="mxl-in" style="flex:1 1 320px;padding-left:0"><input id="ovrText" type="text" maxlength="300" autocomplete="off" style="width:100%" aria-describedby="ovrMsg"></span><button type="button" class="btn" id="ovrCancel">Cancel</button><button type="button" class="btn pri" id="ovrGo">Confirm override</button></div>
+      <p class="sub" style="margin-top:8px">The system only proposes contracts that pass the screen. If none pass at these criteria, no strategy will be built. Adjusting the criteria is the alternative.</p>
+      <div class="askmsg" id="ovrMsg" role="status"></div>
+    </div>
+    <div class="actions" id="s1Actions"></div>
+  </section>
+
+  <!-- STAGE 2: working (the agents-working panel; also shown when the stage stops on a failure) -->
+  <section class="screen" data-s="s2w">
+    <p id="s2wMsg" style="margin-bottom:14px" hidden></p>
+    <div class="panel">
+      <div style="display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline"><strong style="font-size:1.0625rem" id="s2wTitle"></strong><span class="sub" id="agNote">This usually takes about a minute.</span></div>
+      <div id="agents"></div>
+    </div>
+    <div class="actions" id="s2wActions"></div>
+  </section>
+
+  <!-- STAGE 2: brief -->
+  <section class="screen" data-s="s2">
+    <div class="review" id="s2Review"><span><strong>You are reviewing a completed stage.</strong> <span id="s2Frozen"></span></span><button type="button" class="btn" data-back>Back to the current stage</button></div>
+    <div class="panel" id="s2Head"></div>
+    <div id="s2Body" style="margin-top:14px">
+      <div class="grid2">
+        <div class="evstack">
+          <div class="panel ev" id="s2Ev"></div>
+          <details class="panel ev fold" id="s2Ctx"><summary>Context, with no direction <span class="chip un" id="s2CtxN"></span></summary><div id="s2CtxRows"></div></details>
+          <details class="panel ev fold" id="s2Back"><summary>Sector and macro backdrop <span class="chip un" id="s2BackN"></span></summary><div id="s2BackRows"></div></details>
+        </div>
+        <div class="panel" id="s2Right"></div>
+      </div>
+      <details class="panel fold" id="s2Flags"><summary>Flags and missing inputs <span class="chip fl" id="s2FlagN"></span><span class="chip un" id="s2MissN"></span></summary><div id="s2FlagRows"></div></details>
+      <div class="panel"><h2>Historical statistics and horizon</h2>
+        <div class="stat2">
+          <div><div class="scroll"><table><thead><tr><th>Horizon</th><th id="s2BaseHead">Base rate, higher close</th><th>Typical realized move</th></tr></thead><tbody id="s2Rows"></tbody></table></div><p id="s2Against" style="margin-top:10px" hidden></p></div>
+          <div id="s2Why"></div>
+        </div>
+        <dl class="defs" id="s2Defs"></dl>
+      </div>
+      <details class="panel" id="s2Reason"><summary style="cursor:pointer;font-weight:600">How the system reasoned</summary><div id="s2Branches"></div></details>
+    </div>
+    <div class="actions" id="s2Actions"></div>
+    <p class="sub" id="s2Note" style="margin-top:8px;text-align:right" hidden></p>
+  </section>
+
+  <!-- STAGE 2: the user's own view after a no view -->
+  <section class="screen" data-s="s2u">
+    <div class="panel">
+      <div style="display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center"><strong style="font-size:1.0625rem">Take a view yourself</strong><span class="chip un">RECORDED AS YOUR THESIS</span></div>
+      <p class="sub" style="margin-top:6px">The system returned no view. Nothing from the option market is shown yet.</p>
+      <div class="urow"><span class="ctrl-l" id="lblDir">Direction</span><div class="seg" role="group" aria-labelledby="lblDir" id="uDir"><button type="button" data-d="bullish" aria-pressed="true">Bullish</button><button type="button" data-d="bearish" aria-pressed="false">Bearish</button></div>
+        <label>Horizon <select id="uHor"></select></label></div>
+    </div>
+    <div class="grid2">
+      <div class="panel"><h2>What are you relying on?</h2>
+        <p class="sub">Choose from the evidence the system found. At least one.</p>
+        <div id="uRely"></div>
+      </div>
+      <div>
+        <div class="panel"><h2>What would prove you wrong?</h2>
+          <p class="sub">At least one. Each is a condition the system can name; none is a price level.</p>
+          <div id="uCond"></div>
+        </div>
+        <div class="panel"><h2>How your thesis stands</h2>
+          <div style="display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center"><span class="chip" id="uChip">NOT STARTED</span><strong id="uVerdict">Choose what you are relying on.</strong></div>
+          <p class="sub" id="uWhy" style="margin-top:6px"></p>
+          <p class="sub" style="margin-top:6px">This does not block you. It is recorded with the thesis and shown again at the challenge.</p>
+        </div>
+      </div>
+    </div>
+    <div class="actions"><button type="button" class="btn" id="uBack">Back to the evidence</button><button type="button" class="btn" id="uStop">Stop</button><button type="button" class="btn pri" id="uFreeze" disabled>Freeze my thesis</button></div>
+    <p class="sub" id="uNote" style="margin-top:8px;text-align:right" hidden></p>
+  </section>
+
+  <!-- STAGE 3 -->
+  <section class="screen" data-s="s3">
+    <div class="review" data-review><span><strong>You are reviewing a completed stage.</strong> It is read-only. To select a different strategy, use "Return to contracts" on the challenge.</span><button type="button" class="btn" data-back>Back to the current stage</button></div>
+    <div class="panel outp" id="outp">
+      <div class="cm-head"><span class="cm-tk mono" id="cTk"></span><span id="cDir"></span><span class="chip un" id="cProv" hidden>PROVISIONAL</span><span class="sub" style="margin:0" id="cHead"></span></div>
+      <p class="sub" id="cProvLine" hidden></p>
+      <p class="sub" id="cMove"></p>
+      <p id="cMsg" style="margin-top:12px" hidden></p>
+      <p class="sub" id="cMsg2" hidden></p>
+
+      <div id="cStrip">
+        <h4 class="viz-h">Expiration</h4>
+        <div class="exps" id="cExps"></div>
+        <p class="sub" id="cEvents"></p>
+      </div>
+
+      <div id="cMain">
+        <div class="ctrl-row">
+          <div class="ctrl"><span class="ctrl-l" id="lblPri">Rank by</span><div class="seg" role="group" aria-labelledby="lblPri" id="segPri"></div></div>
+          <div class="ctrl"><span class="ctrl-l">Filters</span><div style="display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center"><div class="chips"><span>Liquidity <b>stage 1 criteria</b></span></div><div class="ctl" style="flex:0 1 240px;border-top:0;padding:0"><label for="cCap">Cost cap</label><output id="oCap" for="cCap">5% of max loss</output><input type="range" id="cCap" min="2" max="10" step="0.5" value="5"><span class="rng"><i>2%</i><i id="capDef">default 5%</i><i>10%</i></span></div><div class="chips"><span>Events <b>shown, not filtered</b></span></div></div></div>
+        </div>
+
+        <div class="mxl"><label for="mxl">Max loss for this trade <small>optional</small></label><span class="mxl-in"><i>$</i><input id="mxl" type="text" inputmode="numeric" autocomplete="off" placeholder="one contract each" aria-describedby="mxlNote"></span><span class="sub" id="mxlNote" style="margin:0"></span></div>
+        <div class="orows" id="orows"></div>
+      </div>
+      <div id="cOut">
+        <p class="sub" id="cFiltered"></p>
+        <div class="orows" id="orowsOut" hidden></div>
+        <p class="sub" id="cLabels">"Profitable if thesis holds" and "POP: historical" are counted before slippage. "POP: implied" is approximate.</p>
+      </div>
+    </div>
+    <div class="actions" id="s3Actions"></div>
+  </section>
+
+  <!-- STAGE 4: the challenge -->
+  <section class="screen" data-s="s4">
+    <div class="review" data-review><span><strong>You are reviewing a completed stage.</strong> It is read-only.</span><button type="button" class="btn" data-back>Back to the current stage</button></div>
+    <div class="panel" id="chs">
+      <div class="cm-head"><span class="cm-tk mono" id="chTk"></span><span id="chDir"></span><span class="sub" style="margin:0" id="chFor"></span></div>
+      <div class="ready"><span class="chip ok" id="chChip">READY</span><div><b id="chReady"></b><span id="chReadySub"></span></div></div>
+      <p class="sub" style="margin-top:8px" id="chCaution">The critic runs on the same model family as the agent that drafted the thesis. Treat its agreement with caution.</p>
+      <p class="sub" style="margin-top:8px" id="chNoPass" hidden></p>
+
+      <div class="chcols">
+        <div class="chl" id="chLeft"></div>
+        <div class="chr">
+          <span class="collab">THE CHECKS · FIXED RULES</span>
+          <div class="cbox" id="chThesis"></div>
+          <div class="cbox" id="chContract"></div>
+          <div class="actions chact" id="s4Actions"></div>
+        </div>
+      </div>
+      <button type="button" class="more" aria-expanded="false" id="chMore" style="margin-top:14px"></button>
+      <div hidden id="chDetailWrap"><div style="display:grid;gap:12px;margin-top:8px" id="chDetail"></div></div>
+    </div>
+  </section>
+
+  <!-- After "Proceed to decision": stage 5 is not designed -->
+  <section class="screen" data-s="end">
+    <div class="panel" style="max-width:720px;margin:0 auto;text-align:center">
+      <h1 style="font-size:1.5rem;margin-top:12px">Stage 5, decision and record, comes next</h1>
+      <p style="margin-top:8px;color:var(--ink-2)">It is not designed yet. All four stages above stay available from the stage bar, each one read-only.</p>
+      <div class="actions" style="justify-content:center;margin-top:16px"><button type="button" class="btn pri" id="endHome">Back to home</button></div>
+    </div>
+  </section>
+
+</div></main>
+<script src="/static/app.js"></script>
+</body>
+</html>

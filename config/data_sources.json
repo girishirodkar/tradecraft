@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "updated": "2026-11-18",
+  "purpose": "Where each kind of data comes from, and which symbols the free Financial Modeling Prep key serves. Measured on 18 November 2026 with scripts/analysis/probe_fmp.py and probe_fmp_coverage.py. Decision record: docs/decisions/2026-11-18-data-sources.md.",
+  "sources": {
+    "price_history": {"provider": "Yahoo chart endpoint, cached in label_out/prices", "status": "working", "cost": "free"},
+    "option_chains": {"provider": "Cboe delayed quotes", "status": "working", "cost": "free", "note": "15 minutes delayed"},
+    "filings": {"provider": "SEC EDGAR", "status": "working (18 November 2026)", "cost": "free", "note": "SEC_USER_AGENT is in .env, set by the operator. Read by section, never whole: tradecraft/data/edgar.py"},
+    "macro_and_fed_calendar": {"provider": "FRED release calendar and the Federal Reserve's FOMC schedule", "status": "working (18 November 2026)", "cost": "free", "key": "FRED_API_KEY in .env, added by the operator",
+      "releases": [{"release_id": 10, "name": "Consumer Price Index"}, {"release_id": 50, "name": "Employment Situation"}, {"release_id": 53, "name": "Gross Domestic Product"}, {"release_id": 54, "name": "Personal Income and Outlays"}],
+      "note": "The four releases were chosen by the operator on 18 November 2026. FRED lists scheduled dates only a few weeks ahead; beyond the last listed date a release is not yet scheduled, which is not the same as no release."},
+    "earnings_dates": {"provider": "FMP /stable/earnings", "status": "working for covered symbols", "cost": "free", "fields": ["date", "epsEstimated", "epsActual", "revenueEstimated", "revenueActual", "lastUpdated"], "gap": "No time of day. Treat the report day as inside any window that contains it."},
+    "past_earnings": {"provider": "FMP /stable/earnings", "status": "working for covered symbols", "cost": "free", "note": "Actual against estimated, back many years"},
+    "dividends": {"provider": "FMP /stable/dividends", "status": "working for covered symbols", "cost": "free", "fields": ["date", "recordDate", "paymentDate", "declarationDate", "dividend", "frequency"], "note": "date is the ex-dividend date. A future ex-date appears only once declared; before that, estimate from frequency and say it is an estimate."},
+    "analyst_estimates": {"provider": "FMP /stable/analyst-estimates, period=annual", "status": "working for covered symbols", "cost": "free", "gap": "Current consensus only. No revision history: build it by saving the consensus each day."},
+    "company_profile": {"provider": "FMP /stable/profile", "status": "working for covered symbols", "cost": "free"},
+    "company_news": {"provider": "FMP /stable/news/stock", "status": "adopted for the demo, premium plan (18 November 2026)", "cost": "premium plan", "note": "Untrusted text: wrapped and labelled as data. Refused on the free plan."},
+    "sector_context": {"provider": "FMP profile sector, mapped to a SPDR sector fund; prices from the Yahoo chart endpoint", "status": "adopted for the demo (operator decision, 18 November 2026)", "cost": "free", "sector_funds": {"Technology": "XLK", "Financial Services": "XLF", "Healthcare": "XLV", "Consumer Cyclical": "XLY", "Consumer Defensive": "XLP", "Energy": "XLE", "Industrials": "XLI", "Basic Materials": "XLB", "Utilities": "XLU", "Real Estate": "XLRE", "Communication Services": "XLC"}, "note": "Sector names are FMP's. A sector not listed here gives 'not available'."},
+    "market_regime": {"provider": "Yahoo chart endpoint: SPY, ^VIX and ^VIX3M", "status": "adopted for the demo (operator decision, 18 November 2026)", "cost": "free", "note": "Index-level VIX only. The underlying's own implied volatility is never used in stage 2."},
+    "aggregate_index_earnings": {"provider": "none", "status": "not available"}
+  },
+  "fmp_free_plan": {
+    "refuses": ["the limit parameter", "period=quarter on analyst estimates", "company news", "symbols outside the list below"],
+    "covered": ["SPY", "AAPL", "MSFT", "NVDA", "AMZN", "GOOGL", "META", "TSLA", "AMD", "NFLX", "ADBE", "INTC", "CSCO", "JPM", "BAC", "WFC", "GS", "C", "V", "UNH", "JNJ", "PFE", "ABBV", "XOM", "CVX", "WMT", "COST", "TGT", "NKE", "SBUX", "KO", "PEP", "DIS", "T", "VZ", "BA", "GE", "LMT", "F", "GM", "RIVN", "UBER", "COIN", "HOOD", "PLTR", "SHOP", "PYPL", "SOFI", "RIOT"],
+    "not_covered": ["QQQ", "IWM", "DIA", "XLF", "XLE", "XLK", "AVGO", "CRM", "ORCL", "MU", "QCOM", "TXN", "MS", "MA", "AXP", "BRK.B", "LLY", "MRK", "TMO", "COP", "SLB", "HD", "LOW", "MCD", "PG", "PM", "CMCSA", "CAT", "DE", "HON", "RTX", "UPS", "UNP", "ABNB", "DASH", "SNOW", "CRWD", "PANW", "NOW", "XYZ", "MARA", "MSTR", "SMCI", "ARM", "DELL", "IBM", "GILD", "AMGN", "BMY", "CVS", "LIN", "NEE", "DUK", "SO", "_SPX", "_XSP", "TLT"],
+    "note": "SPY is covered but has no earnings and no analyst estimates, as expected for a fund."
+  },
+  "fmp_plan": {
+    "plan": "premium",
+    "since": "2026-11-18",
+    "rate_limit_per_minute": 750,
+    "bandwidth": "50 GB per rolling 30 days",
+    "source": "operator, 18 November 2026",
+    "note": "Upgraded from the free plan after the measurements in fmp_free_plan were taken. Operator decision, 18 November 2026 (evening): the demo uses company news and the wider symbol coverage; quarterly estimates and the limit parameter are not adopted. See docs/decisions/2026-11-18-data-sources.md.",
+    "measured_2026_11_18": {
+      "how": "scripts/analysis/probe_fmp.py and probe_fmp_coverage.py (outputs test_out/fmp_probe_20261118_184622.json, test_out/fmp_coverage_20261118_184800.json), then a re-check with httpx",
+      "earnings_coverage": "105 of 106 universe symbols; BRK.B refused (402, special symbol)",
+      "company_news": "served (/stable/news/stock, 20 rows for NVDA and for QQQ)",
+      "quarterly_estimates": "served (period=quarter, 10 rows for NVDA)",
+      "limit_parameter": "accepted",
+      "profile_for_previously_uncovered": "served (QQQ, AVGO)",
+      "earnings_time_of_day": "still not available: neither /stable/earnings nor /stable/earnings-calendar has a before-open or after-close field",
+      "estimate_revision_history": "not tested; no endpoint identified",
+      "aggregate_index_earnings": "not tested",
+      "transport_note": "The stdlib urllib client in the probe scripts had large responses cut off (IncompleteRead) on 55 symbols; the same requests through httpx all completed. Application code uses httpx with retries."
+    }
+  }
+}

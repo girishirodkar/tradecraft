@@ -1,0 +1,124 @@
+{
+  "spec_version": "C-1",
+  "run_at": "2026-11-15T12:04:19",
+  "sources": {
+    "SPTR": "yahoo1",
+    "RF": "yahoo1",
+    "BXY": "cboe",
+    "BXMD": "cboe",
+    "CNDR": "cboe"
+  },
+  "source_notes": [],
+  "results": {
+    "BXY": {
+      "post": {
+        "n": 173,
+        "first": "2012-05-31",
+        "last": "2026-10-30",
+        "alpha_pct_per_year": -1.1784816067123276,
+        "ci95": [
+          -3.3657614619829532,
+          1.0087982485582978
+        ],
+        "t_alpha": -1.0560257955058863,
+        "beta": 0.7337760161007415,
+        "detectable_pct_per_year": 2.2319182196639034,
+        "excess_pct_per_year": 8.572203966577575,
+        "vol_pct_per_year": 10.99951944519491,
+        "worst_month_pct": -14.43833949455628,
+        "mkt_excess_pct_per_year": 13.28836778436107
+      },
+      "pre": {
+        "n": 287,
+        "first": "1988-06-30",
+        "last": "2012-05-31",
+        "alpha_pct_per_year": 2.104519850013816,
+        "ci95": [
+          0.3506425054148616,
+          3.858397194612771
+        ],
+        "t_alpha": 2.3518514100940617,
+        "beta": 0.7780996735347014,
+        "detectable_pct_per_year": 1.7896707597948516,
+        "excess_pct_per_year": 6.943958442562421,
+        "vol_pct_per_year": 12.428318746528108,
+        "worst_month_pct": -15.65896698559085,
+        "mkt_excess_pct_per_year": 6.21956126849959
+      }
+    },
+    "BXMD": {
+      "post": {
+        "n": 173,
+        "first": "2012-05-31",
+        "last": "2026-10-30",
+        "alpha_pct_per_year": -1.1441596376701553,
+        "ci95": [
+          -3.120301982057502,
+          0.8319827067171914
+        ],
+        "t_alpha": -1.1348134390231648,
+        "beta": 0.7528503503355665,
+        "detectable_pct_per_year": 2.016471779987089,
+        "excess_pct_per_year": 8.859992704173932,
+        "vol_pct_per_year": 11.11039339495694,
+        "worst_month_pct": -13.432272832358755,
+        "mkt_excess_pct_per_year": 13.28836778436107
+      },
+      "pre": {
+        "n": 292,
+        "first": "1988-01-29",
+        "last": "2012-05-31",
+        "alpha_pct_per_year": 2.439554272677888,
+        "ci95": [
+          0.8810723570397088,
+          3.9980361883160667
+        ],
+        "t_alpha": 3.0680666400230145,
+        "beta": 0.8286539336126632,
+        "detectable_pct_per_year": 1.5902876690185503,
+        "excess_pct_per_year": 7.697067255931042,
+        "vol_pct_per_year": 12.942874310895224,
+        "worst_month_pct": -15.67658466613917,
+        "mkt_excess_pct_per_year": 6.34464252203824
+      }
+    },
+    "CNDR": {
+      "post": {
+        "n": 173,
+        "first": "2012-05-31",
+        "last": "2026-10-30",
+        "alpha_pct_per_year": -1.3178812572273695,
+        "ci95": [
+          -4.6099456717391485,
+          1.9741831572844097
+        ],
+        "t_alpha": -0.7846284090855847,
+        "beta": 0.033141272104708394,
+        "detectable_pct_per_year": 3.35924940256304,
+        "excess_pct_per_year": -0.8774878446584182,
+        "vol_pct_per_year": 6.146583800256715,
+        "worst_month_pct": -7.353760823121765,
+        "mkt_excess_pct_per_year": 13.28836778436107
+      },
+      "pre": {
+        "n": 292,
+        "first": "1988-01-29",
+        "last": "2012-05-31",
+        "alpha_pct_per_year": 3.80882791616272,
+        "ci95": [
+          1.2107151471498812,
+          6.406940685175559
+        ],
+        "t_alpha": 2.873355923852142,
+        "beta": 0.15949315025551725,
+        "detectable_pct_per_year": 2.651135478584529,
+        "excess_pct_per_year": 4.820754939247708,
+        "vol_pct_per_year": 6.900702240641889,
+        "worst_month_pct": -8.655348080551413,
+        "mkt_excess_pct_per_year": 6.34464252203824
+      }
+    }
+  },
+  "reading_overwrite": "NO ALPHA out of the money either.",
+  "reading_condor": "NO EVIDENCED EDGE. Mode 1 has no supported premium-harvesting leg."
+}

@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "tradecraft",
+      "runtimeExecutable": ".venv/bin/python",
+      "runtimeArgs": ["-m", "uvicorn", "tradecraft.web.app:app", "--host", "127.0.0.1", "--port", "8321"],
+      "port": 8321
+    },
+    {
+      "name": "tradecraft-replay",
+      "runtimeExecutable": ".venv/bin/python",
+      "runtimeArgs": ["-m", "uvicorn", "tradecraft.dev_replay:app", "--host", "127.0.0.1", "--port", "8322"],
+      "port": 8322
+    }
+  ]
+}

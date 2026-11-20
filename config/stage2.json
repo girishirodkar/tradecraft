@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "updated": "2026-11-18",
+  "purpose": "Settings for stage 2 (the thesis). Decision record: docs/decisions/2026-11-18-stage-2-anchored-bearings.md.",
+  "results_tolerance_pct": 1.0,
+  "guidance_tolerance_pct": 1.0,
+  "guidance_tolerance_note": "A single guided figure within this percentage of the consensus figure counts as in line. A guided range is in line when it contains the consensus figure (operator ruling, 19 November 2026).",
+  "results_tolerance_note": "A reported figure within this percentage of its consensus estimate counts as in line. A display definition, not a tuned parameter."
+}

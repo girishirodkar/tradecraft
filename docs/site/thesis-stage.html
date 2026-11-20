@@ -1,0 +1,1244 @@
+<title>Thesis Stage</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Ledger (light) / Night Desk (dark), per docs/site/THEME.md.
+   Layout: one reading column (max 860px); figures in plain panels. Probabilities and input numbers set in mono. */
+:root {
+  --bg: #f5f7fa; --surface: #ffffff; --ink: #17212b; --ink-2: #44515f; --ink-3: #5f6c7b;
+  --line: #d9e0e8; --accent: #1c5cab; --band: #e8f0fa;
+  --series-1: #2a78d6; --series-2: #eb6834; --good: #0a7d0a; --crit: #c23232;
+  --display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+  --text: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161b; --surface: #1b2027; --ink: #eef1f4; --ink-2: #c1c9d2; --ink-3: #9aa5b1;
+    --line: #2f3742; --accent: #86b6ef; --band: #1f2c3d;
+    --series-1: #3987e5; --series-2: #d95926; --good: #3fbf3f; --crit: #e66767;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161b; --surface: #1b2027; --ink: #eef1f4; --ink-2: #c1c9d2; --ink-3: #9aa5b1;
+  --line: #2f3742; --accent: #86b6ef; --band: #1f2c3d;
+  --series-1: #3987e5; --series-2: #d95926; --good: #3fbf3f; --crit: #e66767;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--text); font-size: 16px; line-height: 1.6; }
+.wrap { max-width: 860px; margin: 0 auto; padding-block: 40px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(2rem, 5vw, 2.75rem); font-weight: 600; letter-spacing: -0.01em; }
+h2 { font-size: 1.5rem; font-weight: 600; margin-top: 56px; }
+h3 { font-size: 1.0625rem; font-weight: 600; }
+p { margin: 12px 0 0; max-width: 68ch; }
+.lede { font-size: 1.125rem; color: var(--ink-2); }
+.meta { font-family: var(--mono); font-size: 0.8125rem; color: var(--ink-3); letter-spacing: 0.02em; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 14px; }
+.mode { font: inherit; font-size: 0.8125rem; padding: 6px 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); cursor: pointer; }
+.mode:hover { border-color: var(--accent); }
+.mode:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+ul { margin: 12px 0 0; padding-left: 20px; max-width: 68ch; }
+li + li { margin-top: 6px; }
+strong { font-weight: 600; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 20px; margin-top: 20px; min-width: 0; }
+.sub { color: var(--ink-3); font-size: 0.875rem; max-width: none; margin-top: 4px; }
+figure { margin: 0; }
+figcaption { color: var(--ink-3); font-size: 0.875rem; margin-top: 12px; max-width: 68ch; }
+.scroll { overflow-x: auto; }
+.scroll svg { display: block; height: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-2); font-size: 0.8125rem; }
+td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink-3); width: 2.5em; }
+
+.stages { list-style: none; padding: 0; margin: 20px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 8px; max-width: none; counter-reset: st; }
+.stages li { counter-increment: st; margin: 0; border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; background: var(--surface); font-size: 0.875rem; line-height: 1.35; min-width: 0; }
+.stages li::before { content: counter(st); display: block; font-family: var(--mono); font-size: 0.75rem; color: var(--ink-3); margin-bottom: 4px; }
+.stages li.here { background: var(--band); border-color: var(--accent); font-weight: 600; }
+.stages li.here::before { content: counter(st) "  this page"; color: var(--accent); }
+
+.steps { list-style: none; padding: 0; margin: 20px 0 0; max-width: none; counter-reset: s; display: grid; }
+.steps li { counter-increment: s; margin: 0; display: grid; grid-template-columns: 34px 1fr; gap: 14px; padding-bottom: 18px; position: relative; }
+.steps li::before { content: counter(s); font-family: var(--mono); font-size: 0.8125rem; width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid var(--accent); color: var(--accent); background: var(--surface); display: grid; place-items: center; position: relative; z-index: 1; }
+.steps li::after { content: ""; position: absolute; left: 16.5px; top: 34px; bottom: 0; width: 1.5px; background: var(--line); }
+.steps li:last-child { padding-bottom: 0; } .steps li:last-child::after { display: none; }
+.steps b { display: block; font-weight: 600; } .steps span { color: var(--ink-2); font-size: 0.9375rem; }
+
+/* role chips: the six roles are named in words; the tint only groups them */
+.role { display: inline-block; font-size: 0.75rem; font-weight: 500; padding: 1px 8px; border-radius: 3px; border: 1px solid var(--line); white-space: nowrap; color: var(--ink); background: var(--bg); }
+.role.strong { border-color: var(--accent); background: var(--band); }
+
+/* thesis card mock */
+.card-mock { max-width: 600px; display: grid; gap: 10px; }
+.card-mock p { margin: 0; }
+.mock-tag { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.04em; color: var(--ink-3); border: 1px dashed var(--line); border-radius: 4px; padding: 3px 8px; justify-self: start; }
+.cm-head { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 12px; }
+.cm-tk { font-size: 1.375rem; font-weight: 500; }
+.cm-chip { font-family: var(--mono); font-size: 0.8125rem; font-weight: 500; border: 1.5px solid var(--ink); border-radius: 4px; padding: 1px 8px; }
+.cm-warn { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.03em; color: var(--ink-2); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; justify-self: start; }
+.cm-facts { margin: 4px 0 0; display: grid; grid-template-columns: minmax(0, 140px) minmax(0, 1fr); gap: 8px 16px; font-size: 0.9375rem; }
+.cm-facts dt { color: var(--ink-3); font-size: 0.875rem; } .cm-facts dd { margin: 0; }
+.cm-h { font-size: 0.875rem; margin-top: 8px; }
+.ladder { min-width: 500px; }
+.ladder th small { display: block; font-weight: 400; font-size: 0.75rem; color: var(--ink-3); }
+.ladder td.r, .ladder th.r { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ladder thead th.r { font-family: var(--text); }
+.ladder tr.in th, .ladder tr.in td { background: var(--band); font-weight: 600; }
+.ladder tr.in th small { color: var(--accent); }
+.ladder tr.out td, .ladder tr.out th { color: var(--ink-3); }
+.fam { list-style: none; padding: 0; margin: 0; max-width: none; display: grid; gap: 0; }
+.fam li { margin: 0; display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 1fr); gap: 4px 16px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 0.9375rem; }
+.fam b { font-weight: 600; } .fam small { display: block; color: var(--ink-3); font-size: 0.75rem; font-weight: 400; }
+.cm-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.cm-btn { font-size: 0.875rem; padding: 7px 14px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--ink); }
+.cm-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 600; }
+
+/* probability scale */
+.scale { position: relative; height: 150px; margin: 8px 0 0; }
+.scale .axis { position: absolute; left: 0; right: 0; top: 70px; height: 8px; border-radius: 4px; background: var(--line); }
+.scale .cap { position: absolute; top: 62px; height: 24px; border-radius: 4px; background: var(--band); border: 1px solid var(--accent); }
+.scale .mk { position: absolute; top: 58px; width: 3px; height: 32px; background: var(--ink); transform: translateX(-1.5px); }
+.scale .mk.s1 { background: var(--series-1); width: 5px; transform: translateX(-2.5px); }
+.scale .lb { position: absolute; transform: translateX(-50%); font-size: 0.75rem; line-height: 1.25; text-align: center; white-space: nowrap; color: var(--ink); }
+.scale .lb b { display: block; font-family: var(--mono); font-weight: 500; font-size: 0.875rem; }
+.scale .lb.up { top: 6px; } .scale .lb.dn { top: 98px; }
+.scale .lb.r { transform: translateX(-100%); text-align: right; padding-right: 2px; } .scale .lb.l { transform: none; text-align: left; padding-left: 2px; }
+.scale .tick { position: absolute; top: 132px; transform: translateX(-50%); font-family: var(--mono); font-size: 0.6875rem; color: var(--ink-3); }
+
+.flow-m { display: none; gap: 8px; }
+.flow-m .fa { border: 1.5px solid var(--line); border-radius: 6px; padding: 10px 12px; display: grid; gap: 2px; font-size: 0.875rem; }
+.flow-m .fa span { color: var(--ink-2); }
+.flow-m .fa.hi { border-color: var(--series-1); background: var(--band); }
+.flow-m .fa.dash { border-style: dashed; }
+.flow-m .arrow { text-align: center; color: var(--ink-3); font-size: 0.75rem; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; }
+.two .panel { margin-top: 0; }
+.checks { list-style: none; padding: 0; margin: 14px 0 0; max-width: none; display: grid; }
+.checks li { margin: 0; display: grid; grid-template-columns: 26px 1fr; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 0.9375rem; }
+.checks li::before { content: "\2713"; color: var(--good); font-family: var(--mono); }
+.note { border-top: 1px solid var(--line); margin-top: 56px; padding-top: 20px; color: var(--ink-3); font-size: 0.875rem; }
+.note p { max-width: 72ch; }
+@media (max-width: 600px) { .flow-svg { display: none !important; } .flow-m { display: grid; } }
+@media (max-width: 480px) { .cm-facts, .fam li { grid-template-columns: 1fr; gap: 2px; } .cm-facts dd { margin-bottom: 8px; } }
+@media (max-width: 520px) { .ladder { min-width: 0; } .ladder td:last-child { font-size: 0.8125rem; } .ladder .tc { display: none; } .ladder th, .ladder td { padding: 8px 6px; } }
+
+h4 { font-family: var(--display); font-size: 1rem; font-weight: 600; margin: 28px 0 0; line-height: 1.25; }
+.grade { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.02em; text-transform: uppercase; color: var(--ink-3); border: 1px solid var(--line); border-radius: 3px; padding: 0 5px; white-space: nowrap; vertical-align: 1px; }
+h3.sec { margin-top: 40px; }
+[hidden] { display: none !important; }
+.toc { margin-top: 24px; }
+.toc ol { list-style: none; counter-reset: toc; padding: 0; margin: 0; max-width: none; display: flex; flex-wrap: wrap; gap: 6px 8px; }
+.toc li { counter-increment: toc; margin: 0; }
+.toc a { display: inline-block; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink-2); font-size: 0.875rem; text-decoration: none; }
+.toc a::before { content: counter(toc) "\00a0\00a0"; font-family: var(--mono); color: var(--ink-3); }
+.toc a:hover, .toc a:focus-visible { border-color: var(--accent); color: var(--accent); }
+h2[id] { scroll-margin-top: 16px; }
+.tabs { margin-top: 20px; }
+.tablist { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: thin; }
+.tablist button { font: inherit; font-size: 0.9375rem; white-space: nowrap; padding: 10px 14px; min-height: 44px; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; color: var(--ink-3); cursor: pointer; }
+.tablist button[aria-selected="true"] { color: var(--ink); font-weight: 600; border-bottom-color: var(--accent); }
+.tablist button:hover { color: var(--ink); }
+.tablist button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tabcap { color: var(--ink-2); font-size: 0.9375rem; margin: 14px 0 0; max-width: 68ch; }
+[role="tabpanel"] > .panel { margin-top: 14px; }
+.print-only { display: none; }
+details.why { margin-top: 16px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+details.why > summary { cursor: pointer; padding: 11px 16px; font-size: 0.9375rem; font-weight: 600; color: var(--accent); list-style-position: inside; }
+details.why > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+details.why[open] > summary { border-bottom: 1px solid var(--line); }
+details.why > :not(summary) { margin-left: 16px; margin-right: 16px; }
+details.why > ul { margin-top: 12px; margin-bottom: 14px; }
+details.why > .panel { border: 0; padding: 0; margin-top: 12px; margin-bottom: 14px; background: none; }
+details.why > p { margin-top: 12px; }
+details.why > h4 { margin-top: 18px; }
+details.why > h4:first-of-type { margin-top: 14px; }
+@media print { [role="tabpanel"][hidden] { display: block !important; } .tablist, .mode, .toc { display: none; } .print-only { display: block; } }
+/* Wide layout, 17 November 2026: the page uses the available width; cards and panels flex to fill it. */
+.wrap { max-width: 1120px; }
+p, ul, figcaption, .tabcap { max-width: 84ch; }
+.sub, .ex-title, .keyline, .verdict, .stages, .steps, .checks, .fam, .toc ol { max-width: none; }
+/* Cards, tables and figures keep their earlier size (860px at most) and sit centred in the wider page. */
+.wrap > .panel, .wrap > .two, .wrap > .tabs, .wrap > .cand-groups, .wrap > .stages, details.why > .panel { max-width: 860px; margin-left: auto; margin-right: auto; }
+[role="tabpanel"] > .panel { margin-left: auto; margin-right: auto; }
+/* UI call-outs, 17 November 2026: every mock-up says whether it is a screen of the application or an explanation. */
+h3#ui { margin-top: 36px; }
+.ui-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 0 10px; }
+.ui-tag { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; border-radius: 4px; padding: 3px 8px; white-space: nowrap; }
+.ui-tag.app { background: var(--accent); color: var(--surface); border: 1px solid var(--accent); }
+.ui-tag.ex { border: 1px dashed var(--ink-3); color: var(--ink-2); }
+.ui-row span:last-child { font-size: 0.8125rem; color: var(--ink-2); }
+.ui-list { list-style: none; padding: 0; margin: 12px 0 0; max-width: none; display: grid; gap: 8px; }
+.ui-list li { margin: 0; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-size: 0.9375rem; }
+.ui-list b { font-weight: 600; }
+.ui-list small { color: var(--ink-3); font-size: 0.8125rem; }
+</style>
+
+<div class="wrap">
+  <p class="sub manual-link" style="margin:0 0 10px"><a href="manual.html" style="color:var(--accent)">&larr; Tradecraft manual</a> &nbsp;·&nbsp; Stages: <a href="liquidity-gate.html" style="color:var(--accent)">1 Liquidity gate</a> &nbsp;<a href="thesis-stage.html" style="color:var(--accent)">2 Thesis</a> &nbsp;<a href="market-contracts.html" style="color:var(--accent)">3 Market and contracts</a> &nbsp;<a href="challenge.html" style="color:var(--accent)">4 Challenge</a></p>
+  <div class="top"><div class="meta">TRADECRAFT · DRAFT · 17 NOVEMBER 2026 · ON-DEMAND MODE, STAGE 2</div><button type="button" class="mode" id="mode">Switch to dark</button></div>
+  <h1>The thesis stage</h1>
+  <p class="lede">Stage 2 turns an underlying that has cleared the liquidity gate into a research brief: measured figures from its price history, and a researched view drafted by the agents. The user accepts, amends or rejects the view, or supplies their own. The thesis is then frozen before any option price is shown.</p>
+
+  <nav class="toc" aria-label="Contents">
+    <ol>
+      <li><a href="#p1">Overview</a></li>
+      <li><a href="#p2">The research brief</a></li>
+      <li><a href="#p3">How the brief is built</a></li>
+      <li><a href="#p4">How a view is formed</a></li>
+      <li><a href="#p5">Controls</a></li>
+      <li><a href="#p6">Decision and record</a></li>
+      <li><a href="#p7">Background</a></li>
+    </ol>
+  </nav>
+
+  <h2 id="p1">1. Overview</h2>
+
+  <p>The output has two parts, produced in different ways and kept apart on the card. <strong>Measured figures</strong> are counted from price history in code and are the same every time. <strong>The researched view</strong> is drafted by the agents from the evidence. The view does not alter any measured figure.</p>
+  <div class="panel">
+    <div class="scroll">
+      <table style="min-width:480px">
+        <thead><tr><th>Component</th><th>Definition</th></tr></thead>
+        <tbody>
+          <tr><th>Measured figures</th><td>For each of six horizons: how often the underlying has closed higher, and the usual range of its move. With them, the current volatility state.</td></tr>
+          <tr><th>View</th><td>Bullish, bearish, range-bound, or no view. A directional view is the agents' reading of the evidence. A range-bound view follows from a fixed rule.</td></tr>
+          <tr><th>Base rate</th><td>How often the view's outcome has occurred in the past at the primary horizon. Shown beside the view for reference. The system states no probability of its own for a view.</td></tr>
+          <tr><th>Horizon</th><td>Six fixed periods from 7 to 180 days. One is designated primary and governs contract selection.</td></tr>
+          <tr><th>Resolution criterion</th><td>The observable outcome that determines whether the view was correct.</td></tr>
+          <tr><th>Invalidation conditions</th><td>What would show that the reason for the view has gone: each finding the view rests on, paired with what would reverse it. Based on evidence, not on price. The price-based risk exit is set separately, in stage 5.</td></tr>
+          <tr><th>Evidence</th><td>The findings behind each claim, each traced to a stored source and graded for strength.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3 class="sec" id="ui">Screens in this stage</h3>
+  <div class="panel">
+    <p class="sub" style="margin-top:0">This page mixes two kinds of figure. A figure marked <strong>application screen</strong> is what the user sees in the application. A figure marked <strong>explanation only</strong> illustrates a rule and is not part of the application.</p>
+    <ul class="ui-list">
+      <li><span class="ui-tag app">APPLICATION SCREEN</span><b>Research brief</b><small>One screen: the view, the measured figures, the evidence and the actions. Shown in part 2 in its four results.</small></li>
+      <li><span class="ui-tag ex">SCREEN NOT YET DRAWN</span><b>Evidence detail</b><small>Opened from the brief. Every finding with its source, date, grade and bearing.</small></li>
+      <li><span class="ui-tag ex">SCREEN NOT YET DRAWN</span><b>Supplied thesis</b><small>Free-text entry, then the credibility report and confirmation of the terms.</small></li>
+      <li><span class="ui-tag ex">SCREEN NOT YET DRAWN</span><b>Confirmation before the freeze</b><small>Confirms the horizon and locks the thesis.</small></li>
+    </ul>
+    <p class="sub">Every chart, table and diagram in parts 3 to 7 is explanation.</p>
+  </div>
+
+  <h3 class="sec">Procedure</h3>
+
+  <ol class="steps">
+    <li><div><b>Receive the gate result</b><span>The underlying, the screening outcome and the expiration ranges that carry tradeable contracts. No option prices are passed in.</span></div></li>
+    <li><div><b>Retrieve the evidence</b><span>Filings, earnings materials, news, estimates, the earnings date and the macro calendar are fetched and stored with source and timestamp.</span></div></li>
+    <li><div><b>Compute the quantitative inputs</b><span>The base rates, the usual ranges, the volatility state, and the descriptive price measures are calculated in code from price history.</span></div></li>
+    <li><div><b>Analyse in parallel</b><span>Three analyst agents read the evidence and the computed values and report findings independently.</span></div></li>
+    <li><div><b>Draft the view</b><span>The Thesis agent combines the findings into a bullish or bearish view with its reasoning, resolution criterion and invalidation conditions, or returns no view. It states no probability.</span></div></li>
+    <li><div><b>Apply the fixed rules</b><span>Code places the base rate beside the view, applies the range-bound rule where there is no directional view, and recommends the primary horizon.</span></div></li>
+    <li><div><b>Validate</b><span>A deterministic check confirms that the brief is internally consistent.</span></div></li>
+    <li><div><b>User decision</b><span>The user accepts, edits or rejects the view, or supplies a thesis of their own.</span></div></li>
+    <li><div><b>Freeze</b><span>The thesis is locked and timestamped. It cannot be changed once option prices are revealed in stage 3.</span></div></li>
+  </ol>
+
+  <h2 id="p2">2. The research brief</h2>
+
+  <p>The brief is presented to the user on one screen. Four fictional examples illustrate the layout, one for each result the stage can return.</p>
+
+  <div class="tabs" data-tabs>
+    <div class="tablist" role="tablist" aria-label="Example briefs">
+      <button type="button" role="tab" id="ex-t0" aria-controls="ex-p0" aria-selected="true">Bullish</button>
+      <button type="button" role="tab" id="ex-t1" aria-controls="ex-p1" aria-selected="false">Bearish</button>
+      <button type="button" role="tab" id="ex-t2" aria-controls="ex-p2" aria-selected="false">Range-bound</button>
+      <button type="button" role="tab" id="ex-t3" aria-controls="ex-p3" aria-selected="false">No view</button>
+    </div>
+    <div role="tabpanel" id="ex-p0" aria-labelledby="ex-t0">
+      <h4 class="print-only">Bullish</h4>
+      <p class="tabcap">Company evidence points one way and a second family supports it.</p>
+  <div class="panel card-mock" aria-label="Mock-up of a research brief with a bullish view">
+    <div class="ui-row"><span class="ui-tag app">APPLICATION SCREEN</span><span>Research brief. One screen; the four tabs show its four possible results.</span></div>
+    <div class="mock-tag">MOCK-UP · FICTIONAL UNDERLYING, ILLUSTRATIVE FIGURES</div>
+    <div class="cm-head"><span class="cm-tk mono">EXMP</span><span class="cm-chip">BULLISH</span><span class="sub" style="margin:0">researched view · recommended horizon 30 days</span></div>
+    <div class="cm-warn">RESEARCHED VIEW · NO DEMONSTRATED PREDICTIVE EDGE</div>
+
+    <h3 class="cm-h">The view</h3>
+    <dl class="cm-facts">
+      <dt>Basis</dt><dd>Guidance was raised at the latest report and consensus estimates have risen 3% in 30 days. Order growth in the company's largest segment accelerated for a second quarter.</dd>
+      <dt>Base rate</dt><dd><span class="mono">53%</span> of past 30-day periods closed higher. The view does not change this figure, and the system claims no better odds for it.</dd>
+      <dt>Resolution criterion</dt><dd>Closes above the reference close of <span class="mono">$100.00</span> on day 30.</dd>
+      <dt>Catalyst timing</dt><dd>Undated. The basis is a change already reported; no scheduled event inside the horizon is expected to confirm it.</dd>
+      <dt>Invalidation</dt><dd>Guidance is lowered, or consensus estimates are revised down by more than 2%. Action: close the position.</dd>
+      <dt>Risk reference</dt><dd><span class="mono">$95.00</span> is one usual range below the reference close. A level that far away has been crossed in about <span class="mono">23%</span> of past 30-day periods. The risk exit itself is set in stage 5.</dd>
+      <dt>Why 30 days</dt><dd>Eligible contracts are available for this horizon. No earnings date falls inside it; the 60- and 90-day rows span the report on day 31.</dd>
+      <dt>Events</dt><dd>Earnings on day 31, after the close.</dd>
+      <dt>Risk flags</dt><dd>None raised.</dd>
+    </dl>
+
+    <h3 class="cm-h">Measured figures</h3>
+    <p class="sub">Counted from price history. Reference close <span class="mono">$100.00</span>. Volatility state: normal. Base rates are blended with the average of all stocks; this underlying's own 30-day rate is <span class="mono">47%</span>.</p>
+    <div class="scroll">
+      <table class="ladder">
+        <thead><tr><th>Horizon</th><th class="r">Closed higher</th><th class="r">Usual range</th></tr></thead>
+        <tbody>
+          <tr><th>7 days</th><td class="r">51% ± 1.5</td><td class="r">± 2.5%</td></tr>
+          <tr><th>14 days</th><td class="r">52% ± 2</td><td class="r">± 3.5%</td></tr>
+          <tr class="in"><th>30 days <small>recommended</small></th><td class="r">53% ± 3</td><td class="r">± 5%</td></tr>
+          <tr><th>60 days <small>earnings inside</small></th><td class="r">55% ± 4.5</td><td class="r">± 7%</td></tr>
+          <tr><th>90 days <small>earnings inside</small></th><td class="r">56% ± 5.5</td><td class="r">± 9%</td></tr>
+          <tr class="out"><th>180 days <small>context only</small></th><td class="r">59% ± 8</td><td class="r">± 13%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="cm-h">Evidence, by family</h3>
+    <ul class="fam">
+      <li><b>Fundamentals and expectations <small>supports the view</small></b><span>Guidance raised at the latest report. <span class="grade">strong</span> Consensus earnings estimates up 3% over 30 days. <span class="grade">moderate</span></span></li>
+      <li><b>News and events <small>supports the view</small></b><span>Two large contract awards announced since the report. <span class="grade">strong</span> Earnings fall one day after the primary horizon.</span></li>
+      <li><b>Sector and macro <small>no bearing</small></b><span>Sector performance in line with the market. No macro release inside the horizon is flagged.</span></li>
+      <li><b>Price <small>description only</small></b><span>Above its 100-day average and outperforming its sector over 3 months. Not counted as support.</span></li>
+    </ul>
+    <p class="sub">Two families support the view. The view and all six measured rows are logged and scored at their horizons.</p>
+    <div class="cm-actions"><span class="cm-btn primary">Accept view</span><span class="cm-btn">Change primary horizon</span><span class="cm-btn">Edit</span><span class="cm-btn">Reject</span><span class="cm-btn">Supply own thesis</span></div>
+  </div>
+    </div>
+    <div role="tabpanel" id="ex-p1" aria-labelledby="ex-t1">
+      <h4 class="print-only">Bearish</h4>
+      <p class="tabcap">Drafted the same way. The base rate beside it is that of closing lower, which for most underlyings is under 50%. Sector evidence opposes this view, so it is marked contested.</p>
+  <div class="panel card-mock" aria-label="Mock-up of a research brief with a bearish view">
+    <div class="ui-row"><span class="ui-tag app">APPLICATION SCREEN</span><span>Research brief. One screen; the four tabs show its four possible results.</span></div>
+    <div class="mock-tag">MOCK-UP · FICTIONAL UNDERLYING, ILLUSTRATIVE FIGURES</div>
+    <div class="cm-head"><span class="cm-tk mono">EXMB</span><span class="cm-chip">BEARISH</span><span class="sub" style="margin:0">researched view · contested · recommended horizon 30 days</span></div>
+    <div class="cm-warn">RESEARCHED VIEW · NO DEMONSTRATED PREDICTIVE EDGE</div>
+
+    <h3 class="cm-h">The view</h3>
+    <dl class="cm-facts">
+      <dt>Basis</dt><dd>Guidance was lowered at the latest report and consensus estimates have fallen 4% in 30 days. A share offering was filed three weeks ago.</dd>
+      <dt>Base rate</dt><dd><span class="mono">47%</span> of past 30-day periods closed lower. The underlying has closed lower less than half the time, so this view runs against the base rate.</dd>
+      <dt>Resolution criterion</dt><dd>Closes below the reference close of <span class="mono">$100.00</span> on day 30.</dd>
+      <dt>Catalyst timing</dt><dd>Dated. The share offering is expected to price by day 9.</dd>
+      <dt>Invalidation</dt><dd>Guidance is raised, consensus estimates are revised up by more than 2%, or the share offering is withdrawn. Action: close the position.</dd>
+      <dt>Risk reference</dt><dd><span class="mono">$107.00</span> is one usual range above the reference close. A level that far away has been crossed in about <span class="mono">30%</span> of past 30-day periods. The risk exit itself is set in stage 5.</dd>
+      <dt>Why 30 days</dt><dd>Eligible contracts are available for this horizon. No earnings date falls inside it; the 60- and 90-day rows span the report on day 48.</dd>
+      <dt>Events</dt><dd>Earnings on day 48, before the open.</dd>
+      <dt>Risk flags</dt><dd>Guidance reduction and dilution. Both work with the view, not against it, so no size reduction applies.</dd>
+    </dl>
+
+    <h3 class="cm-h">Measured figures</h3>
+    <p class="sub">Counted from price history. Reference close <span class="mono">$100.00</span>. Volatility state: active, so moves larger than the usual range are more likely. Base rates are blended with the average of all stocks; this underlying's own 30-day rate is <span class="mono">46%</span>.</p>
+    <div class="scroll">
+      <table class="ladder">
+        <thead><tr><th>Horizon</th><th class="r">Closed higher</th><th class="r">Usual range</th></tr></thead>
+        <tbody>
+          <tr><th>7 days</th><td class="r">51% ± 1.5</td><td class="r">± 3.5%</td></tr>
+          <tr><th>14 days</th><td class="r">52% ± 2</td><td class="r">± 5%</td></tr>
+          <tr class="in"><th>30 days <small>recommended</small></th><td class="r">53% ± 3</td><td class="r">± 7%</td></tr>
+          <tr><th>60 days <small>earnings inside</small></th><td class="r">55% ± 4.5</td><td class="r">± 10%</td></tr>
+          <tr><th>90 days <small>earnings inside</small></th><td class="r">57% ± 5.5</td><td class="r">± 12%</td></tr>
+          <tr class="out"><th>180 days <small>context only</small></th><td class="r">60% ± 8</td><td class="r">± 18%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="cm-h">Evidence, by family</h3>
+    <ul class="fam">
+      <li><b>Fundamentals and expectations <small>supports the view</small></b><span>Guidance lowered at the latest report. <span class="grade">strong</span> Consensus earnings estimates down 4% over 30 days. <span class="grade">moderate</span></span></li>
+      <li><b>News and events <small>supports the view</small></b><span>Share offering filed three weeks ago. <span class="grade">strong</span> Earnings fall 18 days after the primary horizon.</span></li>
+      <li><b>Sector and macro <small>opposes the view</small></b><span>The sector has outperformed the market over the last month. <span class="grade">weak</span></span></li>
+      <li><b>Price <small>description only</small></b><span>Below its 100-day average and underperforming its sector over 3 months. Not counted as support.</span></li>
+    </ul>
+    <p class="sub">Two families support the view and one opposes it, so the view is marked contested. The view and all six measured rows are logged and scored at their horizons.</p>
+    <div class="cm-actions"><span class="cm-btn primary">Accept view</span><span class="cm-btn">Change primary horizon</span><span class="cm-btn">Edit</span><span class="cm-btn">Reject</span><span class="cm-btn">Supply own thesis</span></div>
+  </div>
+    </div>
+    <div role="tabpanel" id="ex-p2" aria-labelledby="ex-t2">
+      <h4 class="print-only">Range-bound</h4>
+      <p class="tabcap">No directional case and a quiet volatility state. This is the common case, in which no eligible contracts exist at that horizon and the view serves as context.</p>
+  <div class="panel card-mock" aria-label="Mock-up of a research brief with a range-bound view">
+    <div class="ui-row"><span class="ui-tag app">APPLICATION SCREEN</span><span>Research brief. One screen; the four tabs show its four possible results.</span></div>
+    <div class="mock-tag">MOCK-UP · FICTIONAL UNDERLYING, ILLUSTRATIVE FIGURES</div>
+    <div class="cm-head"><span class="cm-tk mono">EXMR</span><span class="cm-chip">RANGE-BOUND</span><span class="sub" style="margin:0">by rule · 7- and 14-day rows · context only</span></div>
+    <div class="cm-warn">MEASURED TENDENCY · NOT A TRADE SIGNAL</div>
+
+    <h3 class="cm-h">The view</h3>
+    <dl class="cm-facts">
+      <dt>Basis</dt><dd>Quiet volatility state: realised volatility over the last 20 trading days is <span class="mono">14%</span> annualised, against a one-year median of <span class="mono">22%</span>. The agents found no directional case: estimates are flat and no material news was retrieved.</dd>
+      <dt>Measured tendency</dt><dd>After a quiet state, the close has stayed inside the usual range about <span class="mono">73%</span> of the time over 14 days, against <span class="mono">68%</span> in general.</dd>
+      <dt>Resolution criterion</dt><dd>Closes between <span class="mono">$96.50</span> and <span class="mono">$103.50</span> on day 14.</dd>
+      <dt>Invalidation</dt><dd>The volatility state turns active, or the company makes an unscheduled announcement. Action: close the position.</dd>
+      <dt>Risk reference</dt><dd>A daily close has moved outside the usual range at some point in almost half of past 14-day periods, even where it finished inside. The risk exit itself is set in stage 5.</dd>
+      <dt>Tradeability</dt><dd>No eligible contracts expire within 21 days at the current settings, so no horizon is recommended. An expiry 22 to 41 days out, closed early, is the alternative.</dd>
+      <dt>Events</dt><dd>Earnings on day 44, after the close. Outside both rows.</dd>
+      <dt>Context</dt><dd>A quiet underlying usually has inexpensive options. This view is not evidence that options are overpriced. Stage 3 shows the move that option prices imply beside the usual range; a fuller comparison is deferred.</dd>
+    </dl>
+
+    <h3 class="cm-h">Measured figures</h3>
+    <p class="sub">Counted from price history. Reference close <span class="mono">$100.00</span>. Volatility state: quiet. Base rates are blended with the average of all stocks; this underlying's own 30-day rate is <span class="mono">47%</span>.</p>
+    <div class="scroll">
+      <table class="ladder">
+        <thead><tr><th>Horizon</th><th class="r">Closed higher</th><th class="r">Usual range</th></tr></thead>
+        <tbody>
+          <tr class="in"><th>7 days <small>range-bound</small></th><td class="r">51% ± 1.5</td><td class="r">± 2.5%</td></tr>
+          <tr class="in"><th>14 days <small>range-bound</small></th><td class="r">52% ± 2</td><td class="r">± 3.5%</td></tr>
+          <tr><th>30 days</th><td class="r">53% ± 3</td><td class="r">± 5%</td></tr>
+          <tr><th>60 days <small>earnings inside</small></th><td class="r">55% ± 4.5</td><td class="r">± 7%</td></tr>
+          <tr><th>90 days <small>earnings inside</small></th><td class="r">56% ± 5.5</td><td class="r">± 9%</td></tr>
+          <tr class="out"><th>180 days <small>context only</small></th><td class="r">59% ± 8</td><td class="r">± 13%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="sub">Both range-bound rows and all six measured rows are logged and scored at their horizons.</p>
+    <div class="cm-actions"><span class="cm-btn primary">Supply own thesis</span><span class="cm-btn">View contracts 22 to 41 days out</span><span class="cm-btn">Stop</span></div>
+  </div>
+    </div>
+    <div role="tabpanel" id="ex-p3" aria-labelledby="ex-t3">
+      <h4 class="print-only">No view</h4>
+      <p class="tabcap">Expected to be the most frequent result. The brief is still produced, with the reason no view was formed.</p>
+  <div class="panel card-mock" aria-label="Mock-up of a research brief with no view">
+    <div class="ui-row"><span class="ui-tag app">APPLICATION SCREEN</span><span>Research brief. One screen; the four tabs show its four possible results.</span></div>
+    <div class="mock-tag">MOCK-UP · FICTIONAL UNDERLYING, ILLUSTRATIVE FIGURES</div>
+    <div class="cm-head"><span class="cm-tk mono">EXMN</span><span class="cm-chip">NO VIEW</span><span class="sub" style="margin:0">nothing found · no horizon recommended</span></div>
+    <div class="cm-warn">NO VIEW · THE BRIEF IS STILL PRODUCED</div>
+
+    <h3 class="cm-h">Why there is no view</h3>
+    <dl class="cm-facts">
+      <dt>Reason</dt><dd>The company evidence conflicts. Guidance was raised at the latest report, and a share offering was filed two weeks ago. The agents do not choose between them.</dd>
+      <dt>Range-bound rule</dt><dd>Not met. The volatility state is normal.</dd>
+      <dt>Events</dt><dd>Earnings on day 52, after the close.</dd>
+      <dt>Risk flags</dt><dd>Dilution: a share offering filed in the last 90 days.</dd>
+    </dl>
+
+    <h3 class="cm-h">Measured figures</h3>
+    <p class="sub">Counted from price history. Reference close <span class="mono">$100.00</span>. Volatility state: normal. Base rates are blended with the average of all stocks; this underlying's own 30-day rate is <span class="mono">49%</span>.</p>
+    <div class="scroll">
+      <table class="ladder">
+        <thead><tr><th>Horizon</th><th class="r">Closed higher</th><th class="r">Usual range</th></tr></thead>
+        <tbody>
+          <tr><th>7 days</th><td class="r">51% ± 1.5</td><td class="r">± 3%</td></tr>
+          <tr><th>14 days</th><td class="r">52% ± 2</td><td class="r">± 4%</td></tr>
+          <tr><th>30 days</th><td class="r">54% ± 3</td><td class="r">± 6%</td></tr>
+          <tr><th>60 days <small>earnings inside</small></th><td class="r">56% ± 4.5</td><td class="r">± 8.5%</td></tr>
+          <tr><th>90 days <small>earnings inside</small></th><td class="r">57% ± 5.5</td><td class="r">± 10.5%</td></tr>
+          <tr class="out"><th>180 days <small>context only</small></th><td class="r">60% ± 8</td><td class="r">± 15%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="cm-h">Evidence, by family</h3>
+    <ul class="fam">
+      <li><b>Fundamentals and expectations <small>conflicting</small></b><span>Guidance raised at the latest report. Consensus earnings estimates up 2% over 30 days. Share offering filed two weeks ago.</span></li>
+      <li><b>News and events <small>no bearing</small></b><span>No material news retrieved since the offering.</span></li>
+      <li><b>Sector and macro <small>no bearing</small></b><span>Sector performance in line with the market.</span></li>
+      <li><b>Price <small>description only</small></b><span>Close to its 100-day average. Not counted as support.</span></li>
+    </ul>
+    <p class="sub">All six measured rows are logged and scored at their horizons.</p>
+    <div class="cm-actions"><span class="cm-btn primary">Supply a thesis</span><span class="cm-btn">Stop</span></div>
+  </div>
+    </div>
+  </div>
+
+  <ul>
+    <li><strong>The view and the figures are kept apart.</strong> The measured figures are arithmetic. The view is a reading of evidence. Showing them separately stops a persuasive write-up from being mistaken for better odds.</li>
+    <li><strong>The system states no probability for its view.</strong> No evidence so far shows that the agents' view shifts the odds. The brief shows the base rate beside the view for reference, and nothing more, until the track record shows that the view deserves a figure of its own.</li>
+    <li><strong>The label is permanent until earned.</strong> Every researched view is marked as having no demonstrated predictive edge until the track record shows otherwise.</li>
+    <li><strong>No score is shown.</strong> A view with a resolution criterion can be checked; a 0 to 100 rating cannot.</li>
+    <li><strong>The direction shapes the trade; later stages limit the cost of being wrong.</strong> A bullish or bearish view decides which way a structure is built. Costs, the critic's challenge and position sizing apply regardless.</li>
+    <li><strong>Accepting a view is not approving a trade.</strong> It fixes the thesis to be tested. The critic's challenge follows in stage 4, before any sizing or order.</li>
+  </ul>
+
+  <h2 id="p3">3. How the brief is built</h2>
+
+  <p>Thirteen inputs are gathered, five agents read them, and three figures are counted in code.</p>
+
+  <h3 class="sec">Inputs and sources</h3>
+
+  <p>Thirteen inputs feed the brief. Each has one role, and the role limits what the input is permitted to do.</p>
+  <div class="panel">
+    <div class="scroll">
+      <table style="min-width:640px">
+        <thead><tr><th></th><th>Input</th><th>Source</th><th>Produced by</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td class="n">1</td><td>Company filings (10-K, 10-Q, 8-K)</td><td>SEC EDGAR</td><td>Agent reading</td><td><span class="role">Evidence and risk flags</span></td></tr>
+          <tr><td class="n">2</td><td>Earnings releases; call transcripts</td><td>EDGAR; data provider</td><td>Agent reading</td><td><span class="role">Evidence and risk flags</span></td></tr>
+          <tr><td class="n">3</td><td>Company news</td><td>Data provider or web search</td><td>Agent reading</td><td><span class="role">Evidence and risk flags</span></td></tr>
+          <tr><td class="n">4</td><td>Consensus estimates and revisions</td><td>Data provider</td><td>Agent reading</td><td><span class="role">Evidence and risk flags</span></td></tr>
+          <tr><td class="n">5</td><td>Earnings date and announcement timing</td><td>Data provider</td><td>Retrieval</td><td><span class="role strong">Guard</span></td></tr>
+          <tr><td class="n">6</td><td>Reaction to past earnings reports</td><td>Earnings dates and prices</td><td>Code</td><td><span class="role strong">Guard</span></td></tr>
+          <tr><td class="n">7</td><td>Sector and industry context</td><td>Sector ETF prices</td><td>Code, then agent</td><td><span class="role">Evidence and risk flags</span></td></tr>
+          <tr><td class="n">8</td><td>Macro calendar and data</td><td>FRED; Federal Reserve</td><td>Agent reading</td><td><span class="role">Evidence and risk flags</span></td></tr>
+          <tr><td class="n">9</td><td>Market regime: index trend, VIX</td><td>Cboe index histories</td><td>Code, then agent</td><td><span class="role">Risk context</span></td></tr>
+          <tr><td class="n">10</td><td>Trend and momentum, three timeframes</td><td>Daily price history</td><td>Code</td><td><span class="role">Description only</span></td></tr>
+          <tr><td class="n">11</td><td>Support and resistance levels</td><td>Daily price history</td><td>Code</td><td><span class="role strong">Levels</span></td></tr>
+          <tr><td class="n">12</td><td>Relative strength against sector and index</td><td>Price history</td><td>Code</td><td><span class="role">Description only</span></td></tr>
+          <tr><td class="n">13</td><td>Realised volatility, usual range and base rate</td><td>Price history</td><td>Code</td><td><span class="role strong">Anchor</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <details class="why">
+    <summary>What each role may and may not do</summary>
+  <div class="panel">
+    <div class="scroll">
+      <table style="min-width:560px">
+        <thead><tr><th>Role</th><th>Permitted</th><th>Not permitted</th></tr></thead>
+        <tbody>
+          <tr><th>Anchor</th><td>Supplies the base rate, the usual range and the volatility state</td><td>Being adjusted by the view</td></tr>
+          <tr><th>Guard</th><td>Forces a change of horizon or a warning</td><td>Changing any measured figure</td></tr>
+          <tr><th>Levels</th><td>Shown on the brief and the chart. Shown as context beside each candidate in stage 3</td><td>Setting the direction of a view, an invalidation condition or an exit</td></tr>
+          <tr><th>Risk context</th><td>Informs position sizing and the regime note</td><td>Acting as an entry signal</td></tr>
+                    <tr><th>Evidence and risk flags</th><td>Supports or opposes the researched view. Raises risk flags, which add invalidation conditions, reduce position size, or lead to no view</td><td>Changing any measured figure</td></tr>
+          <tr><th>Description only</th><td>Shown on the brief and the chart</td><td>Supporting the direction of a view; changing any measured figure</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  </details>
+
+  <h3 class="sec">Agents</h3>
+
+  <p>Five agents take part, arranged as a fan-out and a merge. The analysts do not debate one another: agents built on the same model tend to share the same errors, so agreement between them is weak evidence.</p>
+  <figure class="panel">
+    <div class="scroll">
+      <svg viewBox="0 0 780 340" class="flow-svg" style="width:100%" role="img" aria-label="Agent flow. The Evidence Retriever feeds three analysts working in parallel: the Fundamental Analyst, the Regime Assessor and the Technical Analyst. Values computed in code feed the Technical Analyst and the Thesis agent. The Thesis agent drafts the view, which passes a validation check before the user decides.">
+        <defs><marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+        <g font-size="13" fill="currentColor" stroke-width="1.5">
+          <rect x="10" y="120" width="140" height="56" rx="6" fill="none" stroke="currentColor"/>
+          <text x="80" y="144" text-anchor="middle" font-weight="600">Evidence</text><text x="80" y="162" text-anchor="middle" font-weight="600">Retriever</text>
+          <rect x="220" y="24" width="170" height="56" rx="6" fill="none" stroke="currentColor"/>
+          <text x="305" y="48" text-anchor="middle" font-weight="600">Fundamental Analyst</text><text x="305" y="66" text-anchor="middle" font-size="11.5">filings, news, estimates</text>
+          <rect x="220" y="120" width="170" height="56" rx="6" fill="none" stroke="currentColor"/>
+          <text x="305" y="144" text-anchor="middle" font-weight="600">Regime Assessor</text><text x="305" y="162" text-anchor="middle" font-size="11.5">sector, macro, market</text>
+          <rect x="220" y="216" width="170" height="56" rx="6" fill="none" stroke="currentColor"/>
+          <text x="305" y="240" text-anchor="middle" font-weight="600">Technical Analyst</text><text x="305" y="258" text-anchor="middle" font-size="11.5">price description, levels</text>
+          <rect x="460" y="120" width="130" height="56" rx="6" fill="#2a78d6" fill-opacity="0.14" stroke="#2a78d6" stroke-width="2"/>
+          <text x="525" y="153" text-anchor="middle" font-weight="600">Thesis agent</text>
+          <rect x="650" y="60" width="120" height="50" rx="6" fill="none" stroke="currentColor" stroke-dasharray="5 4"/>
+          <text x="710" y="81" text-anchor="middle" font-weight="600">Validation</text><text x="710" y="98" text-anchor="middle" font-size="11.5">check, in code</text>
+          <rect x="650" y="190" width="120" height="50" rx="25" fill="none" stroke="currentColor"/>
+          <text x="710" y="220" text-anchor="middle" font-weight="600">User decision</text>
+          <rect x="350" y="292" width="350" height="40" rx="6" fill="none" stroke="currentColor" stroke-dasharray="5 4"/>
+          <text x="525" y="317" text-anchor="middle" font-size="12">Computed in code: base rates, ranges, volatility state, levels</text>
+          <g fill="none" stroke="currentColor">
+            <path d="M150 140 C185 140 185 52 214 52" marker-end="url(#a3)"/>
+            <line x1="150" y1="148" x2="214" y2="148" marker-end="url(#a3)"/>
+            <path d="M390 52 C425 52 425 136 454 136" marker-end="url(#a3)"/>
+            <line x1="390" y1="148" x2="454" y2="148" marker-end="url(#a3)"/>
+            <path d="M390 244 C425 244 425 162 454 162" marker-end="url(#a3)"/>
+            <path d="M590 140 C620 140 620 85 644 85" marker-end="url(#a3)"/>
+            <line x1="710" y1="110" x2="710" y2="184" marker-end="url(#a3)"/>
+            <path d="M400 292 C360 292 340 285 325 278" marker-end="url(#a3)"/>
+            <line x1="525" y1="292" x2="525" y2="182" marker-end="url(#a3)"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <div class="flow-m" aria-hidden="true">
+      <div class="fa"><b>Evidence Retriever</b><span>Fetches and stores filings, news, estimates and calendars.</span></div>
+      <div class="arrow">feeds three analysts in parallel</div>
+      <div class="fa"><b>Fundamental Analyst</b><span>Filings, earnings materials, news, estimates, earnings history.</span></div>
+      <div class="fa"><b>Regime Assessor</b><span>Sector, macro and market regime.</span></div>
+      <div class="fa"><b>Technical Analyst</b><span>A description of price behaviour and chart levels, from values computed in code.</span></div>
+      <div class="arrow">findings merge</div>
+      <div class="fa hi"><b>Thesis agent</b><span>Drafts a bullish or bearish view with its reasoning, or returns no view. States no probability.</span></div>
+      <div class="fa dash"><b>Validation check, in code</b><span>Runs before the user sees the draft.</span></div>
+      <div class="fa"><b>User decision</b><span>Accept, edit, reject, or supply own thesis.</span></div>
+    </div>
+    <figcaption>Dashed boxes are ordinary code, not agents. Arithmetic is done in code because it is exact and cheap; agents are used only where reading and judgement are required.</figcaption>
+  </figure>
+
+  <h3 class="sec">Measured figures</h3>
+
+  <p>Three things are counted from the underlying's price history: how often it closed higher over each horizon, the usual range of its move, and its current volatility state. None involves a model or an agent.</p>
+
+  <h4>The base rate</h4>
+
+  <p>The base rate is the share of past periods of the horizon's length in which the underlying closed above its starting price. It is a count, not a model.</p>
+  <ol class="steps">
+    <li><div><b>Build the windows</b><span>From each day in the history, pair its close with the close 30 days on. Twenty years of daily data gives about 5,000 rolling windows.</span></div></li>
+    <li><div><b>Count and divide</b><span>The share of windows in which the later close was higher. In the examples, 53%.</span></div></li>
+    <li><div><b>Compute the margin of error</b><span>Rolling windows overlap heavily, so the margin is computed from the number of non-overlapping windows: about 240 for a 30-day horizon, giving roughly ±3 points. Using the rolling count would overstate the precision tenfold.</span></div></li>
+    <li><div><b>Blend with the average of all stocks</b><span>A single stock's own rate is mostly chance, even over 20 years. It is blended with the average rate across all single stocks in the coverage universe. The longer the stock's history and the shorter the row, the more its own figure counts. The brief shows the blended rate, with the stock's own rate beside it.</span></div></li>
+  </ol>
+
+  <details class="why">
+    <summary>Notes on the base rate, and sample size by horizon</summary>
+  <ul>
+    <li><strong>Closes are adjusted for splits, not for dividends.</strong> A view resolves on the actual closing price, so the base rate is counted on the same basis.</li>
+    <li><strong>The rate mostly reflects market drift.</strong> It carries no view about the company. Across the 105 underlyings measured on 16 November 2026 the 30-day rate had a median of 57%. That sample holds today's large companies, which flatters the figure.</li>
+    <li><strong>Lookback.</strong> Up to 20 years where available, with a minimum of 5. Beyond 20 years the company is often a materially different business.</li>
+    <li><strong>Stated uncertainty.</strong> The base rate is displayed with its range, for example 53% plus or minus 3.</li>
+  </ul>
+  <div class="panel">
+    <h3>How much the stock's own rate counts</h3>
+    <p class="sub">Share of the blended rate that comes from the stock's own history. The remainder comes from the average of all single stocks.</p>
+    <div class="scroll">
+      <table style="min-width:460px;margin-top:10px">
+        <thead><tr><th>Row</th><th>20 years of history</th><th>10 years</th><th>5 years</th></tr></thead>
+        <tbody>
+          <tr><td>7 days</td><td class="mono">53%</td><td class="mono">36%</td><td class="mono">22%</td></tr>
+          <tr><td>14 days</td><td class="mono">47%</td><td class="mono">31%</td><td class="mono">18%</td></tr>
+          <tr><td>30 days</td><td class="mono">39%</td><td class="mono">24%</td><td class="mono">14%</td></tr>
+          <tr><td>60 days</td><td class="mono">29%</td><td class="mono">17%</td><td class="mono">9%</td></tr>
+          <tr><td>90 and 180 days</td><td colspan="3">None. The average of all single stocks is used</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <ul>
+    <li><strong>Why blend.</strong> Measured on 17 November 2026 across 105 underlyings, the differences between stocks' base rates were only slightly larger than chance alone would produce. A stock's own 63% is weak evidence that it rises more often than others.</li>
+    <li><strong>An example.</strong> A stock with 20 years of history and an own 30-day rate of 63% shows about 59%. A stock with 5 years and an own rate of 46% shows about 55%.</li>
+    <li><strong>Index funds and ETFs are not blended.</strong> They behave differently from single stocks and most have long histories, so their own rate is used. XSP, with under six years, uses the history of SPX, which tracks the same index.</li>
+    <li><strong>The average runs high.</strong> It is taken from today's large companies, which flatters it. For a weak recent listing the blended rate may be too generous, which is why the stock's own rate stays visible.</li>
+    <li><strong>The weights are provisional.</strong> Stocks move together, which makes the differences between them look smaller than they are, so the weights lean somewhat towards the average.</li>
+    <li><strong>The stated range.</strong> The plus-or-minus figure is that of the stock's own history, which is the wider and more cautious of the two.</li>
+  </ul>
+  <div class="panel">
+    <h3>Sample size by horizon</h3>
+    <p class="sub">Independent, non-overlapping windows available in 20 years of history for one underlying, and the resulting uncertainty in its base rate.</p>
+    <div class="scroll">
+      <table style="min-width:460px;margin-top:10px">
+        <thead><tr><th>Horizon</th><th>Tier</th><th>Independent windows</th><th>Approximate uncertainty</th></tr></thead>
+        <tbody>
+          <tr><td>7 days</td><td>Short</td><td class="mono">about 1,040</td><td class="mono">± 1.5 points</td></tr>
+          <tr><td>14 days</td><td>Short</td><td class="mono">about 520</td><td class="mono">± 2 points</td></tr>
+          <tr><td>30 days</td><td>Short</td><td class="mono">about 240</td><td class="mono">± 3 points</td></tr>
+          <tr><td>60 days</td><td>Medium</td><td class="mono">about 120</td><td class="mono">± 4.5 points</td></tr>
+          <tr><td>90 days</td><td>Medium</td><td class="mono">about 80</td><td class="mono">± 5.5 points</td></tr>
+          <tr><td>180 days</td><td>Long, context</td><td class="mono">about 40</td><td class="mono">± 8 points</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  </details>
+
+  <h4>The usual range</h4>
+
+  <p>For each horizon, the usual range is the band, either side of the starting price, that contained 68% of past moves of that length. A usual range of ±5% over 30 days means that in about two periods out of three the close finished within 5% of where it started.</p>
+
+  <details class="why">
+    <summary>Why a band, and what it is used for</summary>
+  <ul>
+    <li><strong>Why a band and not a standard deviation.</strong> A standard deviation is distorted by crisis periods. Measured on 16 November 2026, one bank's 30-day figure came to ±13.5% by standard deviation and ±9.1% by the 68% band, because 2008 dominates the former. The band holds 68% of past moves for every underlying by construction.</li>
+    <li><strong>It is not adjusted for the volatility state.</strong> Scaling the range for the state was tested on unseen data on 16 November 2026 and was no more accurate than the unadjusted range. The adjustment was dropped.</li>
+    <li><strong>Its uses.</strong> It defines the range-bound resolution criterion, gives the user a sense of scale, and informs strike selection in stage 3.</li>
+  </ul>
+  </details>
+
+  <h4>The volatility state</h4>
+
+  <div class="two">
+    <div class="panel">
+      <h3>Definition</h3>
+      <table style="margin-top:10px">
+        <thead><tr><th>State</th><th>20-day realised volatility</th></tr></thead>
+        <tbody>
+          <tr><th>Quiet</th><td>Below 80% of its one-year median</td></tr>
+          <tr><th>Normal</th><td>Between 80% and 120%</td></tr>
+          <tr><th>Active</th><td>Above 120%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <h3>What followed each state</h3>
+      <p class="sub">Share of periods in which the close stayed inside the usual range. Unseen data, 2014 onward, 94 underlyings.</p>
+      <table style="margin-top:10px">
+        <thead><tr><th>Row</th><th>Quiet</th><th>Normal</th><th>Active</th></tr></thead>
+        <tbody>
+          <tr><th>7 days</th><td class="mono">75%</td><td class="mono">69%</td><td class="mono">61%</td></tr>
+          <tr><th>14 days</th><td class="mono">73%</td><td class="mono">67%</td><td class="mono">59%</td></tr>
+          <tr><th>30 days</th><td class="mono">71%</td><td class="mono">67%</td><td class="mono">62%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <details class="why">
+    <summary>Notes on the volatility state</summary>
+  <ul>
+    <li><strong>The state is reported on every brief.</strong> Quiet periods tend to follow quiet periods and active periods active ones, in nearly every underlying measured.</li>
+    <li><strong>These figures were observed, not tested.</strong> They come from the test that rejected the adjusted range. They are shown as a measured tendency and scored going forward.</li>
+    <li><strong>One fixed definition.</strong> The 20-day window and the 80% and 120% thresholds are set once and logged as a configuration.</li>
+  </ul>
+  </details>
+
+  <h4>Price description</h4>
+
+  <p>Trend, momentum, relative strength and chart levels are computed in code and shown on the brief and the chart. None of these supports a direction, sets an exit or moves any figure. Chart levels are carried forward to stage 3, where they are shown beside each candidate as context. They do not place strikes.</p>
+
+  <div class="panel">
+    <div class="scroll">
+      <table style="min-width:520px">
+        <thead><tr><th>Technique</th><th>Use in stage 2</th></tr></thead>
+        <tbody>
+          <tr><th>Trend and momentum, on daily, weekly and monthly bars</th><td>Description only. Measured on 16 November 2026 and found not to predict direction in this universe.</td></tr>
+          <tr><th>Support and resistance</th><td>Description. Shown as context beside each candidate in stage 3.</td></tr>
+          <tr><th>Relative strength</th><td>Description. Separates a company-specific move from a sector move.</td></tr>
+          <tr><th>Chart patterns</th><td>Shown with a weak grade.</td></tr>
+          <tr><th>Candlesticks, Fibonacci, Elliott wave</th><td>Display only. Not an input to the view.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <details class="why">
+    <summary>What was measured, and how technical analysis is used</summary>
+  <ul>
+    <li><strong>It was measured and found wanting.</strong> Across 105 underlyings and 20 years, being above the average shifted the chance of closing higher by less than a point, in the wrong direction for a momentum reading. A stock's own trend effect in the first half of its history barely predicted its effect in the second.</li>
+    <li><strong>No alternative indicator will be searched for.</strong> Testing several and keeping the best would overstate its value.</li>
+    <li><strong>No price-forecasting models.</strong> Statistical models that project future prices from past prices are not used.</li>
+  </ul>
+  <ul>
+    <li><strong>Timeframes are reported side by side.</strong> They are not combined into an agreement count, because they derive from the same price series and are not independent.</li>
+    <li><strong>The chart is always drawn</strong>, with the levels marked, so the user can see what the thesis refers to.</li>
+    <li><strong>The heavier use comes later.</strong> Chart levels are shown beside each candidate in stage 3 as context, and each candidate's position relative to them is recorded so that their value can be measured later.</li>
+  </ul>
+  </details>
+
+  <h2 id="p4">4. How a view is formed</h2>
+
+  <p>A directional view is the agents' reading of what the evidence says about the company over the primary horizon. It is a judgement, drafted for the user to accept, amend or reject. It is not a calculation.</p>
+
+  <h3 class="sec">Directional view: single names</h3>
+
+  <div class="two">
+    <div class="panel"><h3>What may support a direction</h3><p>Filings and earnings materials. Consensus estimates and their recent revisions. Company news. Sector and macro context. Each claim cites a stored item of evidence and carries a grade.</p></div>
+    <div class="panel"><h3>What may not</h3><p>Price trend, momentum and relative strength, which are description only. Support and resistance, which are description. The underlying's option prices and implied volatility, which this stage does not see.</p></div>
+  </div>
+
+  <h4>How the findings are combined</h4>
+  <p>The Thesis agent does not weight the three analysts by percentage. Any such split would be an invented number, and weighted inputs add up to a score, which this system does not produce. The findings are combined by an order of precedence.</p>
+  <div class="panel">
+    <div class="scroll">
+      <table style="min-width:520px">
+        <thead><tr><th>Analyst</th><th>Say on the direction</th></tr></thead>
+        <tbody>
+          <tr><th>Fundamental Analyst</th><td>Decides whether there is a view, and which way. Company-specific evidence leads</td></tr>
+          <tr><th>Regime Assessor</th><td>Qualifies the view. Sector and macro findings may support or oppose it, but may not start one. Index instruments differ; see the next section</td></tr>
+          <tr><th>Technical Analyst</th><td>None. It supplies a description of price behaviour and chart levels</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <ol class="steps">
+    <li><div><b>Company evidence leads</b><span>A directional view requires at least one company-specific finding from the Fundamental Analyst: a change in guidance, a revision to estimates, or a material filing or news item.</span></div></li>
+    <li><div><b>Sector and macro cannot start a view</b><span>They may support or oppose a view that company evidence has established. A favourable sector alone is not a reason to be bullish on an underlying, and a weak one alone is not a reason to be bearish.</span></div></li>
+    <li><div><b>Conflicting company evidence means no view</b><span>Raised guidance beside a newly filed share offering is mixed evidence. The agent does not choose between them.</span></div></li>
+    <li><div><b>Opposition from the backdrop is shown, not netted</b><span>Where company evidence points one way and the sector or macro backdrop the other, the view stands, the opposing evidence is listed, and the view is marked as contested.</span></div></li>
+    <li><div><b>Every finding carries a grade, and a view needs solid evidence</b><span>Each finding is graded strong, moderate or weak by the rule below. A directional view requires at least one company-specific finding graded moderate or strong.</span></div></li>
+  </ol>
+
+  <h4>Evidence grades</h4>
+  <p>A grade says how reliable a finding is: whether it is current and comes from the source itself. It makes no claim about how well that kind of evidence predicts direction. Grades are set by three checks applied in code, so that the agents do not grade their own work.</p>
+  <div class="two">
+    <div class="panel">
+      <h3>The three checks</h3>
+      <table style="margin-top:10px">
+        <thead><tr><th>Check</th><th>Passed when</th></tr></thead>
+        <tbody>
+          <tr><th>Primary source</th><td>It comes from a company filing, an earnings release or official data, not from a report about them</td></tr>
+          <tr><th>Recent</th><td>It is dated within the last 30 days, or since the latest earnings report</td></tr>
+          <tr><th>Specific</th><td>It concerns this company, or for an index the index itself, not the sector or the market in general</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <h3>The grade</h3>
+      <table style="margin-top:10px">
+        <thead><tr><th>Checks passed</th><th>Grade</th></tr></thead>
+        <tbody>
+          <tr><td>All three</td><th>Strong</th></tr>
+          <tr><td>Two</td><th>Moderate</th></tr>
+          <tr><td>One or none</td><th>Weak</th></tr>
+        </tbody>
+      </table>
+      <p class="sub" style="margin-top:12px">Guidance raised in last week's earnings release is strong. A two-month-old article about sector demand is weak.</p>
+    </div>
+  </div>
+  <details class="why">
+    <summary>What grades are used for, and their limit</summary>
+  <ul>
+    <li><strong>They define thin evidence.</strong> A view needs at least one company-specific finding graded moderate or strong. For an index, the finding must come from its lead evidence.</li>
+    <li><strong>They order the evidence.</strong> The brief lists the strongest findings first.</li>
+    <li><strong>They do nothing else.</strong> Grades are not added up, are not turned into a score, and change no figure.</li>
+    <li><strong>A grade is not a measure of importance.</strong> A finding can be current and well sourced and still be trivial, such as a routine filing. Judging what matters remains with the agents.</li>
+    <li><strong>The 30-day window is a provisional design choice.</strong></li>
+  </ul>
+  </details>
+  <ul>
+    <li><strong>No view is a normal result.</strong> Where the evidence is thin or mixed, the agents return no view. Thin means that every company-specific finding is graded weak; mixed means that the company evidence conflicts. A system obliged to produce a view on every underlying would manufacture them.</li>
+    <li><strong>The second rule has a cost.</strong> The system will not turn bearish on an underlying solely because its sector is deteriorating. That is consistent with this project's research, which rejected sector rotation as a signal and found that macro events should generate no entries.</li>
+    <li><strong>Evidence is counted by family.</strong> The families are fundamentals and expectations, news and events, and sector and macro. A view supported by one family is marked as weakly supported. Evidence that opposes the view is listed beside the evidence that supports it.</li>
+    <li><strong>How a view earns a probability of its own.</strong> Whether an agent's reading of public information predicts direction cannot be tested on past data, because the model may have seen that period. It can only be tested going forward. Every view is logged and resolved at its horizon. Once about 100 directional views have resolved, their hit rate is compared with the base rate. Only if the views are right more often than the base rate may a view carry a probability above the base rate, and then by the measured amount.</li>
+    <li><strong>A bearish view runs against the base rate.</strong> Most underlyings close lower less than half the time over any horizon. The brief states that figure and leaves the judgement to the user.</li>
+  </ul>
+
+  <h3 class="sec">Directional view: index instruments</h3>
+
+  <p>An index has no company-specific evidence, so the single-name rules cannot be applied to it as written. Each index instrument instead has lead evidence, which may start a view, and qualifying evidence, which may only support or oppose one.</p>
+  <div class="panel">
+    <div class="scroll">
+      <table style="min-width:620px">
+        <thead><tr><th>Instrument</th><th>Lead evidence</th><th>Qualifying evidence</th></tr></thead>
+        <tbody>
+          <tr><th>SPY, SPX, XSP</th><td>Aggregate earnings: index-level estimate revisions and earnings-season results. Macro and policy: growth, inflation and employment data, and the central bank's path</td><td>Rates and credit conditions</td></tr>
+          <tr><th>QQQ</th><td>Aggregate earnings, with results and guidance from its largest holdings. Macro and policy</td><td>Rates</td></tr>
+          <tr><th>IWM</th><td>Aggregate small-cap earnings and estimate revisions. Macro and policy</td><td>Credit conditions</td></tr>
+          <tr><th>TLT</th><td>Rates and policy: the inflation trend, the central bank's path, Treasury supply</td><td>Growth data</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <ol class="steps">
+    <li><div><b>Lead evidence starts the view</b><span>A directional view on an index requires at least one finding from its lead evidence.</span></div></li>
+    <li><div><b>Qualifying evidence cannot start a view</b><span>It may support or oppose one that lead evidence has established.</span></div></li>
+    <li><div><b>Conflicting lead evidence means no view</b><span>Where aggregate earnings point one way and macro and policy the other, the result is no view. Neither takes precedence.</span></div></li>
+    <li><div><b>Opposition from qualifying evidence is shown, not netted</b><span>The view stands, the opposing evidence is listed, and the view is marked as contested.</span></div></li>
+    <li><div><b>Price measures remain description</b><span>Index trend, breadth and VIX describe the market and inform sizing. They do not support a direction.</span></div></li>
+  </ol>
+
+  <details class="why">
+    <summary>Notes on the index logic</summary>
+  <ul>
+    <li><strong>Macro and policy may start a view on the equity indices.</strong> Decided on 17 November 2026, so that index views are available throughout the year and not only around earnings season. This project's research found macro events the least reliable basis for direction, which is one more reason the view carries no claimed edge and is scored against the base rate.</li>
+    <li><strong>The analysts' roles shift.</strong> The Fundamental Analyst covers aggregate earnings and the largest holdings. The Regime Assessor leads on macro and policy for the equity indices and on rates and policy for TLT. No additional agent is required.</li>
+    <li><strong>Bearish index views run firmly against the base rate.</strong> Indices have closed higher more often than single stocks, and the brief states the figure.</li>
+    <li><strong>Everything else is unchanged.</strong> The measured figures, the base rate shown beside the view, the label, the scoring and the range-bound rule apply as for single names. The index flag list applies in place of the single-name list.</li>
+  </ul>
+  </details>
+
+  <h3 class="sec">The range-bound view</h3>
+
+  <p>A range-bound view is set by rule, not by the agents. All four conditions must hold.</p>
+  <div class="panel">
+    <ul class="checks">
+      <li>The agents have returned no directional view.</li>
+      <li>The underlying is in a quiet volatility state.</li>
+      <li>The row is the 7-day or the 14-day row.</li>
+      <li>No earnings date or flagged event falls inside the row.</li>
+    </ul>
+  </div>
+
+  <details class="why">
+    <summary>Why two rows, and why it is mostly context</summary>
+  <ul>
+    <li><strong>Why only the two short rows.</strong> On unseen data the quiet state lifted the share of closes inside the usual range by about 7 points over 7 days and 5 over 14. Over 30 days the lift was about 3 points, too small to rest a view on.</li>
+    <li><strong>It is context far more often than a trade.</strong> Quiet underlyings and liquid short-dated options seldom coincide. In the 16 November 2026 snapshot, 25 of 106 underlyings had two eligible calls and two eligible puts expiring in 7 to 14 days at the default settings, and none of the three underlyings then in a quiet state was among them.</li>
+    <li><strong>It is not a trade signal.</strong> A quiet underlying usually has inexpensive options. Whether a range-bound structure is worth taking depends on option prices, which this stage does not see.</li>
+    <li><strong>Range-bound structures mostly sell premium.</strong> This project's tests found no excess return from rule-based premium selling on indices after 2012. That context is shown on the brief, and sizing permits defined-risk structures only.</li>
+    <li><strong>An active state creates no view.</strong> It is reported as a note that larger moves are more likely.</li>
+    <li><strong>Reviewed against outcomes.</strong> Every range-bound row is scored. The rule is reviewed once about 100 have resolved.</li>
+  </ul>
+  </details>
+
+  <h3 class="sec">When there is no view</h3>
+
+  <p>No view is expected to be a frequent result. The brief is still produced: the measured figures, the evidence and any risk flags are shown, with the reason no view was formed.</p>
+  <div class="panel">
+    <div class="scroll">
+      <table style="min-width:520px">
+        <thead><tr><th>Kind</th><th>Cause</th></tr></thead>
+        <tbody>
+          <tr><th>Nothing found</th><td>The evidence is thin or mixed, and the conditions for a range-bound view are not met</td></tr>
+          <tr><th>Declined</th><td>A severe flag stopped the view: a going-concern warning or an announced takeover</td></tr>
+          <tr><th>Insufficient data</th><td>Under five years of price history, or a required input is missing</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p>The user then has two options.</p>
+  <div class="two">
+    <div class="panel"><h3>Stop</h3><p>The workflow ends and the user returns to the home page of the application. Nothing is written to the permanent record: no decision records and no scoring entry.</p></div>
+    <div class="panel"><h3>Supply a thesis</h3><p>The user enters a thesis as free text. The system evaluates it and reports on its credibility, as set out below. After a declined result this is an override: the flag stays attached and a decision record is written.</p></div>
+  </div>
+  <ul>
+    <li><strong>What stopping gives up.</strong> With nothing recorded, the system cannot later report how often it returned no view, or check how the underlyings it passed on went on to behave.</li>
+    <li><strong>The agents are not asked again for a different answer.</strong> A view obtained by repeated asking is not evidence. The user may submit the same underlying on another day; the measured figures are deterministic, so a different result means the data has changed.</li>
+  </ul>
+
+  <h4>Evaluating a thesis the user supplies</h4>
+  <p>A supplied thesis is checked claim by claim against the evidence already retrieved. The result is a statement of what the evidence supports. It is not an endorsement and carries no score.</p>
+  <ol class="steps">
+    <li><div><b>Read the text</b><span>The system identifies the direction, the time frame and each factual claim the thesis makes.</span></div></li>
+    <li><div><b>Check each claim</b><span>Each claim is marked supported, contradicted or not found, with the stored item of evidence cited.</span></div></li>
+    <li><div><b>Check for rejected signals</b><span>If the thesis rests on a signal this project's research excluded, such as unusual options flow or social-media sentiment, the system says so.</span></div></li>
+    <li><div><b>Show what cuts against it</b><span>Opposing evidence, the base rate for the stated direction, and any risk flags are set beside the thesis.</span></div></li>
+    <li><div><b>State a verdict in words</b><span>One of four: well supported, partly supported, not supported, or rests on a rejected signal.</span></div></li>
+    <li><div><b>Confirm the terms</b><span>The system extracts the direction, the horizon and at least one invalidation condition from the text, and the user confirms or corrects them. An invalidation condition, meaning what would show the thesis to be wrong, is required before the thesis can be frozen.</span></div></li>
+  </ol>
+  <ul>
+    <li><strong>The guard against agreement.</strong> A system asked to assess a user's idea tends to find reasons to agree with it. Checking claims one at a time against stored evidence, and always showing the opposing evidence, is the safeguard. The critic's challenge in stage 4 follows as for any thesis.</li>
+    <li><strong>The verdict follows a fixed rule.</strong> A claim counts as supported only when the evidence behind it is graded moderate or strong. No supported claim and at least one rejected signal: rests on a rejected signal. No supported claim: not supported. At least one supported claim and at least one other that is contradicted, not found or a rejected signal: partly supported. Every claim supported: well supported. One contradicted claim cannot be outvoted.</li>
+    <li><strong>The verdict does not gate the workflow.</strong> The user may proceed with a thesis the evidence does not support. The verdict and the user's decision are both recorded.</li>
+    <li><strong>The same path serves every user-supplied thesis,</strong> including one entered in place of a view the user has rejected.</li>
+  </ul>
+
+  <h3 class="sec">Horizon and resolution criterion</h3>
+
+  <p>A view always refers to one specific, observable outcome over a stated period. Both are fixed before any option price is shown.</p>
+  <div class="two">
+    <div class="panel"><h3>Horizons</h3><p>Figures are stated at six fixed horizons, weighted towards the periods that matter for options trading: 7, 14 and 30 days (short), 60 and 90 days (medium), and 180 days (long, as context). Fixed horizons make base rates comparable. One is designated primary. The system recommends it by a fixed rule, and the user may choose a different row.</p></div>
+    <div class="panel"><h3>Resolution criterion</h3><p>One standard outcome per view. <strong>Bullish:</strong> the underlying closes above the reference close at the horizon. <strong>Bearish:</strong> it closes below. <strong>Range-bound:</strong> it closes within the usual range either side of the reference close.</p></div>
+  </div>
+  <p>The outcome cannot be known in advance. On the horizon date the system compares the closing price with the criterion recorded on day one and marks the view correct or incorrect. That comparison is mechanical and involves no judgement.</p>
+
+  <h4>Recommending the primary horizon</h4>
+  <p>Where there is a directional view, the system recommends one row as primary. The recommendation is a fixed rule applied in code, so the same inputs always produce the same recommendation. It takes no account of how strong any row looks.</p>
+  <ol class="steps">
+    <li><div><b>Exclude the 180-day row</b><span>It is context only and is never primary.</span></div></li>
+    <li><div><b>Exclude rows without eligible contracts</b><span>The liquidity screen reports which expiry ranges carry eligible contracts. A row is kept only if contracts expiring on or after its horizon date are available. This uses counts only; no option price is read.</span></div></li>
+    <li><div><b>Set aside rows that span a scheduled event</b><span>Where an earnings date or a flagged binary event falls inside a row, rows that end before it are preferred. If every remaining row spans the event, none is set aside and the recommendation carries a warning.</span></div></li>
+    <li><div><b>Take the row nearest 30 days</b><span>Among the rows that remain, the one closest to 30 days is recommended.</span></div></li>
+  </ol>
+
+  <details class="why">
+    <summary>The rule applied to the bullish example</summary>
+  <div class="panel">
+        <div class="scroll">
+      <table style="min-width:480px;margin-top:10px">
+        <thead><tr><th>Row</th><th>Result</th><th>Eligible contracts</th><th>Scheduled event inside</th></tr></thead>
+        <tbody>
+          <tr><th>7 days</th><td>Kept; further from 30 days</td><td>Yes</td><td>None</td></tr>
+          <tr><th>14 days</th><td>Kept; further from 30 days</td><td>Yes</td><td>None</td></tr>
+          <tr><th>30 days</th><td><strong>Recommended</strong></td><td>Yes</td><td>None</td></tr>
+          <tr><th>60 days</th><td>Set aside at step 3</td><td>Yes</td><td>Earnings, day 31</td></tr>
+          <tr><th>90 days</th><td>Set aside at step 3</td><td>Yes</td><td>Earnings, day 31</td></tr>
+          <tr><th>180 days</th><td>Excluded at step 1</td><td>Yes</td><td>Earnings, day 31</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  </details>
+
+  <details class="why">
+    <summary>How the recommendation is used</summary>
+  <ul>
+    <li><strong>The reason is shown.</strong> The brief states in one line why the row was recommended.</li>
+    <li><strong>The user decides.</strong> Any other row may be selected as primary. The recommendation and the user's selection are each written as a decision record.</li>
+    <li><strong>Range-bound views.</strong> Only the 7- and 14-day rows are candidates, and the same rule applies to those two.</li>
+    <li><strong>When no row qualifies.</strong> If no row has eligible contracts, no recommendation is made and the brief says so. When the market is closed and no snapshot covers the underlying, step 2 is skipped and the recommendation is marked provisional.</li>
+    <li><strong>All six rows are scored</strong> whichever is primary, so nothing is gained by selecting a row afterwards.</li>
+  </ul>
+  </details>
+
+  <h3 class="sec">Invalidation and risk exit</h3>
+  <p>Two different questions are kept apart. Whether the reason for a view has gone is a question about evidence. Whether a loss has reached a limit set in advance is a question about price. A fall in price does not show that a researched view was wrong.</p>
+  <div class="panel">
+    <div class="scroll">
+      <table style="min-width:600px">
+        <thead><tr><th></th><th>Thesis invalidation</th><th>Risk exit</th></tr></thead>
+        <tbody>
+          <tr><th>Question</th><td>Has the reason for the view gone?</td><td>Has the loss reached the limit set in advance?</td></tr>
+          <tr><th>Based on</th><td>Evidence</td><td>Price, or the value of the position</td></tr>
+          <tr><th>Set by</th><td>The agents. Each finding the view rests on is paired with what would reverse it</td><td>Code, by a fixed rule</td></tr>
+          <tr><th>Example</th><td>Guidance is lowered; estimates are revised down by more than 2%; a flagged ruling goes against the company</td><td>A daily close one usual range against the view</td></tr>
+          <tr><th>Where it is set</th><td>This stage</td><td>Stage 5, once the option structure is known</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <ul>
+    <li><strong>This stage states the invalidation conditions.</strong> Every load-bearing finding carries one. Risk flags may add others, such as a ruling date.</li>
+    <li><strong>This stage also shows a risk reference.</strong> The price one usual range against the view, with how often a level that far away has been crossed in the past. It is information for the user. The risk exit itself is set in stage 5, on the position.</li>
+    <li><strong>Range-bound views</strong> are invalidated when the volatility state turns active or an unscheduled announcement is made.</li>
+    <li><strong>A user-supplied thesis</strong> must state at least one invalidation condition before it is frozen.</li>
+  </ul>
+  <details class="why">
+    <summary>Why chart levels are not used, and how often a price level is crossed</summary>
+  <ul>
+    <li><strong>A chart level was first proposed and then withdrawn.</strong> Any definition of support or resistance is one of many, and once a level is required to sit at a sensible distance, the distance determines how often it is crossed and the level adds only a story.</li>
+    <li><strong>A price exit is discipline, not prediction.</strong> Measured on 16 November 2026, these underlyings were slightly more likely to rise after falling. A price exit therefore cannot be justified as a sign that the view is failing. Its value lies in limiting loss and in committing to an exit beforehand.</li>
+    <li><strong>Chart levels keep one use.</strong> They are shown as description, and in stage 3 they appear beside each candidate as context.</li>
+  </ul>
+  <div class="panel">
+    <h3>How often a daily close has crossed a level</h3>
+    <p class="sub">Share of past periods in which a daily close reached a level set at the stated distance from the starting price. Median across 105 underlyings, 20 years.</p>
+    <div class="scroll">
+      <table style="min-width:520px;margin-top:10px">
+        <thead><tr><th>Row</th><th>Half a usual range below</th><th>One usual range below</th><th>One usual range above</th><th>One and a half below</th></tr></thead>
+        <tbody>
+          <tr><td>7 days</td><td class="mono">41%</td><td class="mono">21%</td><td class="mono">24%</td><td class="mono">11%</td></tr>
+          <tr><td>14 days</td><td class="mono">44%</td><td class="mono">23%</td><td class="mono">27%</td><td class="mono">11%</td></tr>
+          <tr><td>30 days</td><td class="mono">47%</td><td class="mono">23%</td><td class="mono">30%</td><td class="mono">11%</td></tr>
+          <tr><td>60 days</td><td class="mono">48%</td><td class="mono">22%</td><td class="mono">33%</td><td class="mono">10%</td></tr>
+          <tr><td>90 days</td><td class="mono">50%</td><td class="mono">23%</td><td class="mono">34%</td><td class="mono">10%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  </details>
+
+  <h2 id="p5">5. Controls</h2>
+
+  <p>Four mechanisms keep the brief within what the evidence supports: risk flags, safeguards on the view, a validation check, and a list of what the stage may not use.</p>
+
+  <h3 class="sec">Risk flags</h3>
+
+  <p>Filings, earnings materials, news, sector and macro context are read for a defined list of risk flags. An agent decides whether a flag is present and cites the evidence. It does not create new flags, and a flag changes no figure on the brief.</p>
+
+  <div class="tabs" data-tabs>
+    <div class="tablist" role="tablist" aria-label="Risk flag lists">
+      <button type="button" role="tab" id="fl-t0" aria-controls="fl-p0" aria-selected="true">Single-name underlyings</button>
+      <button type="button" role="tab" id="fl-t1" aria-controls="fl-p1" aria-selected="false">Index instruments</button>
+    </div>
+    <div role="tabpanel" id="fl-p0" aria-labelledby="fl-t0">
+      <h4 class="print-only">Single-name underlyings</h4>
+  <div class="panel">
+    <div class="scroll">
+      <table style="min-width:620px;margin-top:10px">
+        <thead><tr><th>Flag</th><th>Trigger</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><th>Going-concern or liquidity warning</th><td>Stated in the latest annual or quarterly report</td><td>No view</td></tr>
+          <tr><th>Announced merger or takeover</th><td>The company is the target of an announced transaction</td><td>No view</td></tr>
+          <tr><th>Pending binary event</th><td>A dated court ruling, regulatory decision or shareholder vote inside the horizon</td><td>Invalidation condition; reduce size</td></tr>
+          <tr><th>Dilution</th><td>A share offering or shelf registration filed in the last 90 days</td><td>Reduce size</td></tr>
+          <tr><th>Guidance reduction</th><td>Guidance lowered at the latest report</td><td>Reduce size</td></tr>
+          <tr><th>Material litigation or regulatory action</th><td>A new 8-K or a newly added risk factor, not standing disclosure</td><td>Reduce size; invalidation condition where a ruling date is known</td></tr>
+          <tr><th>Fed decision inside a short horizon</th><td>A scheduled Federal Reserve meeting inside a primary horizon of 14 days or less</td><td>Reduce size</td></tr>
+          <tr><th>Sector-wide move</th><td>The recent move matches the sector's, with no company-specific outperformance</td><td>Note on the card only</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+    </div>
+    <div role="tabpanel" id="fl-p1" aria-labelledby="fl-t1">
+      <h4 class="print-only">Index instruments</h4>
+  <div class="panel">
+    <p class="sub">The filings, earnings and sector flags do not apply to SPY, SPX, XSP, QQQ, IWM or TLT. Macro and calendar flags take their place. Confirmed 17 November 2026.</p>
+    <div class="scroll">
+      <table style="min-width:620px;margin-top:10px">
+        <thead><tr><th>Flag</th><th>Trigger</th><th>Applies to</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><th>Fed decision</th><td>A scheduled Federal Reserve meeting inside a primary horizon of 14 days or less</td><td>All</td><td>Reduce size; no range-bound view on that row</td></tr>
+          <tr><th>Inflation or employment release</th><td>CPI or the monthly employment report inside a primary horizon of 7 days</td><td>All</td><td>Reduce size; no range-bound view on that row</td></tr>
+          <tr><th>Heavy earnings period</th><td>Holdings making up at least 20% of the index report inside a primary horizon of 14 days or less</td><td>SPY, SPX, XSP, QQQ, IWM</td><td>Reduce size; no range-bound view on that row</td></tr>
+          <tr><th>Treasury refunding</th><td>The quarterly refunding announcement inside a primary horizon of 30 days or less</td><td>TLT</td><td>Reduce size</td></tr>
+          <tr><th>Fiscal deadline or national election</th><td>A government funding or debt-ceiling deadline, or a national election, inside the primary horizon</td><td>All</td><td>Reduce size</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+    </div>
+  </div>
+
+  <div class="two">
+    <div class="panel"><h3>What a flag does</h3><p><strong>Adds an invalidation condition.</strong> A ruling due on day 22 becomes a stated exit condition. <strong>Reduces position size.</strong> A flagged thesis is marked as carrying event risk and is sized down in stage 5. <strong>Stops the thesis in severe cases.</strong> A going-concern warning or an announced merger leads to no view.</p></div>
+    <div class="panel"><h3>What a flag does not do</h3><p>It does not change any figure on the brief. Every flag is logged with the thesis. Once enough theses have resolved, flagged and unflagged theses are compared, and a deduction is introduced only for a flag type that is shown to predict worse outcomes, at the measured size.</p></div>
+  </div>
+
+  <ul>
+    <li><strong>Triggers are set so that a flag is the exception.</strong> A flag that is nearly always raised says nothing. Inflation and employment reports are each monthly, so any 14-day period contains one; they are flagged for indices on the 7-day horizon only. Monthly long-bond auctions and index rebalances are not flagged.</li>
+    <li><strong>Every scheduled release is still shown.</strong> For an index, the brief lists each Fed decision, inflation release and employment report inside the primary horizon, with its date and with the index's usual move on past release days beside its usual move on an ordinary day. This is counted in code from price history and the release calendar.</li>
+    <li><strong>One size reduction, however many flags.</strong> Several size-reducing flags on the same thesis produce a single reduction. They do not compound.</li>
+    <li><strong>Direction matters.</strong> A flag reduces size only where it works against the view or raises the likelihood of a large move in either direction. A guidance reduction counts against a bullish thesis and not against a bearish one.</li>
+    <li><strong>Flags removed on review.</strong> Restatement and trading halt (little relevance to liquid underlyings); insider selling (not supported by this project's research); margin deterioration and revenue shortfall (already reflected in guidance and in estimate revisions); sector trend opposing the view (price-derived, and already shown as description).</li>
+    <li><strong>Thresholds are provisional.</strong> The 90-day, 14-day and 7-day windows and the 20% earnings threshold are design choices.</li>
+  </ul>
+
+  <details class="why">
+    <summary>Why flags do not deduct points</summary>
+  <p>Deducting points for flags was considered and rejected on 16 November 2026, for five reasons.</p>
+  <ul>
+    <li><strong>The base rate already contains these risks.</strong> Twenty years of history include litigation, dilution and weak quarters. Their average effect is in the base rate, and a deduction would count it twice.</li>
+    <li><strong>The information is public.</strong> A filed registration or a known court date is visible to the market and largely reflected in the price.</li>
+    <li><strong>Flags are common.</strong> Most annual reports disclose litigation, and a 30-day horizon almost always contains an inflation release or a central bank meeting. Routine deductions would lower every figure.</li>
+    <li><strong>The design would be asymmetric.</strong> Evidence could raise a figure by a few points and lower it by many, so bullish theses would be systematically understated.</li>
+    <li><strong>Many flags concern risk, not direction.</strong> A pending ruling makes a large move in either direction more likely. Smaller position size is the appropriate response to that.</li>
+  </ul>
+  </details>
+
+  <h3 class="sec">Safeguards</h3>
+
+  <p>More inputs make a view read as more convincing. They do not necessarily make it more accurate. Four safeguards keep the stated confidence in line with the evidence.</p>
+  <div class="two">
+    <div class="panel"><h3>The agents set no figures</h3><p>The base rate shown beside a view is counted in code. However persuasive the reasoning, no figure on the brief changes.</p></div>
+    <div class="panel"><h3>Evidence families</h3><p>Evidence is grouped as fundamentals and expectations, news and events, and sector and macro. A view supported by one family is marked as weakly supported. Price-derived measures are description and are not counted.</p></div>
+  </div>
+  <div class="two">
+    <div class="panel"><h3>Opposing evidence is shown</h3><p>Evidence against the view is listed beside the evidence for it, with the same grading. A brief that shows only support is rejected by the validation check.</p></div>
+    <div class="panel"><h3>The view is scored against the base rate</h3><p>Every view is resolved at its horizon. If directional views are not right more often than the base rate once about 100 have resolved, the system reports that the views add no predictive value.</p></div>
+  </div>
+
+  <h3 class="sec">Validation before the user sees a draft</h3>
+
+  <p>There is no critic agent in this stage. The critic operates in stage 4, on a different model. A second critic here would duplicate that work and add assurance without adding accuracy. A deterministic check runs on every draft instead.</p>
+  <div class="panel">
+    <ul class="checks">
+      <li>Every claim cites a stored item of evidence, and every finding carries a grade set by the three checks.</li>
+      <li>Every figure in the thesis matches the computed value it cites.</li>
+      <li>The figure shown beside the view equals the base rate of its outcome at the primary horizon, and the draft states no other probability.</li>
+      <li>A directional view cites at least one company-specific finding graded moderate or strong, or for an index one such finding from its lead evidence, and that evidence does not conflict with itself.</li>
+      <li>A resolution criterion is present, and each finding the view rests on is paired with an evidence-based invalidation condition. No invalidation condition is a price level.</li>
+      <li>An earnings date inside the horizon is flagged, and the view is marked dated or undated.</li>
+      <li>No price-derived measure is cited in support of a direction.</li>
+      <li>Evidence opposing the view is listed, or the brief states that none was found.</li>
+      <li>Every risk flag raised is on the defined list and cites its evidence.</li>
+      <li>A range-bound view meets all four of its conditions.</li>
+      <li>The evidence families are listed, and a view supported by one family is marked as weakly supported.</li>
+    </ul>
+  </div>
+  <p>A draft that fails is returned to the Thesis agent once. If it fails again, the user is shown the draft together with the failed checks.</p>
+
+  <h3 class="sec">What this stage does not use</h3>
+
+  <ul>
+    <li><strong>The underlying's option data.</strong> Option prices, implied volatility and market-implied probabilities are withheld. Stage 4 sets the brief's figures beside the market's, and that comparison would be circular if the view had been formed with sight of the market's figures.</li>
+    <li><strong>Rejected signals.</strong> Social-media sentiment, unusual options flow and similar inputs were examined in research and excluded.</li>
+    <li><strong>Index-level VIX is the one exception.</strong> It describes the market regime, not the underlying's own options.</li>
+  </ul>
+
+  <h2 id="p6">6. Decision and record</h2>
+
+  <h3 class="sec">User decision and freeze</h3>
+
+  <div class="two">
+    <div class="panel"><h3>System-drafted view</h3><p>The default path. The user may accept the view, edit any component, or reject it. The original draft is retained beside any edit. An edit to the direction is recorded as the user's.</p></div>
+    <div class="panel"><h3>User-supplied thesis</h3><p>The user may bypass the draft and enter a thesis as free text. The system evaluates its credibility claim by claim, then asks the user to confirm the direction, horizon and invalidation conditions. The same record is written.</p></div>
+  </div>
+  <ul>
+    <li><strong>Optional independent estimate.</strong> Before the draft is shown, the user may record their own estimate of the chance that the underlying closes higher. Reading a draft first anchors judgement on it, so the two figures are stored separately.</li>
+    <li><strong>Freeze.</strong> Once accepted, the thesis is locked and timestamped. It cannot be revised after option prices are shown in stage 3.</li>
+    <li><strong>Scoring.</strong> Every view is logged and resolved at its horizon, whether or not a trade follows. No track-record claim is displayed before 100 views have resolved.</li>
+  </ul>
+
+  <h3 class="sec">What is handed to stage 3</h3>
+  <p>The brief the user reads is kept short. The record passed to the later stages is complete. A longer write-up would not help stage 3, which works from fields, and would make a view read as stronger than the evidence warrants.</p>
+  <div class="panel">
+    <div class="scroll">
+      <table style="min-width:520px">
+        <thead><tr><th>Layer</th><th>For</th><th>Content</th></tr></thead>
+        <tbody>
+          <tr><th>The brief</th><td>The user</td><td>The view, the measured figures and the main evidence, on one screen</td></tr>
+          <tr><th>Expandable detail</th><td>The user, on request</td><td>Every finding, with its source, date, grade and bearing</td></tr>
+          <tr><th>The record</th><td>Stages 3 to 6</td><td>Every field below in structured form, with the complete evidence set</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="two">
+    <div class="panel"><h3>Fields in the record</h3><p>The underlying, the view and whether it is contested or weakly supported. The primary horizon. The resolution criterion and invalidation conditions. The base rates, usual ranges and volatility state. Scheduled events with dates. Risk flags and their effects. Catalyst timing. Chart levels, shown as context in stage 3.</p></div>
+    <div class="panel"><h3>Catalyst timing</h3><p>Whether the view depends on a dated event, and when. A view that turns on a decision expected on day 12 calls for a different expiry from one that rests on estimates which have already risen. The Thesis agent marks the view dated, with the date and the finding it comes from, or undated.</p></div>
+  </div>
+  <ul>
+    <li><strong>The complete evidence set travels with the record.</strong> It includes findings not shown on the brief. The critic in stage 4 checks the evidence itself, not a summary of it.</li>
+    <li><strong>Nothing about option prices is in the record.</strong> Stage 3 opens the option chain for the first time.</li>
+    <li><strong>Fields added for the challenge in stage 4.</strong> Each finding records its evidence family and the underlying's price move since the finding became public. Each invalidation condition records its type, from a fixed list, so that the system can tell whether the condition can be watched. The record lists every input that was unavailable, with the reason.</li>
+  </ul>
+
+  <h3 class="sec">Decision records</h3>
+
+  <p>Each decision in this stage is written to the decision record at the time it is made: the evidence retrieved, the analysts' findings, the measured figures, the drafted view, the validation result, the horizon recommendation, and the user's acceptance, edit or rejection. Where a trade follows, the chain is retained permanently and linked to that trade.</p>
+
+  <h2 id="p7">7. Background</h2>
+
+  <p>How the stage came to its present design: what was measured, and the alternatives that were set aside.</p>
+  <details class="why" id="bg">
+    <summary>Show the measurements and the rejected alternatives</summary>
+  <h4>What was measured on 16 November 2026</h4>
+
+  <p>This stage was first designed to compute a direction from price trend and estimate revisions. Four measurements on 20 years of daily prices led to the present design.</p>
+  <div class="panel">
+    <div class="scroll">
+      <table style="min-width:620px">
+        <thead><tr><th>Question</th><th>Finding</th><th>Consequence</th></tr></thead>
+        <tbody>
+          <tr><th>Does price trend shift the chance of closing higher?</th><td>By under a point, in the wrong direction, and not consistently for any one stock</td><td>Trend is description only</td></tr>
+          <tr><th>Could estimate revisions alone carry a direction?</th><td>A bearish reading was reachable on about 13% of underlyings. The frequency of revisions could not be measured</td><td>No rule-based direction</td></tr>
+          <tr><th>Does the volatility state give a more accurate range?</th><td>Tested once on unseen data, under conditions fixed in advance. No improvement</td><td>The usual range is reported unadjusted</td></tr>
+          <tr><th>Does the volatility state carry any information?</th><td>Yes. Closes stayed inside the usual range more often after a quiet state, on unseen data</td><td>Range-bound view on the 7- and 14-day rows</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p>With the computed direction removed, fewer than one underlying in ten would have carried any system view. The researched view restores a drafted direction without claiming that it improves the odds.</p>
+
+  <h4>Considered and rejected</h4>
+  <div class="panel">
+    <div class="scroll">
+      <table style="min-width:560px">
+        <thead><tr><th>Alternative</th><th>Why it was not adopted</th></tr></thead>
+        <tbody>
+          <tr><th>A direction computed from price trend</th><td>The measured effect was under a point, in the wrong direction, and unstable from one period to the next</td></tr>
+          <tr><th>A direction read from estimate revisions alone</th><td>Almost never bearish, and the label would restate a figure already on the brief</td></tr>
+          <tr><th>A range adjusted for the volatility state</th><td>Tested once on unseen data and no more accurate than the unadjusted range</td></tr>
+          <tr><th>Point deductions for risk flags</th><td>The base rate already contains those risks; deductions would lower every figure and understate bullish views</td></tr>
+          <tr><th>Percentage weights across the analysts</th><td>The weights would be invented numbers and would add up to a score</td></tr>
+          <tr><th>A brief with no system view at all</th><td>It would abandon the aim of a drafted thesis and learn nothing about the agents' views</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  </details>
+
+  <div class="note">
+    <p><strong>Open design questions.</strong> Not yet settled: the choice of data provider, and the detailed design of the Monitor agent that watches invalidation conditions while a position is open. The stage takes one underlying per request; handling a list is out of scope for now. The volatility-state thresholds, the flag thresholds and the base-rate blending weights are provisional design choices.</p>
+    <p><strong>Limitations.</strong> The research behind this design found little evidence that the direction of a liquid underlying can be predicted after costs, and the measurements of 16 November 2026 agree. This stage is designed to produce an honest, falsifiable and auditable brief. The researched view is not presented as a source of predictive edge.</p>
+    <p><strong>Implementation status.</strong> This page documents the design. The stage is not yet implemented. All figures shown are illustrative.</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  var modeBtn = document.getElementById('mode'), root = document.documentElement;
+  function isDark() { var t = root.getAttribute('data-theme'); return t ? t === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches; }
+  function label() { modeBtn.textContent = isDark() ? 'Switch to light' : 'Switch to dark'; }
+  modeBtn.addEventListener('click', function () { root.setAttribute('data-theme', isDark() ? 'light' : 'dark'); label(); });
+  label();
+})();
+(function () {
+  document.querySelectorAll('[data-tabs]').forEach(function (box) {
+    var tabs = Array.prototype.slice.call(box.querySelectorAll(':scope > .tablist > [role="tab"]'));
+    function select(i, focus) {
+      tabs.forEach(function (t, k) {
+        var on = k === i;
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+        t.tabIndex = on ? 0 : -1;
+        document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+      });
+      if (focus) tabs[i].focus();
+    }
+    tabs.forEach(function (t, i) {
+      t.addEventListener('click', function () { select(i, false); });
+      t.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight') { e.preventDefault(); select((i + 1) % tabs.length, true); }
+        else if (e.key === 'ArrowLeft') { e.preventDefault(); select((i - 1 + tabs.length) % tabs.length, true); }
+      });
+    });
+    select(0, false);
+  });
+  var bgLink = document.querySelector('.toc a[href="#p7"]'), bg = document.getElementById('bg');
+  if (bgLink && bg) bgLink.addEventListener('click', function () { bg.open = true; });
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details.why').forEach(function (d) { d.open = true; });
+  });
+})();
+</script>
+
+<script>
+/* When this page is shown inside the Tradecraft manual (docs/site/manual.html): follow the manual's theme,
+   hide this page's own theme button and link line, and report its height and its sections to the manual. */
+(function () {
+  if (window.parent === window) return;
+  var root = document.documentElement;
+  var st = document.createElement('style');
+  st.textContent = '.mode, .manual-link { display: none !important; } html { overflow: hidden; } .wrap { padding-top: 4px !important; padding-bottom: 12px !important; }';
+  document.head.appendChild(st);
+  function report() {
+    var toc = [].map.call(document.querySelectorAll('h2'), function (h) {
+      return {text: h.textContent.replace(/^\s*\d+\.\s*/, '').trim(), top: Math.round(h.getBoundingClientRect().top + window.scrollY)};
+    });
+    // The height of the content itself, not of the window: a window-sized measure would grow each time the manual resizes the frame.
+    var wrap = document.querySelector('.wrap') || document.body;
+    var height = Math.ceil(wrap.getBoundingClientRect().bottom + window.scrollY) + 16;
+    if (Math.abs(height - last) < 2) return;
+    last = height;
+    parent.postMessage({tradecraft: 'page', height: height, toc: toc}, '*');
+  }
+  var last = 0;
+  window.addEventListener('message', function (e) { var d = e.data || {}; if (d.tradecraft === 'theme') root.setAttribute('data-theme', d.theme); });
+  window.addEventListener('load', report);
+  window.addEventListener('resize', report);
+  if (window.ResizeObserver) new ResizeObserver(report).observe(document.body);
+  report();
+})();
+</script>

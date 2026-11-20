@@ -1,0 +1,338 @@
+{
+ "spec_version": "R-1",
+ "frozen_on": "2026-11-16",
+ "names": [
+  "AAPL",
+  "ABBV",
+  "ADBE",
+  "AMD",
+  "AMGN",
+  "AMZN",
+  "AVGO",
+  "AXP",
+  "BA",
+  "BAC",
+  "BMY",
+  "BRK.B",
+  "C",
+  "CAT",
+  "CMCSA",
+  "COP",
+  "COST",
+  "CRM",
+  "CSCO",
+  "CVS",
+  "CVX",
+  "DE",
+  "DELL",
+  "DIA",
+  "DIS",
+  "DUK",
+  "F",
+  "GE",
+  "GILD",
+  "GM",
+  "GOOGL",
+  "GS",
+  "HD",
+  "HON",
+  "IBM",
+  "INTC",
+  "IWM",
+  "JNJ",
+  "JPM",
+  "KO",
+  "LIN",
+  "LLY",
+  "LMT",
+  "LOW",
+  "MA",
+  "MARA",
+  "MCD",
+  "META",
+  "MRK",
+  "MS",
+  "MSFT",
+  "MSTR",
+  "MU",
+  "NEE",
+  "NFLX",
+  "NKE",
+  "NOW",
+  "NVDA",
+  "ORCL",
+  "PANW",
+  "PEP",
+  "PFE",
+  "PG",
+  "PM",
+  "PYPL",
+  "QCOM",
+  "QQQ",
+  "RIOT",
+  "RTX",
+  "SBUX",
+  "SHOP",
+  "SLB",
+  "SMCI",
+  "SO",
+  "SPY",
+  "T",
+  "TGT",
+  "TLT",
+  "TMO",
+  "TSLA",
+  "TXN",
+  "UNH",
+  "UNP",
+  "UPS",
+  "V",
+  "VZ",
+  "WFC",
+  "WMT",
+  "XLE",
+  "XLF",
+  "XLK",
+  "XOM",
+  "XYZ",
+  "_SPX"
+ ],
+ "skipped": [
+  [
+   "RIVN",
+   "5.0 years"
+  ],
+  [
+   "UBER",
+   "7.5 years"
+  ],
+  [
+   "ABNB",
+   "5.9 years"
+  ],
+  [
+   "DASH",
+   "5.9 years"
+  ],
+  [
+   "COIN",
+   "5.6 years"
+  ],
+  [
+   "HOOD",
+   "5.3 years"
+  ],
+  [
+   "PLTR",
+   "6.1 years"
+  ],
+  [
+   "SNOW",
+   "6.2 years"
+  ],
+  [
+   "CRWD",
+   "7.4 years"
+  ],
+  [
+   "SOFI",
+   "5.9 years"
+  ],
+  [
+   "ARM",
+   "3.2 years"
+  ],
+  [
+   "_XSP",
+   "5.7 years"
+  ]
+ ],
+ "result": {
+  "7d": {
+   "windows_scored": 57898,
+   "months": 155,
+   "loss_naive": 0.3031981255542772,
+   "loss_scaled": 0.303592956882926,
+   "improvement_pct": -0.13022221952295637,
+   "mean_monthly_d": -4.8322895600091405e-05,
+   "t_stat": -0.019619660726051896,
+   "hit_naive": {
+    "quiet": 74.53086950293654,
+    "normal": 69.27926196425139,
+    "active": 61.15172144411584
+   },
+   "hit_scaled": {
+    "quiet": 60.077352814782984,
+    "normal": 60.772631174322505,
+    "active": 60.6439372802857
+   },
+   "n_by_state": {
+    "quiet": 13962,
+    "normal": 26015,
+    "active": 17921
+   },
+   "multiplier_last_year": {
+    "quiet": 0.8094234082031889,
+    "normal": 0.9182036858984679,
+    "active": 1.141502173315849
+   },
+   "multiplier_first_year": {
+    "quiet": 0.6457485972451801,
+    "normal": 0.7564429287934427,
+    "active": 0.8559395487155514
+   },
+   "error_ok": false,
+   "hits_ok": false,
+   "row_pass": false
+  },
+  "14d": {
+   "windows_scored": 28867,
+   "months": 155,
+   "loss_naive": 0.297153912809575,
+   "loss_scaled": 0.2975007072078294,
+   "improvement_pct": -0.11670531105428877,
+   "mean_monthly_d": 5.423023463760903e-05,
+   "t_stat": 0.028026308919742084,
+   "hit_naive": {
+    "quiet": 72.92777857863629,
+    "normal": 67.23476124673729,
+    "active": 59.10826594788859
+   },
+   "hit_scaled": {
+    "quiet": 60.357503243477005,
+    "normal": 60.37924151696607,
+    "active": 61.320754716981135
+   },
+   "n_by_state": {
+    "quiet": 6937,
+    "normal": 13026,
+    "active": 8904
+   },
+   "multiplier_last_year": {
+    "quiet": 0.8270388157538109,
+    "normal": 0.9588208623397514,
+    "active": 1.170364840785591
+   },
+   "multiplier_first_year": {
+    "quiet": 0.6611008513103793,
+    "normal": 0.7706128297755984,
+    "active": 0.9422212565075926
+   },
+   "error_ok": false,
+   "hits_ok": false,
+   "row_pass": false
+  },
+  "30d": {
+   "windows_scored": 13715,
+   "months": 154,
+   "loss_naive": 0.28724909075127425,
+   "loss_scaled": 0.2894329796599925,
+   "improvement_pct": -0.7602770483995062,
+   "mean_monthly_d": -0.0016454441437631301,
+   "t_stat": -0.6233715947058843,
+   "hit_naive": {
+    "quiet": 71.19565217391305,
+    "normal": 66.96227023540793,
+    "active": 61.98524160914068
+   },
+   "hit_scaled": {
+    "quiet": 59.42028985507246,
+    "normal": 59.690422444372786,
+    "active": 61.604379909545344
+   },
+   "n_by_state": {
+    "quiet": 3312,
+    "normal": 6202,
+    "active": 4201
+   },
+   "multiplier_last_year": {
+    "quiet": 0.8663193596032442,
+    "normal": 0.9650974736100433,
+    "active": 1.1318288959548632
+   },
+   "multiplier_first_year": {
+    "quiet": 0.7229111545180656,
+    "normal": 0.7806939567787601,
+    "active": 0.886444924002486
+   },
+   "error_ok": false,
+   "hits_ok": false,
+   "row_pass": false
+  },
+  "60d": {
+   "windows_scored": 6748,
+   "months": 149,
+   "loss_naive": 0.28736845162433994,
+   "loss_scaled": 0.2907705384675279,
+   "improvement_pct": -1.1838762480563698,
+   "mean_monthly_d": -0.0057409316810569785,
+   "t_stat": -1.7185332217480274,
+   "hit_naive": {
+    "quiet": 67.47603833865814,
+    "normal": 66.84799032940465,
+    "active": 62.8068303094984
+   },
+   "hit_scaled": {
+    "quiet": 59.233226837060705,
+    "normal": 61.710486551828346,
+    "active": 62.54002134471718
+   },
+   "n_by_state": {
+    "quiet": 1565,
+    "normal": 3309,
+    "active": 1874
+   },
+   "multiplier_last_year": {
+    "quiet": 0.949172536273252,
+    "normal": 0.9779209649599868,
+    "active": 1.0943422879505664
+   },
+   "multiplier_first_year": {
+    "quiet": 0.7672427795947013,
+    "normal": 0.8970282920592733,
+    "active": NaN
+   },
+   "error_ok": false,
+   "hits_ok": false,
+   "row_pass": false
+  },
+  "90d": {
+   "windows_scored": 4406,
+   "months": 141,
+   "loss_naive": 0.2725501742803407,
+   "loss_scaled": 0.27400642932414576,
+   "improvement_pct": -0.534307140932956,
+   "mean_monthly_d": 0.0007294550759178488,
+   "t_stat": 0.1929797043897193,
+   "hit_naive": {
+    "quiet": 75.19607843137256,
+    "normal": 69.46375372393247,
+    "active": 63.84839650145773
+   },
+   "hit_scaled": {
+    "quiet": 62.05882352941177,
+    "normal": 61.51936444885799,
+    "active": 63.265306122448976
+   },
+   "n_by_state": {
+    "quiet": 1020,
+    "normal": 2014,
+    "active": 1372
+   },
+   "multiplier_last_year": {
+    "quiet": 0.8334363161605677,
+    "normal": 0.931113387626381,
+    "active": 1.0650860095384767
+   },
+   "multiplier_first_year": {
+    "quiet": 0.7061861821360241,
+    "normal": 0.8356288667320536,
+    "active": NaN
+   },
+   "error_ok": false,
+   "hits_ok": false,
+   "row_pass": false
+  },
+  "PASS": false
+ }
+}

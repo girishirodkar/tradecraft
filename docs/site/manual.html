@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tradecraft Manual</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Ledger (light) / Night Desk (dark), per docs/site/THEME.md. One reading column; figures in plain panels. */
+:root {
+  --bg: #f5f7fa; --surface: #ffffff; --ink: #17212b; --ink-2: #44515f; --ink-3: #5f6c7b;
+  --line: #d9e0e8; --accent: #1c5cab; --band: #e8f0fa;
+  --series-1: #2a78d6; --series-2: #eb6834; --good: #0a7d0a; --crit: #c23232;
+  --display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+  --text: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161b; --surface: #1b2027; --ink: #eef1f4; --ink-2: #c1c9d2; --ink-3: #9aa5b1;
+    --line: #2f3742; --accent: #86b6ef; --band: #1f2c3d;
+    --series-1: #3987e5; --series-2: #d95926; --good: #3fbf3f; --crit: #e66767;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161b; --surface: #1b2027; --ink: #eef1f4; --ink-2: #c1c9d2; --ink-3: #9aa5b1;
+  --line: #2f3742; --accent: #86b6ef; --band: #1f2c3d;
+  --series-1: #3987e5; --series-2: #d95926; --good: #3fbf3f; --crit: #e66767;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--text); font-size: 16px; line-height: 1.6; }
+.wrap { max-width: 860px; margin: 0 auto; padding-block: 40px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3, h4 { font-family: var(--display); text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(2.25rem, 6vw, 3.25rem); font-weight: 600; letter-spacing: -0.02em; }
+h1 span { color: var(--accent); }
+h2 { font-size: 1.5rem; font-weight: 600; margin-top: 56px; scroll-margin-top: 16px; }
+h3 { font-size: 1.0625rem; font-weight: 600; margin-top: 28px; }
+h4 { font-size: 0.9375rem; font-weight: 600; }
+p { margin: 12px 0 0; max-width: 68ch; }
+a { color: var(--accent); }
+.lede { font-size: 1.125rem; color: var(--ink-2); }
+.meta { font-family: var(--mono); font-size: 0.8125rem; color: var(--ink-3); letter-spacing: 0.02em; }
+.mono, code { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+code { font-size: 0.875em; background: var(--band); border-radius: 3px; padding: 1px 5px; overflow-wrap: anywhere; }
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 14px; }
+.mode { font: inherit; font-size: 0.8125rem; padding: 6px 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); cursor: pointer; }
+.mode:hover { border-color: var(--accent); }
+.mode:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+ul, ol.plain { margin: 12px 0 0; padding-left: 20px; max-width: 68ch; }
+li + li { margin-top: 6px; }
+strong { font-weight: 600; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 20px; margin-top: 20px; min-width: 0; }
+.panel > :first-child { margin-top: 0; }
+.sub { color: var(--ink-3); font-size: 0.875rem; max-width: none; margin-top: 4px; }
+figure { margin: 0; }
+figcaption { color: var(--ink-3); font-size: 0.875rem; margin-top: 12px; max-width: 68ch; }
+.scroll { overflow-x: auto; }
+.scroll svg { display: block; height: auto; min-width: 620px; width: 100%; }
+table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-2); font-size: 0.8125rem; }
+tr:last-child td { border-bottom: 0; }
+td.k { font-weight: 600; white-space: nowrap; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; }
+.two .panel { margin-top: 0; }
+.part { margin-top: 72px; border-top: 2px solid var(--accent); padding-top: 18px; }
+.part .meta { color: var(--accent); }
+.part h2 { margin-top: 6px; font-size: 1.875rem; }
+.lvl { display: inline-block; font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.06em; color: var(--surface); background: var(--accent); border-radius: 4px; padding: 2px 8px; margin-right: 8px; vertical-align: 3px; }
+.who { color: var(--ink-3); font-size: 0.875rem; margin-top: 6px; }
+.tag { display: inline-block; font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.04em; border: 1px solid var(--line); border-radius: 4px; padding: 1px 7px; color: var(--ink-2); white-space: nowrap; }
+.tag.agent { border-color: var(--accent); background: var(--band); color: var(--ink); }
+.more { margin-top: 14px; font-size: 0.9375rem; }
+.more a { font-weight: 600; }
+.toc { margin-top: 24px; display: grid; gap: 14px; }
+.toc b { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.06em; color: var(--ink-3); font-weight: 500; }
+.toc ol { list-style: none; padding: 0; margin: 6px 0 0; max-width: none; display: flex; flex-wrap: wrap; gap: 6px 8px; }
+.toc li { margin: 0; }
+.toc a { display: inline-block; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink-2); font-size: 0.875rem; text-decoration: none; }
+.toc a:hover, .toc a:focus-visible { border-color: var(--accent); color: var(--accent); }
+.io { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 16px; }
+.io div { border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; background: var(--surface); font-size: 0.9375rem; }
+.io b { display: block; font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; color: var(--ink-3); font-weight: 500; margin-bottom: 4px; }
+.note { border-top: 1px solid var(--line); margin-top: 56px; padding-top: 20px; color: var(--ink-3); font-size: 0.875rem; }
+.note p { max-width: 72ch; }
+
+/* diagrams: every colour is a theme token, so they follow the light and dark themes */
+svg text { font-family: var(--text); font-size: 13px; fill: var(--ink); }
+svg .t2 { fill: var(--ink-2); font-size: 11.5px; }
+svg .t3 { fill: var(--ink-3); font-size: 11px; font-family: var(--mono); letter-spacing: 0.04em; }
+svg .hd { font-weight: 600; font-size: 13.5px; }
+svg .bx { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+svg .ag { fill: var(--band); stroke: var(--accent); stroke-width: 1.5; }
+svg .st { fill: var(--bg); stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 4 3; }
+svg .ln { stroke: var(--ink-3); stroke-width: 1.5; fill: none; }
+svg .la { stroke: var(--accent); stroke-width: 1.5; fill: none; }
+svg .ld { stroke: var(--ink-3); stroke-width: 1.5; fill: none; stroke-dasharray: 4 3; }
+svg .ah { fill: var(--ink-3); }
+svg .aha { fill: var(--accent); }
+
+/* The manual is three pages with one header. The tabs move between pages; the pills move within a page. */
+.tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 26px; }
+.tabs a { display: grid; gap: 3px; align-content: start; padding: 12px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); text-decoration: none; min-width: 0; }
+.tabs a b { font-family: var(--display); font-weight: 600; font-size: 1rem; line-height: 1.25; }
+.tabs a i { font-style: normal; font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; color: var(--ink-3); }
+.tabs a small { font-size: 0.8125rem; color: var(--ink-3); line-height: 1.35; }
+.tabs a:hover, .tabs a:focus-visible { border-color: var(--accent); }
+.tabs a[aria-current="page"] { border-color: var(--accent); background: var(--band); }
+.tabs a[aria-current="page"] b, .tabs a[aria-current="page"] i { color: var(--accent); }
+@media (max-width: 640px) { .tabs { grid-template-columns: 1fr; } }
+.part { margin-top: 34px; }
+.toc { margin-top: 20px; display: block; }
+.toc ol { margin-top: 8px; }
+.toc + p, .toc + h2 { margin-top: 30px; }
+.emb iframe { display: block; width: 100%; height: 86vh; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); margin-top: 16px; }
+.pages { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 56px; }
+.pages a { flex: 1 1 220px; display: grid; gap: 2px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); text-decoration: none; color: var(--ink); min-width: 0; }
+.pages a:hover, .pages a:focus-visible { border-color: var(--accent); }
+.pages a small { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; color: var(--ink-3); }
+.pages a.next { text-align: right; }
+.pages a.up { flex: 0 0 auto; align-content: center; color: var(--ink-2); font-size: 0.875rem; }
+h2 { scroll-margin-top: 16px; }
+
+@media print {
+  .mode, .tabs, .toc, .pages { display: none !important; }
+  body { background: #fff; font-size: 11pt; }
+  .wrap { max-width: none; padding: 0; }
+  h2 { break-after: avoid; } .panel, figure, table { break-inside: avoid; }
+  .emb iframe { display: none; } a { color: inherit; text-decoration: none; }
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="top">
+  <div class="top"><div class="meta">TRADECRAFT · PRODUCT MANUAL · AS BUILT, 19 NOVEMBER 2026</div><button type="button" class="mode" id="mode">Switch to dark</button></div>
+  <h1>Trade<span>craft</span> manual</h1>
+  <p class="lede">What Tradecraft does at each of its four stages and why, and how the system is built, from a one-page overview down to the modules. Everything here describes the application as it is built. Where something is designed but not built, the manual says so.</p>
+  <nav class="tabs" aria-label="The three parts of the manual">
+    <a href="manual.html" aria-current="page"><i>PART 1</i><b>The logic of each stage</b><small>Why each stage works as it does, and what it will not do</small></a>
+    <a href="manual-architecture.html"><i>PART 2</i><b>The architecture</b><small>How it is built, at four levels of depth</small></a>
+    <a href="manual-stages.html"><i>PART 3</i><b>Detailed stage manuals</b><small>The four stage manuals in full</small></a>
+  </nav>
+
+  <div class="part"><div class="meta">PART 1 OF 3</div><h2>The logic of each stage</h2></div>
+  <nav class="toc" aria-label="On this page"><b>ON THIS PAGE</b>
+    <ol>
+      <li><a href="#why">Why it is built this way</a></li>
+      <li><a href="#s1">1 · Liquidity gate</a></li>
+      <li><a href="#s2">2 · Thesis</a></li>
+      <li><a href="#s3">3 · Market and contracts</a></li>
+      <li><a href="#s4">4 · Challenge</a></li>
+    </ol>
+  </nav>
+
+  <p>The user names one US-listed underlying. Tradecraft then works through four stages, one screen at a time, and the user decides at the end of each whether to go on. Each stage has a detailed manual with the full rules, in part 3; this part gives the reasoning and points to it.</p>
+
+  <figure class="panel">
+    <div class="scroll">
+      <svg viewBox="0 0 820 150" role="img" aria-label="The four stages in order: liquidity gate and contracts are code only; thesis and challenge use agents inside coded checks.">
+        <defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" class="ah"/></marker></defs>
+        <rect class="bx" x="10" y="30" width="170" height="86" rx="6"/><text x="26" y="56" class="hd">1 Liquidity gate</text><text x="26" y="76" class="t2">Screens the option chain</text><text x="26" y="100" class="t3">CODE ONLY</text>
+        <rect class="ag" x="220" y="30" width="170" height="86" rx="6"/><text x="236" y="56" class="hd">2 Thesis</text><text x="236" y="76" class="t2">Evidence, then a view</text><text x="236" y="100" class="t3">5 AGENTS + CODE</text>
+        <rect class="bx" x="430" y="30" width="170" height="86" rx="6"/><text x="446" y="56" class="hd">3 Contracts</text><text x="446" y="76" class="t2">Defined-risk strategies</text><text x="446" y="100" class="t3">CODE ONLY</text>
+        <rect class="ag" x="640" y="30" width="170" height="86" rx="6"/><text x="656" y="56" class="hd">4 Challenge</text><text x="656" y="76" class="t2">Checks, then a critic</text><text x="656" y="100" class="t3">CODE + 2 AGENTS</text>
+        <path class="ln" d="M180 73H218" marker-end="url(#a1)"/><path class="ln" d="M390 73H428" marker-end="url(#a1)"/><path class="ln" d="M600 73H638" marker-end="url(#a1)"/>
+        <text x="199" y="24" text-anchor="middle" class="t3">USER</text><text x="409" y="24" text-anchor="middle" class="t3">USER</text><text x="619" y="24" text-anchor="middle" class="t3">USER</text>
+        <text x="410" y="140" text-anchor="middle" class="t2">The user decides between stages. Every decision is written to an append-only record.</text>
+      </svg>
+    </div>
+    <figcaption>Tinted boxes use language models. Plain boxes are fixed rules in code. Stages 5 and 6 (decision, sizing, monitoring) are not designed and not built.</figcaption>
+  </figure>
+
+  <h2 id="why">Why it is built this way</h2>
+  <p>The project began with research, not with a product idea. Nineteen research strands and four pre-registered tests are recorded in <code>docs/research/</code>, <code>docs/factor-spec.md</code> and <code>vrp_out/TRIALS.log</code>. Three findings shape everything that follows.</p>
+  <ul>
+    <li><strong>Direction is close to unpredictable at retail scale.</strong> The measured edge from predicting direction is a few basis points a month, before costs. The system therefore states no probability for a view and labels every system thesis "no demonstrated predictive edge".</li>
+    <li><strong>Execution cost dominates.</strong> On single names a round trip through the bid-ask spread costs several times any plausible edge. So the first stage is about whether a contract can be traded at all, and the third ranks nothing on how cheap or rich an option appears.</li>
+    <li><strong>A model told to be critical mostly sounds critical.</strong> Whatever a rule can check is checked by a rule. Models are confined to the judgement that rules cannot make, and their output is checked in code before the user sees it.</li>
+  </ul>
+  <p>The design rule that follows is simple: <strong>rules where rules are enough, agents where judgement is needed, and a check on both.</strong> Two of the four stages use no model at all.</p>
+  <p class="sub">The system produces research and candidates. It places no orders and gives no investment advice.</p>
+
+  <h2 id="s1">1 · Liquidity gate</h2>
+  <p><span class="tag">CODE ONLY</span></p>
+  <p>The gate answers one question before any research is done: are there contracts on this underlying that can actually be traded? It excludes; it never scores. A wide quoted spread is a cost the user pays on the way in and again on the way out, so a name whose contracts fail is not worth a thesis.</p>
+  <div class="io">
+    <div><b>IN</b>The option chain: live delayed quotes in market hours, the daily snapshot otherwise.</div>
+    <div><b>OUT</b>PASS or FAIL, the count of eligible contracts, and every contract screened out, by reason.</div>
+    <div><b>THE USER DECIDES</b>Continue, adjust the criteria, override a fail, or stop.</div>
+  </div>
+  <h3>The rules that matter</h3>
+  <ul>
+    <li><strong>Five criteria, all adjustable for the request:</strong> maximum bid-ask spread (default 5% of the premium), minimum open interest (100), days to expiration (42 to 90), maximum distance from spot (10%), minimum premium ($0.20).</li>
+    <li><strong>At least two contracts must clear the screen</strong> for a pass.</li>
+    <li><strong>The user may override a fail,</strong> but only with a written rationale, and the override is written to the decision record. An invalid quote cannot be overridden. The system itself never proposes a contract that fails.</li>
+    <li><strong>Outside market hours the result is provisional:</strong> it is computed on the latest daily snapshot and marked as such on every later screen.</li>
+  </ul>
+  <h3>What it does not do</h3>
+  <p>It shows no premiums, so that pricing cannot anchor the thesis that follows. It does not rank underlyings or contracts.</p>
+  <p class="more">Full rules: <a href="manual-stages.html#d1">Liquidity gate</a>. Code: <code>tradecraft/gate.py</code>, <code>tradecraft/stage1.py</code>.</p>
+
+  <h2 id="s2">2 · Thesis</h2>
+  <p><span class="tag agent">5 AGENTS</span> <span class="tag">MEASURED FIGURES AND CHECKS IN CODE</span></p>
+  <p>The thesis stage produces a research brief: a view (bullish, bearish or no view), the evidence it rests on, and the conditions that would prove it wrong. The agents gather and read; code measures, grades and decides what counts.</p>
+  <div class="io">
+    <div><b>IN</b>Filings, earnings and estimates, news, dividend dates, the macro calendar, price history.</div>
+    <div><b>OUT</b>A brief: the view, graded findings, invalidation criteria, measured statistics and a recommended horizon.</div>
+    <div><b>THE USER DECIDES</b>Accept and freeze, reject, or, after a no view, enter a thesis of their own.</div>
+  </div>
+  <h3>The rules that matter</h3>
+  <ul>
+    <li><strong>No agent sets a figure.</strong> The base rate of a higher close, the typical realized move, the volatility state and the recommended horizon are computed in code from price history. The base rate is shown beside the view and is not moved by it.</li>
+    <li><strong>A finding carries a direction only when the evidence states a comparison.</strong> Three kinds can: results against estimates (built in code from the two numbers), a guidance change (the analyst extracts the figures; code compares them), and a new event on a fixed list. Everything else is context: shown, and unable to start, support or cancel a view.</li>
+    <li><strong>Grades are set in code</strong> from three tests on the cited evidence: primary source, recent, specific. Three passes is strong, two is moderate, otherwise weak.</li>
+    <li><strong>Three outcomes, all proper results:</strong> a view; no view because the findings that carry a direction conflict; no view because nothing carries one. A failure is never shown as a no view.</li>
+    <li><strong>The draft is checked in code before the user sees it.</strong> Every claim must cite stored evidence, every number must appear in what it cites, and the draft may state no probability and rest on no price-derived signal. A failing draft is returned to the Thesis agent once, then rejected.</li>
+  </ul>
+  <h3>What it does not do</h3>
+  <p>The Thesis agent never sees an option price, an implied volatility or a market-implied probability. Price trend, momentum and chart levels are description only. Index instruments return no view by rule, because sector and macro evidence may qualify a view but may not start one.</p>
+  <p class="more">Full rules: <a href="manual-stages.html#d2">Thesis stage</a>, and the decision record <code>docs/decisions/2026-11-18-stage-2-anchored-bearings.md</code>, which governs where the two differ. Code: <code>tradecraft/stage2.py</code>, <code>agents.py</code>, <code>validation.py</code>, <code>figures.py</code>, <code>evidence.py</code>.</p>
+
+  <h2 id="s3">3 · Market and contracts</h2>
+  <p><span class="tag">CODE ONLY</span></p>
+  <p>With the thesis frozen, the system opens the option chain and builds strategies that express the view with defined risk. This stage uses no model. Choosing a contract is arithmetic on quotes and history, and a model would add variance without adding information.</p>
+  <div class="io">
+    <div><b>IN</b>The frozen thesis (view and horizon), the option chain, price history, the stage 1 criteria in force.</div>
+    <div><b>OUT</b>Up to three candidates on the same measures, filtered and ranked; the first is the "best fit".</div>
+    <div><b>THE USER DECIDES</b>The ranking priority, the cost cap, the expiration, an optional maximum loss, and which candidate to take forward.</div>
+  </div>
+  <h3>The rules that matter</h3>
+  <ul>
+    <li><strong>Defined risk only.</strong> For a directional view: two spread shapes and one bought option. Strikes are placed by the typical realized move for the days to expiration, never by chart levels.</li>
+    <li><strong>Every leg is an eligible contract.</strong> A single option must pass the bid-ask criterion; the legs of a spread are judged together, through the cost cap.</li>
+    <li><strong>A cost cap the user controls:</strong> estimated slippage as a share of maximum loss, 5% by default, adjustable from 2% to 10%. A candidate over the cap is filtered out and shown with the reason.</li>
+    <li><strong>Ranking is on the user's priority alone:</strong> fit to thesis, reward-to-risk, or lowest slippage. Nothing is ranked on gross richness.</li>
+    <li><strong>The expiration defaults to the thesis horizon.</strong> Switching it amends the horizon, and the amendment is recorded.</li>
+  </ul>
+  <h3>What it does not do</h3>
+  <p>It never calls the first-ranked candidate "recommended". It does not filter on earnings or ex-dividend dates; it shows them. It asks for no account size.</p>
+  <p class="more">Full rules: <a href="manual-stages.html#d3">Market and contracts</a>, with the operator's build decisions in <code>docs/decisions/2026-11-17-stage-3-contract-selection.md</code>. Code: <code>tradecraft/stage3.py</code>.</p>
+
+  <h2 id="s4">4 · Challenge</h2>
+  <p><span class="tag">23 CHECKS IN CODE</span> <span class="tag agent">2 AGENTS</span></p>
+  <p>Before the user decides, the system challenges both the thesis and the chosen contract. Rules come first. The Critic is confined to what rules cannot do, argues both sides at the same length, and gives no verdict.</p>
+  <div class="io">
+    <div><b>IN</b>The frozen thesis with its evidence, the selected candidate and the ones not selected, fresh quotes, the project's own research.</div>
+    <div><b>OUT</b>One screen: the Critic's judgement on the left, the fixed-rule checks on the right, and a readiness line.</div>
+    <div><b>THE USER DECIDES</b>Proceed, return to contracts, or stop. Nothing blocks.</div>
+  </div>
+  <h3>The rules that matter</h3>
+  <ul>
+    <li><strong>Twelve checks on the thesis and eleven on the contract.</strong> Each returns flagged, passed, not applicable or could not be checked. A check never reports "passed" for want of data.</li>
+    <li><strong>The thesis is restated as a question</strong> by a fixed template. The Critic is not shown the original wording or told who wrote the thesis, and the check that records the thesis's origin is withheld from it.</li>
+    <li><strong>Retrieval is from the project's own research only,</strong> searched both ways for each claim, at most three passages a side. There is no web search.</li>
+    <li><strong>The Critic's output is checked in code.</strong> Every objection must cite a check, a claim or a passage that exists; every claim must be given a standing; the two cases have the same length limit; a verdict, a score or advice is refused. A failing answer is returned once, then rejected, and the screen shows the checks alone.</li>
+    <li><strong>The readiness line is set by code</strong> and is about whether the inputs are still valid (a stale thesis, a price that has moved), not about whether the trade is good.</li>
+  </ul>
+  <h3>What it does not do</h3>
+  <p>It does not veto. Flags are not counted into a rating. The Critic does no research of its own, and for the demo it runs on the same model family as the Thesis agent, which the screen states.</p>
+  <p class="more">Full rules: <a href="manual-stages.html#d4">Challenge</a>, with the operator's build decisions in <code>docs/decisions/2026-11-17-stage-4-challenge.md</code>, which govern where the two differ. Code: <code>tradecraft/stage4.py</code>, <code>research.py</code>.</p>
+
+  <nav class="pages" aria-label="Previous and next part">
+    <a class="up" href="#top">Top &uarr;</a>
+    <a class="next" href="manual-architecture.html"><small>PART 2 &rarr;</small>The architecture</a>
+  </nav>
+
+  <div class="note">
+    <p>This manual describes the application as built on 19 November 2026 and was checked against the code. Rules are cited from the decision records in <code>docs/decisions/</code>, which govern wherever an older page differs. The stage pages linked from Part 1 were written during design; the Challenge page predates the operator's build decisions of 19 November.</p>
+    <p>Tradecraft is a personal research tool and a course capstone. It places no orders and gives no investment advice.</p>
+  </div>
+</div>
+</div>
+<script>
+(function () {
+  var root = document.documentElement, b = document.getElementById('mode');
+  // The theme chosen on one page of the manual carries to the others.
+  var asked = /[?&]theme=(dark|light)/.exec(location.search), kept = null;
+  try { kept = localStorage.getItem('tradecraft-manual-theme'); } catch (e) {}
+  if (asked) root.setAttribute('data-theme', asked[1]); else if (kept === 'dark' || kept === 'light') root.setAttribute('data-theme', kept);
+  function isDark() { var t = root.getAttribute('data-theme'); return t ? t === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches; }
+  function label() { b.textContent = isDark() ? 'Switch to light' : 'Switch to dark'; }
+  // Each embedded stage manual follows the theme, and tells this page how tall it is so that it can be shown in full.
+  var frames = [].slice.call(document.querySelectorAll('.emb iframe'));
+  function sendTheme() { frames.forEach(function (f) { try { f.contentWindow.postMessage({tradecraft: 'theme', theme: isDark() ? 'dark' : 'light'}, '*'); } catch (e) {} }); }
+  b.addEventListener('click', function () {
+    var next = isDark() ? 'light' : 'dark'; root.setAttribute('data-theme', next);
+    try { localStorage.setItem('tradecraft-manual-theme', next); } catch (e) {}
+    label(); sendTheme();
+  });
+  label();
+  window.addEventListener('message', function (e) {
+    var d = e.data || {}; if (d.tradecraft !== 'page') return;
+    frames.forEach(function (f) { if (f.contentWindow === e.source) { f.style.height = d.height + 'px'; sendTheme(); } });
+    // A frame growing to its full height pushes the ones below it down: stay on the section the link asked for.
+    if (location.hash && !moved) { var t = document.getElementById(location.hash.slice(1)); if (t) { root.style.scrollBehavior = 'auto'; t.scrollIntoView(); root.style.scrollBehavior = ''; } }
+  });
+  var moved = false;
+  ['wheel', 'touchmove', 'keydown', 'mousedown'].forEach(function (ev) { window.addEventListener(ev, function () { moved = true; }, {passive: true}); });
+  window.addEventListener('hashchange', function () { moved = false; });
+  frames.forEach(function (f) { f.addEventListener('load', sendTheme); });
+  sendTheme();
+})();
+</script>
+</body>
+</html>

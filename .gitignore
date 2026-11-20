@@ -1,0 +1,20 @@
+.env
+*.csv.gz
+census_out/
+snapshots/
+__pycache__/
+.DS_Store
+test_out/
+test_universe.txt
+_to_delete/
+.gitlocks_aside/
+label_out/
+
+logs/
+Claude outputs/
+
+# Tradecraft build
+.venv/
+.uv-cache/
+/data/
+.pytest_cache/

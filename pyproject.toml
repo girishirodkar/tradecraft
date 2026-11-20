@@ -1,0 +1,27 @@
+[project]
+name = "tradecraft"
+version = "0.1.0"
+description = "Tradecraft: a personal options research tool (on-demand mode, stages 1 to 4). Places no orders and gives no investment advice."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "langgraph",
+    "anthropic",
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "httpx",
+    "chromadb>=1.5.9",
+]
+
+[dependency-groups]
+dev = [
+    "imageio-ffmpeg>=0.8.1",
+    "pytest",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

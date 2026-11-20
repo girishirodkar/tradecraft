@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "updated": "2026-11-19",
+  "purpose": "Settings for stage 3 (market and contracts). Decision record: docs/decisions/2026-11-17-stage-3-contract-selection.md.",
+  "cost_cap_pct_of_max_loss": {"default": 5, "min": 2, "max": 10},
+  "cost_cap_note": "The default and the range of the on-screen cost-cap control (operator decision, 19 November 2026, after the count in docs/build-log.md). A change applies to the current request only and is recorded.",
+  "source_retries": 3
+}

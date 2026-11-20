@@ -1,0 +1,1092 @@
+<title>Market and Contracts</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Ledger (light) / Night Desk (dark), per docs/site/THEME.md.
+   Layout: one reading column (max 860px); figures in plain panels. Probabilities and input numbers set in mono. */
+:root {
+  --bg: #f5f7fa; --surface: #ffffff; --ink: #17212b; --ink-2: #44515f; --ink-3: #5f6c7b;
+  --line: #d9e0e8; --accent: #1c5cab; --band: #e8f0fa;
+  --series-1: #2a78d6; --series-2: #eb6834; --good: #0a7d0a; --crit: #c23232;
+  --display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+  --text: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161b; --surface: #1b2027; --ink: #eef1f4; --ink-2: #c1c9d2; --ink-3: #9aa5b1;
+    --line: #2f3742; --accent: #86b6ef; --band: #1f2c3d;
+    --series-1: #3987e5; --series-2: #d95926; --good: #3fbf3f; --crit: #e66767;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161b; --surface: #1b2027; --ink: #eef1f4; --ink-2: #c1c9d2; --ink-3: #9aa5b1;
+  --line: #2f3742; --accent: #86b6ef; --band: #1f2c3d;
+  --series-1: #3987e5; --series-2: #d95926; --good: #3fbf3f; --crit: #e66767;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--text); font-size: 16px; line-height: 1.6; }
+.wrap { max-width: 860px; margin: 0 auto; padding-block: 40px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(2rem, 5vw, 2.75rem); font-weight: 600; letter-spacing: -0.01em; }
+h2 { font-size: 1.5rem; font-weight: 600; margin-top: 56px; }
+h3 { font-size: 1.0625rem; font-weight: 600; }
+p { margin: 12px 0 0; max-width: 68ch; }
+.lede { font-size: 1.125rem; color: var(--ink-2); }
+.meta { font-family: var(--mono); font-size: 0.8125rem; color: var(--ink-3); letter-spacing: 0.02em; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 14px; }
+.mode { font: inherit; font-size: 0.8125rem; padding: 6px 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); cursor: pointer; }
+.mode:hover { border-color: var(--accent); }
+.mode:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+ul { margin: 12px 0 0; padding-left: 20px; max-width: 68ch; }
+li + li { margin-top: 6px; }
+strong { font-weight: 600; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 20px; margin-top: 20px; min-width: 0; }
+.sub { color: var(--ink-3); font-size: 0.875rem; max-width: none; margin-top: 4px; }
+figure { margin: 0; }
+figcaption { color: var(--ink-3); font-size: 0.875rem; margin-top: 12px; max-width: 68ch; }
+.scroll { overflow-x: auto; }
+.scroll svg { display: block; height: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-2); font-size: 0.8125rem; }
+td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink-3); width: 2.5em; }
+
+.stages { list-style: none; padding: 0; margin: 20px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 8px; max-width: none; counter-reset: st; }
+.stages li { counter-increment: st; margin: 0; border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; background: var(--surface); font-size: 0.875rem; line-height: 1.35; min-width: 0; }
+.stages li::before { content: counter(st); display: block; font-family: var(--mono); font-size: 0.75rem; color: var(--ink-3); margin-bottom: 4px; }
+.stages li.here { background: var(--band); border-color: var(--accent); font-weight: 600; }
+.stages li.here::before { content: counter(st) "  this page"; color: var(--accent); }
+
+.steps { list-style: none; padding: 0; margin: 20px 0 0; max-width: none; counter-reset: s; display: grid; }
+.steps li { counter-increment: s; margin: 0; display: grid; grid-template-columns: 34px 1fr; gap: 14px; padding-bottom: 18px; position: relative; }
+.steps li::before { content: counter(s); font-family: var(--mono); font-size: 0.8125rem; width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid var(--accent); color: var(--accent); background: var(--surface); display: grid; place-items: center; position: relative; z-index: 1; }
+.steps li::after { content: ""; position: absolute; left: 16.5px; top: 34px; bottom: 0; width: 1.5px; background: var(--line); }
+.steps li:last-child { padding-bottom: 0; } .steps li:last-child::after { display: none; }
+.steps b { display: block; font-weight: 600; } .steps span { color: var(--ink-2); font-size: 0.9375rem; }
+
+/* role chips: the six roles are named in words; the tint only groups them */
+.role { display: inline-block; font-size: 0.75rem; font-weight: 500; padding: 1px 8px; border-radius: 3px; border: 1px solid var(--line); white-space: nowrap; color: var(--ink); background: var(--bg); }
+.role.strong { border-color: var(--accent); background: var(--band); }
+
+/* thesis card mock */
+.card-mock { max-width: 600px; display: grid; gap: 10px; }
+.card-mock p { margin: 0; }
+.mock-tag { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.04em; color: var(--ink-3); border: 1px dashed var(--line); border-radius: 4px; padding: 3px 8px; justify-self: start; }
+.cm-head { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 12px; }
+.cm-tk { font-size: 1.375rem; font-weight: 500; }
+.cm-chip { font-family: var(--mono); font-size: 0.8125rem; font-weight: 500; border: 1.5px solid var(--ink); border-radius: 4px; padding: 1px 8px; }
+.cm-warn { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.03em; color: var(--ink-2); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; justify-self: start; }
+.cm-facts { margin: 4px 0 0; display: grid; grid-template-columns: minmax(0, 140px) minmax(0, 1fr); gap: 8px 16px; font-size: 0.9375rem; }
+.cm-facts dt { color: var(--ink-3); font-size: 0.875rem; } .cm-facts dd { margin: 0; }
+.cm-h { font-size: 0.875rem; margin-top: 8px; }
+.ladder { min-width: 500px; }
+.ladder th small { display: block; font-weight: 400; font-size: 0.75rem; color: var(--ink-3); }
+.ladder td.r, .ladder th.r { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ladder thead th.r { font-family: var(--text); }
+.ladder tr.in th, .ladder tr.in td { background: var(--band); font-weight: 600; }
+.ladder tr.in th small { color: var(--accent); }
+.ladder tr.out td, .ladder tr.out th { color: var(--ink-3); }
+.fam { list-style: none; padding: 0; margin: 0; max-width: none; display: grid; gap: 0; }
+.fam li { margin: 0; display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 1fr); gap: 4px 16px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 0.9375rem; }
+.fam b { font-weight: 600; } .fam small { display: block; color: var(--ink-3); font-size: 0.75rem; font-weight: 400; }
+.cm-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.cm-btn { font-size: 0.875rem; padding: 7px 14px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--ink); }
+.cm-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 600; }
+
+/* probability scale */
+.scale { position: relative; height: 150px; margin: 8px 0 0; }
+.scale .axis { position: absolute; left: 0; right: 0; top: 70px; height: 8px; border-radius: 4px; background: var(--line); }
+.scale .cap { position: absolute; top: 62px; height: 24px; border-radius: 4px; background: var(--band); border: 1px solid var(--accent); }
+.scale .mk { position: absolute; top: 58px; width: 3px; height: 32px; background: var(--ink); transform: translateX(-1.5px); }
+.scale .mk.s1 { background: var(--series-1); width: 5px; transform: translateX(-2.5px); }
+.scale .lb { position: absolute; transform: translateX(-50%); font-size: 0.75rem; line-height: 1.25; text-align: center; white-space: nowrap; color: var(--ink); }
+.scale .lb b { display: block; font-family: var(--mono); font-weight: 500; font-size: 0.875rem; }
+.scale .lb.up { top: 6px; } .scale .lb.dn { top: 98px; }
+.scale .lb.r { transform: translateX(-100%); text-align: right; padding-right: 2px; } .scale .lb.l { transform: none; text-align: left; padding-left: 2px; }
+.scale .tick { position: absolute; top: 132px; transform: translateX(-50%); font-family: var(--mono); font-size: 0.6875rem; color: var(--ink-3); }
+
+.flow-m { display: none; gap: 8px; }
+.flow-m .fa { border: 1.5px solid var(--line); border-radius: 6px; padding: 10px 12px; display: grid; gap: 2px; font-size: 0.875rem; }
+.flow-m .fa span { color: var(--ink-2); }
+.flow-m .fa.hi { border-color: var(--series-1); background: var(--band); }
+.flow-m .fa.dash { border-style: dashed; }
+.flow-m .arrow { text-align: center; color: var(--ink-3); font-size: 0.75rem; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; }
+.two .panel { margin-top: 0; }
+.checks { list-style: none; padding: 0; margin: 14px 0 0; max-width: none; display: grid; }
+.checks li { margin: 0; display: grid; grid-template-columns: 26px 1fr; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 0.9375rem; }
+.checks li::before { content: "\2713"; color: var(--good); font-family: var(--mono); }
+.note { border-top: 1px solid var(--line); margin-top: 56px; padding-top: 20px; color: var(--ink-3); font-size: 0.875rem; }
+.note p { max-width: 72ch; }
+@media (max-width: 600px) { .flow-svg { display: none !important; } .flow-m { display: grid; } }
+@media (max-width: 480px) { .cm-facts, .fam li { grid-template-columns: 1fr; gap: 2px; } .cm-facts dd { margin-bottom: 8px; } }
+@media (max-width: 520px) { .ladder { min-width: 0; } .ladder td:last-child { font-size: 0.8125rem; } .ladder .tc { display: none; } .ladder th, .ladder td { padding: 8px 6px; } }
+
+h4 { font-family: var(--display); font-size: 1rem; font-weight: 600; margin: 28px 0 0; line-height: 1.25; }
+.grade { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.02em; text-transform: uppercase; color: var(--ink-3); border: 1px solid var(--line); border-radius: 3px; padding: 0 5px; white-space: nowrap; vertical-align: 1px; }
+h3.sec { margin-top: 40px; }
+[hidden] { display: none !important; }
+.toc { margin-top: 24px; }
+.toc ol { list-style: none; counter-reset: toc; padding: 0; margin: 0; max-width: none; display: flex; flex-wrap: wrap; gap: 6px 8px; }
+.toc li { counter-increment: toc; margin: 0; }
+.toc a { display: inline-block; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink-2); font-size: 0.875rem; text-decoration: none; }
+.toc a::before { content: counter(toc) "\00a0\00a0"; font-family: var(--mono); color: var(--ink-3); }
+.toc a:hover, .toc a:focus-visible { border-color: var(--accent); color: var(--accent); }
+h2[id] { scroll-margin-top: 16px; }
+.tabs { margin-top: 20px; }
+.tablist { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: thin; }
+.tablist button { font: inherit; font-size: 0.9375rem; white-space: nowrap; padding: 10px 14px; min-height: 44px; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; color: var(--ink-3); cursor: pointer; }
+.tablist button[aria-selected="true"] { color: var(--ink); font-weight: 600; border-bottom-color: var(--accent); }
+.tablist button:hover { color: var(--ink); }
+.tablist button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tabcap { color: var(--ink-2); font-size: 0.9375rem; margin: 14px 0 0; max-width: 68ch; }
+[role="tabpanel"] > .panel { margin-top: 14px; }
+.print-only { display: none; }
+details.why { margin-top: 16px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+details.why > summary { cursor: pointer; padding: 11px 16px; font-size: 0.9375rem; font-weight: 600; color: var(--accent); list-style-position: inside; }
+details.why > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+details.why[open] > summary { border-bottom: 1px solid var(--line); }
+details.why > :not(summary) { margin-left: 16px; margin-right: 16px; }
+details.why > ul { margin-top: 12px; margin-bottom: 14px; }
+details.why > .panel { border: 0; padding: 0; margin-top: 12px; margin-bottom: 14px; background: none; }
+details.why > p { margin-top: 12px; }
+details.why > h4 { margin-top: 18px; }
+details.why > h4:first-of-type { margin-top: 14px; }
+@media print { [role="tabpanel"][hidden] { display: block !important; } .tablist, .mode, .toc { display: none; } .print-only { display: block; } }
+
+/* ---- stage 3: candidates ---- */
+.cand-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin-top: 20px; }
+.cand-group { min-width: 0; }
+.cand-group > h4 { margin: 0 0 8px; font-family: var(--mono); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+.cand { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: center; width: 100%; text-align: left; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px; margin-top: 8px; cursor: pointer; }
+.cand:hover { border-color: var(--accent); }
+.cand:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cand[aria-pressed="true"] { border-color: var(--accent); background: var(--band); }
+.cand b { display: block; font-size: 0.9375rem; font-weight: 600; line-height: 1.3; }
+.cand span { display: block; font-size: 0.8125rem; color: var(--ink-2); line-height: 1.4; margin-top: 2px; }
+.cand svg { display: block; width: 96px; height: 52px; }
+.explorer .mock-tag, .panel > .mock-tag { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; color: var(--ink-3); }
+.ctrl-row { display: flex; flex-wrap: wrap; gap: 14px 24px; margin-top: 14px; align-items: flex-end; }
+.ctrl { min-width: 0; }
+.ctrl-l { display: block; font-size: 0.75rem; color: var(--ink-3); margin-bottom: 5px; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--bg); }
+.seg button { font: inherit; font-size: 0.875rem; padding: 8px 12px; min-height: 40px; border: 0; border-right: 1px solid var(--line); background: none; color: var(--ink-2); cursor: pointer; white-space: nowrap; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: inset 0 -2px 0 var(--accent); }
+.seg button:hover { color: var(--ink); }
+.seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.chk { display: inline-flex; gap: 8px; align-items: center; font-size: 0.875rem; color: var(--ink-2); min-height: 40px; cursor: pointer; }
+.chk input { width: 16px; height: 16px; accent-color: var(--accent); }
+.ex-title { font-weight: 600; margin-top: 18px; max-width: none; }
+.viz-h { font-family: var(--text); font-size: 0.8125rem; font-weight: 600; color: var(--ink-2); margin: 22px 0 6px; }
+.viz { position: relative; width: 100%; }
+.viz svg { display: block; width: 100%; height: auto; overflow: visible; }
+.viz text { font-family: var(--text); fill: var(--ink-2); }
+.viz .mono-t { font-family: var(--mono); }
+.viz .ax { stroke: var(--line); stroke-width: 1; }
+.viz .zero { stroke: var(--ink-3); stroke-width: 1; }
+.viz .bandr { fill: var(--band); }
+.viz .pline { fill: none; stroke: var(--series-1); stroke-width: 2; stroke-linejoin: round; }
+.viz .gainf { fill: var(--good); opacity: 0.13; }
+.viz .lossf { fill: var(--crit); opacity: 0.13; }
+.viz .spot { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; }
+.viz .dot { fill: var(--series-1); stroke: var(--surface); stroke-width: 2; }
+.viz .cross { stroke: var(--ink-3); stroke-width: 1; }
+.viz .chipb { fill: var(--series-1); }
+.viz .chips { fill: var(--surface); stroke: var(--series-1); stroke-width: 1.5; }
+.viz .chipb-t { fill: #fff; font-weight: 600; }
+.viz .chips-t { fill: var(--ink); font-weight: 600; }
+.viz .lead { stroke: var(--ink-3); stroke-width: 1; }
+.viz .strong-t { fill: var(--ink); font-weight: 600; }
+.viz .e-dot { fill: var(--series-1); stroke: var(--surface); stroke-width: 2; }
+.viz .e-ring { fill: var(--surface); stroke: var(--ink-3); stroke-width: 1.5; }
+.viz .e-pick { fill: none; stroke: var(--accent); stroke-width: 2; }
+.viz .mkfill { fill: var(--ink); }
+.tip { position: absolute; z-index: 5; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 0.8125rem; line-height: 1.35; padding: 6px 9px; border-radius: 4px; white-space: nowrap; }
+.tip b { font-family: var(--mono); font-weight: 500; }
+.explorer { position: relative; }
+.keyline { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.8125rem; color: var(--ink-3); margin-top: 8px; max-width: none; }
+.keyline span { display: inline-flex; align-items: center; gap: 6px; }
+.keyline b { font-family: var(--mono); font-weight: 500; color: var(--ink); }
+.sw { display: inline-block; width: 16px; height: 10px; border-radius: 2px; }
+.sw.band { background: var(--band); border: 1px solid var(--line); }
+.sw.line { height: 0; border-top: 2px solid var(--series-1); border-radius: 0; }
+.sw.gain { background: var(--good); opacity: 0.3; }
+.sw.loss { background: var(--crit); opacity: 0.3; }
+.mk { display: inline-block; width: 10px; height: 10px; }
+.mk.dot { border-radius: 50%; background: var(--series-1); }
+.mk.ring { border-radius: 50%; border: 1.5px solid var(--ink-3); }
+.mk.dia { background: var(--ink); transform: rotate(45deg) scale(0.8); }
+.mk.tri { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 10px solid var(--ink); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 18px; }
+.tile { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; min-width: 0; }
+.tile span { display: block; font-size: 0.75rem; color: var(--ink-3); }
+.tile b { display: block; font-family: var(--mono); font-weight: 500; font-size: 1.125rem; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.tile small { display: block; font-size: 0.75rem; color: var(--ink-3); margin-top: 1px; }
+table.legs { margin-top: 16px; }
+table.legs td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.exps { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-top: 8px; }
+.exp { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; min-width: 0; }
+.exp.on { border: 2px solid var(--accent); padding: 9px 11px; }
+.exp > div { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.exp > div span { font-size: 0.8125rem; color: var(--ink-2); }
+.exp p { margin: 2px 0 0; font-size: 0.8125rem; color: var(--ink-2); }
+.exp small { display: block; margin-top: 4px; font-size: 0.75rem; color: var(--accent); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips span { border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; font-size: 0.8125rem; color: var(--ink-3); min-height: 0; }
+.chips b { font-family: var(--mono); font-weight: 400; color: var(--ink); }
+.orows { border: 1px solid var(--line); border-radius: 6px; margin-top: 18px; overflow: hidden; }
+.orow, .ohead { display: grid; grid-template-columns: 1.4em minmax(0, 2fr) repeat(7, minmax(0, 1fr)) 76px; gap: 2px 10px; align-items: center; padding: 10px 12px; }
+.ohead { font-size: 0.75rem; color: var(--ink-3); border-bottom: 1px solid var(--line); align-items: end; }
+.ohead .hl { color: var(--accent); font-weight: 600; }
+.ocand + .ocand { border-top: 1px solid var(--line); }
+.ocand.open > .orow { background: var(--band); }
+.orow { font-size: 0.875rem; }
+.orow .v { font-family: var(--mono); font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
+.orow .nm { font-weight: 600; line-height: 1.3; }
+.orow .why1 { grid-column: 2 / -1; font-size: 0.75rem; color: var(--ink-3); }
+.ocand.rec .why1 { color: var(--accent); }
+.orow button { font: inherit; font-size: 0.8125rem; min-height: 40px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); cursor: pointer; }
+.orow button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ocand.open .orow button { border-color: var(--accent); color: var(--accent); }
+.odet { display: flex; flex-wrap: wrap; gap: 20px 28px; padding: 16px 16px 20px; border-top: 1px solid var(--line); }
+.odet > div { min-width: 0; }
+.odet .oc { flex: 3 1 340px; }
+.odet .os { flex: 2 1 240px; }
+.odet h4 { margin: 0 0 6px; font-size: 0.8125rem; color: var(--ink-2); }
+.odet .os h4:not(:first-child) { margin-top: 16px; }
+.odet table { font-size: 0.8125rem; }
+.odet td.n { color: var(--ink); width: auto; }
+.odet .kv { display: flex; justify-content: space-between; gap: 12px; font-size: 0.8125rem; padding: 2px 0; }
+.odet .kv span:last-child { color: var(--ink-3); }
+.odet .ex3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; font-size: 0.75rem; color: var(--ink-3); }
+.odet .ex3 b { display: block; font-family: var(--mono); font-weight: 400; font-size: 0.875rem; color: var(--ink); }
+.odet .oth { border: 1px dashed var(--line); border-radius: 6px; padding: 8px 10px; font-size: 0.8125rem; color: var(--ink-2); margin-top: 16px; }
+.odet .tiles { margin-top: 10px; }
+@media (max-width: 760px) {
+  .ohead { display: none; }
+  .orow { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 12px; align-items: start; }
+  .orow .rk { display: none; }
+  .orow .nm, .orow .why1 { grid-column: 1 / -1; }
+  .orow .nm::before { content: attr(data-rank) ". "; font-family: var(--mono); font-weight: 400; }
+  .orow .v::before { content: attr(data-l); display: block; font-family: var(--text); font-size: 0.6875rem; color: var(--ink-3); }
+  .orow button { grid-column: 1 / -1; }
+}
+/* Wide layout, 17 November 2026: the page uses the available width; cards and panels flex to fill it. */
+.wrap { max-width: 1120px; }
+p, ul, figcaption, .tabcap { max-width: 84ch; }
+.sub, .ex-title, .keyline, .verdict, .stages, .steps, .checks, .fam, .toc ol { max-width: none; }
+/* Cards, tables and figures keep their earlier size (860px at most) and sit centred in the wider page. */
+.wrap > .panel, .wrap > .two, .wrap > .tabs, .wrap > .cand-groups, .wrap > .stages, details.why > .panel { max-width: 860px; margin-left: auto; margin-right: auto; }
+[role="tabpanel"] > .panel { margin-left: auto; margin-right: auto; }
+/* UI call-outs, 17 November 2026: every mock-up says whether it is a screen of the application or an explanation. */
+h3#ui { margin-top: 36px; }
+.ui-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 0 10px; }
+.ui-tag { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; border-radius: 4px; padding: 3px 8px; white-space: nowrap; }
+.ui-tag.app { background: var(--accent); color: var(--surface); border: 1px solid var(--accent); }
+.ui-tag.ex { border: 1px dashed var(--ink-3); color: var(--ink-2); }
+.ui-row span:last-child { font-size: 0.8125rem; color: var(--ink-2); }
+.ui-list { list-style: none; padding: 0; margin: 12px 0 0; max-width: none; display: grid; gap: 8px; }
+.ui-list li { margin: 0; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-size: 0.9375rem; }
+.ui-list b { font-weight: 600; }
+.ui-list small { color: var(--ink-3); font-size: 0.8125rem; }
+details.why > .cand-groups { max-width: 860px; margin-left: auto; margin-right: auto; }
+.mxl { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 16px; }
+.mxl label { font-size: 0.875rem; font-weight: 600; }
+.mxl label small { font-weight: 400; color: var(--ink-3); margin-left: 4px; }
+.mxl-in { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); padding-left: 10px; }
+.mxl-in:focus-within { border-color: var(--accent); outline: 2px solid var(--accent); outline-offset: 1px; }
+.mxl-in i { font-style: normal; font-family: var(--mono); color: var(--ink-3); }
+.mxl-in input { font: inherit; font-family: var(--mono); font-size: 0.9375rem; width: 11.5em; min-height: 40px; padding: 6px 10px 6px 6px; border: 0; background: none; color: var(--ink); outline: none; }
+.viz .lvl { stroke: var(--series-2); stroke-width: 1.5; stroke-dasharray: 2 3; }
+.viz .lvl-t { fill: var(--ink-2); font-family: var(--mono); }
+</style>
+
+<div class="wrap">
+  <p class="sub manual-link" style="margin:0 0 10px"><a href="manual.html" style="color:var(--accent)">&larr; Tradecraft manual</a> &nbsp;·&nbsp; Stages: <a href="liquidity-gate.html" style="color:var(--accent)">1 Liquidity gate</a> &nbsp;<a href="thesis-stage.html" style="color:var(--accent)">2 Thesis</a> &nbsp;<a href="market-contracts.html" style="color:var(--accent)">3 Market and contracts</a> &nbsp;<a href="challenge.html" style="color:var(--accent)">4 Challenge</a></p>
+  <div class="top"><div class="meta">TRADECRAFT · 17 NOVEMBER 2026, REVISED 19 NOVEMBER 2026 · ON-DEMAND MODE, STAGE 3</div><button type="button" class="mode" id="mode">Switch to dark</button></div>
+  <h1>Market and contracts</h1>
+  <p class="lede">Stage 3 opens the option chain for the first time. It takes the frozen thesis from stage 2, builds option structures that express the view, describes each on the same terms, and ranks them by a priority the user selects. The first-ranked structure is the recommendation. The stage does not say whether the trade is worth taking.</p>
+
+  <nav class="toc" aria-label="Contents">
+    <ol>
+      <li><a href="#p1">Overview</a></li>
+      <li><a href="#p2">Building the candidates</a></li>
+      <li><a href="#p3">Describing the candidates</a></li>
+      <li><a href="#p4">Filtering and ranking</a></li>
+      <li><a href="#p5">The output</a></li>
+      <li><a href="#p6">Decision and record</a></li>
+    </ol>
+  </nav>
+
+  <h2 id="p1">1. Overview</h2>
+  <p>A view says where the underlying is expected to finish. A trade needs more than that: a structure, an expiry, strikes, and a price. This stage supplies them by fixed rules and sets the resulting candidates side by side, so that the user chooses among them on stated terms.</p>
+
+  <div class="two">
+    <div class="panel">
+      <h3>What the stage receives</h3>
+      <p>The frozen thesis from stage 2: the underlying, the view, the primary horizon, whether the view depends on a dated catalyst, the usual range and volatility state, the risk flags, and chart levels. No option price has been seen up to this point.</p>
+    </div>
+    <div class="panel">
+      <h3>What the stage does not do</h3>
+      <p>It does not judge whether the view is right or the trade worthwhile. It does not set position size, which belongs to stage 5. It does not place orders. No agent takes part: every strike, expiry and figure is computed in code.</p>
+    </div>
+  </div>
+
+  <h3 class="sec">What the stage produces</h3>
+  <div class="panel">
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Component</th><th>Definition</th></tr></thead>
+        <tbody>
+          <tr><th>Candidates</th><td>A small set of defined-risk option structures that express the view: spreads, a single bought option, or an iron condor, each with its expiry and strikes.</td></tr>
+          <tr><th>Payoff</th><td>For each candidate: the net premium, the maximum loss, the maximum gain and the break-even price.</td></tr>
+          <tr><th>Pays when the view is right</th><td>How often the candidate would have made money in the past periods in which the view's outcome occurred.</td></tr>
+          <tr><th>Base-rate chance of profit</th><td>How often the candidate would have finished beyond break-even, given the underlying's own history of moves over the same period.</td></tr>
+          <tr><th>Structure-level cost</th><td>The cost of trading the whole structure, in dollars and as a share of the amount at risk.</td></tr>
+          <tr><th>Market-implied chance of profit</th><td>The chance of profit that current option prices imply, shown beside the base-rate figure as context.</td></tr>
+          <tr><th>Exposure</th><td>The candidate's net delta, theta and vega.</td></tr>
+          <tr><th>Checks</th><td>Whether earnings fall before expiry, and whether a dividend falls before expiry on a short leg. Shown on the row; they set nothing aside.</td></tr>
+          <tr><th>Ranking and recommendation</th><td>The candidates in order, by a priority the user selects. The first-ranked candidate is the recommendation, with the reason stated.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <ul>
+    <li><strong>The recommendation serves a stated priority.</strong> The user selects what matters most: matching the view, a larger payoff, or the lowest trading cost. The system ranks on that measure. The recommendation is not a forecast and does not state that the trade is worth taking.</li>
+    <li><strong>Defined risk only.</strong> Every candidate has a known maximum loss. Spreads, iron condors and single bought options qualify. Uncovered short options are not proposed.</li>
+    <li><strong>Cost is measured on the structure.</strong> Two legs that each pass the liquidity gate can still form a spread that is expensive to trade relative to its price. The figure that matters is the cost of the whole structure.</li>
+    <li><strong>The user decides.</strong> The user may take the recommended candidate, an alternative, or none.</li>
+  </ul>
+
+  <h3 class="sec" id="ui">Screens in this stage</h3>
+  <div class="panel">
+    <p class="sub" style="margin-top:0">This page mixes two kinds of figure. A figure marked <strong>application screen</strong> is what the user sees in the application. A figure marked <strong>explanation only</strong> illustrates a rule and is not part of the application.</p>
+    <ul class="ui-list">
+      <li><span class="ui-tag app">APPLICATION SCREEN</span><b>Stage 3 output</b><small>The single screen of this stage: expiry, ranking, filters, the ranked comparison and the detail of each candidate. Shown in part 5.</small></li>
+    </ul>
+    <p class="sub">The candidate explorer and the expiry timeline in part 2 are explanation only. The user never builds a structure by hand; the system builds and ranks the candidates.</p>
+  </div>
+
+  <h3 class="sec">Procedure</h3>
+  <ol class="steps">
+    <li><div><b>Confirm the frozen thesis</b><span>The thesis record from stage 2 is read as written. It cannot be changed from this point; an amendment creates a new record.</span></div></li>
+    <li><div><b>Open the option chain</b><span>Live quotes are used when the market is open. When it is closed, the most recent snapshot is used and every figure is marked provisional.</span></div></li>
+    <li><div><b>Re-apply the liquidity criteria</b><span>The user's stage 1 settings are applied to the chain just retrieved, without the days-to-expiry criterion. Only eligible contracts may form part of a candidate. For a spread or an iron condor the bid-ask criterion is judged on the whole structure in step 7, not on each leg. There is no override at this stage.</span></div></li>
+    <li><div><b>Choose the expiry</b><span>The default is the eligible expiry nearest the horizon date of the thesis, among those on or after it or up to three trading sessions before it. The user may switch to an expiry that serves another horizon from the research brief.</span></div></li>
+    <li><div><b>Build the candidates</b><span>Structures are assembled by fixed rule from the view, with strikes placed by reference to the usual range. Each spread is priced in both of its constructions, with calls and with puts. A directional view also produces a single bought option.</span></div></li>
+    <li><div><b>Describe each candidate</b><span>Payoff, the two history-based chances, the market-implied chance, trading cost and exposure are calculated for each, on the same basis.</span></div></li>
+    <li><div><b>Apply the filters</b><span>Each candidate's trading cost is tested against the cap. A candidate over the cap is set aside with the reason shown; a candidate that could not be built from eligible contracts is listed with its reason. Events before expiry are shown on the row and set nothing aside.</span></div></li>
+    <li><div><b>Rank and recommend</b><span>The remaining candidates are ranked by the priority the user selects. The default is to match the view. The first-ranked candidate is the recommendation.</span></div></li>
+    <li><div><b>User selection</b><span>The user selects a candidate or none. The expiry, the priority, the ranking and the selection are written as decision records, and the selected candidate passes to stage 4.</span></div></li>
+  </ol>
+
+  <h2 id="p2">2. Building the candidates</h2>
+  <p>Candidates are assembled by fixed rule. The view determines the kind of structure, the usual range determines where the strikes sit, and the horizon determines the expiry. Nothing in this step involves judgement.</p>
+
+  <h3 class="sec">From the view to the candidates</h3>
+  <p>Each directional view produces two spreads and a single bought option. One spread requires a move in the view's direction. The other requires only that the underlying does not move against the view. The single option is a call for a bullish view and a put for a bearish view, bought at the price. A range-bound view produces an iron condor at two widths.</p>
+  <details class="why" id="exwrap">
+    <summary>See how each candidate is constructed (explanation only)</summary>
+  <p>Select a card to load it in the explorer beneath.</p>
+  <div class="cand-groups" id="candGroups"></div>
+  <h4>Candidate explorer</h4>
+  <div class="panel explorer" id="explorer">
+    <div class="ui-row"><span class="ui-tag ex">EXPLANATION ONLY</span><span>Not a screen in the application. It illustrates how the system constructs each candidate.</span></div>
+    <div class="mock-tag">ILLUSTRATIVE · FICTIONAL UNDERLYING AT $100 · USUAL RANGE ±5% · 32 DAYS TO EXPIRY</div>
+    <div class="ctrl-row">
+      <div class="ctrl"><span class="ctrl-l" id="lblView">View</span><div class="seg" role="group" aria-labelledby="lblView" id="segView"></div></div>
+      <div class="ctrl"><span class="ctrl-l" id="lblShape">Payoff shape</span><div class="seg" role="group" aria-labelledby="lblShape" id="segShape"></div></div>
+      <div class="ctrl" id="ctrlCons"><span class="ctrl-l" id="lblCons">Construction</span><div class="seg" role="group" aria-labelledby="lblCons" id="segCons"></div></div>
+    </div>
+    <p class="ex-title" id="exTitle"></p>
+    <p class="sub" id="exNote"></p>
+
+    <h4 class="viz-h">Where the strikes sit</h4>
+    <div class="viz" id="ladder" role="img" aria-label="Strike ladder showing the legs of the selected candidate against the usual range"></div>
+    <p class="keyline"><span><b>C</b> call</span><span><b>P</b> put</span><span><i class="sw band"></i>usual range</span></p>
+
+    <h4 class="viz-h">Profit or loss at expiry, per contract</h4>
+    <div class="viz hoverable" id="payoff" role="img" aria-label="Payoff at expiry of the selected candidate across underlying prices"></div>
+    <div class="tip" id="tip" hidden></div>
+    <p class="keyline"><span><i class="sw line"></i>payoff at expiry</span><span><i class="sw gain"></i>profit</span><span><i class="sw loss"></i>loss</span><span><i class="sw band"></i>usual range</span></p>
+
+    <div class="tiles" id="tiles"></div>
+    <div class="scroll">
+      <table class="legs" id="legs"></table>
+    </div>
+  </div>
+  </details>
+  <ul>
+    <li><strong>Two constructions, one payoff.</strong> Each spread can be built with calls or with puts at the same strikes. The payoff line does not move when the construction changes; only the legs and the premium do. The system prices both and keeps the one that costs less to trade.</li>
+    <li><strong>The two shapes are different trades.</strong> A spread that requires a move pays more and pays less often. A spread that requires no adverse move pays less and pays more often. The system sets both beside each other; it does not treat them as interchangeable.</li>
+  </ul>
+
+  <h3 class="sec">Placing the strikes</h3>
+  <ol class="steps">
+    <li><div><b>Measure the usual range for the expiry</b><span>The band that held 68% of past moves over the number of days to expiry. In the example, ±5%, or $95 to $105.</span></div></li>
+    <li><div><b>Anchor at the price</b><span>The first strike is the eligible strike nearest the current price. A single option is bought at that strike, and its row states how far the strike is from the price.</span></div></li>
+    <li><div><b>Place the second strike one usual range away</b><span>Above the price or below it, according to the shape, moved to the nearest eligible listed strike. Where that is not one usual range away the row states the distance used. If no eligible strike exists on that side the candidate is not built, and the screen says why.</span></div></li>
+    <li><div><b>For an iron condor, sell at the edges and buy beyond</b><span>The short strikes sit at the edges of the usual range, or at 1.25 times it for the wider version. Each long strike is the next eligible strike beyond.</span></div></li>
+  </ol>
+
+  <h3 class="sec">Choosing the expiry</h3>
+  <p>The expiry is the eligible one nearest the horizon date, among those on or after it or up to three trading sessions before it; when two are equally near, the one on or after is chosen. Change the horizon to see which expiry is chosen. The rule for a view that depends on a dated catalyst (the expiry must fall after that date) is not applied in the first version: the thesis record carries no catalyst date.</p>
+  <div class="panel">
+    <div class="ui-row"><span class="ui-tag ex">EXPLANATION ONLY</span><span>Not a screen in the application. In the application the expiries appear as the strip at the top of the output.</span></div>
+    <div class="mock-tag">ILLUSTRATIVE · LISTED EXPIRIES FOR A FICTIONAL UNDERLYING</div>
+    <div class="ctrl-row">
+      <div class="ctrl"><span class="ctrl-l" id="lblHz">Primary horizon</span><div class="seg" role="group" aria-labelledby="lblHz" id="segHz"></div></div>
+      <div class="ctrl"><label class="chk"><input type="checkbox" id="chkCat"> View depends on a catalyst dated 5 days after the horizon</label></div>
+    </div>
+    <div class="viz" id="timeline" role="img" aria-label="Timeline of listed expiries with the chosen expiry marked"></div>
+    <p class="keyline"><span><i class="mk dot"></i>eligible expiry</span><span><i class="mk ring"></i>listed, not eligible</span><span><i class="mk dia"></i>horizon</span><span><i class="mk tri"></i>catalyst</span></p>
+    <p class="ex-title" id="tlOut"></p>
+  </div>
+
+  <h3 class="sec">Expiries offered, and switching</h3>
+  <ul>
+    <li><strong>One expiry for each horizon in the research brief.</strong> The same rule is applied to every horizon row that has an eligible expiry. Horizons that lead to the same expiry are merged into one option, labelled with the horizons it serves.</li>
+    <li><strong>The default comes from the thesis.</strong> The expiry for the thesis horizon is selected when the stage opens.</li>
+    <li><strong>The user may switch.</strong> Selecting another expiry rebuilds the candidates for that period, with its own usual range and history-based figures. The switch is recorded as an amendment to the horizon; the thesis record itself is not altered.</li>
+    <li><strong>The gap is always shown.</strong> Each expiry states how many days it falls after the horizon it serves, or before it: "27 days beyond it", "1 day before it".</li>
+    <li><strong>A poor match is a soft warning.</strong> Where the days to expiry exceed twice the horizon, more than half of the option's life falls after the period the view describes, and the expiry is marked a poor match. The mark removes nothing and does not affect the ranking. The screen adds one sentence: the figures assume the position is held to expiry, the view covers only the first part of that period, and closing at the horizon will give a different result.</li>
+    <li><strong>Where it arises.</strong> Mainly on the 7- and 14-day horizons, where few underlyings have eligible contracts and the nearest usable expiry is often about a month away.</li>
+  </ul>
+  <div class="panel">
+    <div class="ui-row"><span class="ui-tag app">APPLICATION SCREEN</span><span>Part of the stage 3 output: an expiry card carrying the warning. Illustrative.</span></div>
+    <div class="exps">
+      <div class="exp on"><div><b>18 December</b><span class="mono">32 days</span></div><p>Serves the 14-day horizon · 18 days beyond it</p><small style="color:var(--ink)"><strong>Poor match.</strong> Figures assume holding to expiry. Your view covers the first 14 days; closing then will give a different result.</small></div>
+      <div class="exp"><div><b>15 January</b><span class="mono">60 days</span></div><p>Serves the 60-day horizon · on the horizon date</p><small>Switch to this expiry</small></div>
+    </div>
+  </div>
+  <ul>
+    <li><strong>One expiry per structure.</strong> Every leg of a candidate shares the same expiry.</li>
+  </ul>
+
+  <details class="why">
+    <summary>Why these rules, and what is provisional</summary>
+  <ul>
+    <li><strong>Why defined risk only.</strong> Every position must have a known maximum loss, so that the user can decide how much to put at risk. An uncovered short option has no fixed limit.</li>
+    <li><strong>Single bought options.</strong> The maximum loss is the premium paid.</li>
+    <li><strong>Why strikes come from the usual range.</strong> It is the one measure of likely movement the system has counted from the underlying's own history, and it scales with the days to expiry.</li>
+    <li><strong>Why only eligible contracts.</strong> A structure with one illiquid leg is expensive to enter and harder to leave.</li>
+    <li><strong>What makes a leg eligible.</strong> A valid two-sided quote, and the user's open-interest, minimum-premium and strike-distance settings. The days-to-expiry setting is left out, because the expiry comes from the thesis horizon. For a spread or an iron condor the bid-ask setting is not applied to each leg: an option a usual range from the price is cheap, so a quote a few cents wide is a large share of its premium, and applying the setting leg by leg pulled the strikes in or kept only the dearer construction. The cost of the whole structure is judged instead, by the cost cap. A single bought option keeps the bid-ask setting. Where a leg is quoted wider than the setting, the detail says so.</li>
+    <li><strong>When the expiry falls well after the horizon.</strong> If the nearest eligible expiry is some days beyond the horizon, the screen states by how many. The payoff figures then describe the position at expiry, not at the horizon.</li>
+    <li><strong>Provisional choices.</strong> The strike distances (one usual range, and 1.25 for the wider condor) and the width of the condor's wings are design choices.</li>
+  </ul>
+  </details>
+
+  <h2 id="p3">3. Describing the candidates</h2>
+  <p>Every candidate is described on the same measures, calculated in code from the chain and from the underlying's price history. The same measures appear as columns on the output screen, so candidates can be compared line by line.</p>
+  <div class="panel">
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Measure</th><th>Definition</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><th>Payoff</th><td>Net premium at the midpoint, maximum loss, maximum gain and break-even price, per contract.</td><td>Option quotes</td></tr>
+          <tr><th>Pays when the view is right</th><td>Of the past periods of the same length in which the view's outcome occurred, the share in which the candidate would have made money. For a bullish view the outcome is a higher close. Counted before trading cost, and labelled so.</td><td>Price history</td></tr>
+          <tr><th>Base-rate chance of profit</th><td>Of all past periods of the same length, the share in which the candidate would have finished beyond break-even. Counted before trading cost, and labelled so.</td><td>Price history</td></tr>
+          <tr><th>Market-implied chance of profit</th><td>The same chance read from current option prices: the chance of finishing beyond the break-even, using the implied volatility of the eligible contract nearest the break-even, with no drift assumed. Labelled "approximate" and shown beside the base-rate figure as context.</td><td>Implied volatility</td></tr>
+          <tr><th>Trading cost</th><td>The cost of entering the whole structure at market against the midpoint, summed over the legs, in dollars and as a share of the amount at risk.</td><td>Bid and ask</td></tr>
+          <tr><th>Exposure</th><td>Net delta, theta and vega of the structure.</td><td>Greeks from the feed</td></tr>
+          <tr><th>Chart levels</th><td>Where the break-even sits relative to the highest and lowest daily close of the last 60 trading days. Description only.</td><td>Price history</td></tr>
+          <tr><th>Contracts</th><td>One by default. Where the user enters a maximum loss for the trade, the number of contracts whose combined maximum loss fits within it.</td><td>User input</td></tr>
+          <tr><th>Checks</th><td>Earnings before expiry. A dividend before expiry on a short leg, which can lead to early assignment. A row is marked when either applies.</td><td>Earnings and ex-dividend dates from the data provider</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="two">
+    <div class="panel">
+      <h3>Pays when the view is right</h3>
+      <p class="sub">Answers: if the researched view proves correct, does this structure pay? A structure that needs a large move can lose even when the direction was right.</p>
+    </div>
+    <div class="panel">
+      <h3>Base-rate chance of profit</h3>
+      <p class="sub">Answers: with no view at all, how often has this structure paid? It is the figure to compare with the market-implied chance.</p>
+    </div>
+  </div>
+  <ul>
+    <li><strong>No expected return is shown.</strong> The system claims no edge, so a fairly priced structure loses its trading cost on average. The screen states what the underlying must do for the trade to pay.</li>
+    <li><strong>Both history-based figures are blended.</strong> As with the base rate in stage 2, a single stock's own history is combined with that of all single stocks, using the same weights. Because stocks differ in how far they move, each past move is first divided by that stock's usual range, and the break-even is expressed the same way. The blended figure is shown and the stock's own figure is kept in the record. Index funds use their own history.</li>
+    <li><strong>The history flatters bullish structures.</strong> Price history contains only companies that survived. Both history-based figures inherit that bias.</li>
+    <li><strong>Delta is not shown as a probability.</strong> It is shown only as exposure.</li>
+    <li><strong>Chart levels are context.</strong> The 60-day high and low of the daily close are drawn on each candidate's payoff chart, and one sentence states where the break-even sits relative to them. They do not place a strike, set aside a candidate or affect the ranking.</li>
+    <li><strong>Chart levels are measured.</strong> Each candidate's position relative to the levels is saved in the record. Once enough trades have resolved, candidates with a level on their side are compared with the rest. Levels gain a role in placing strikes only if that comparison supports it.</li>
+  </ul>
+
+  <h2 id="p4">4. Filtering and ranking</h2>
+  <p>Filters decide which candidates may be shown as choices. The ranking then orders those that remain, according to a priority the user selects. Both are fixed rules in code.</p>
+
+  <h3 class="sec">Filters</h3>
+  <div class="panel">
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Filter</th><th>A candidate is set aside when</th><th>Setting</th></tr></thead>
+        <tbody>
+          <tr><th>Liquidity</th><td>A leg cannot be found among eligible contracts: the candidate is not built, and is listed with the reason.</td><td>The user's stage 1 controls, without days to expiry; the bid-ask setting applies to a single option only</td></tr>
+          <tr><th>Trading cost</th><td>The cost of the whole structure exceeds the cap.</td><td>Share of the amount at risk. Default 5%, adjustable on the screen from 2% to 10%</td></tr>
+          <tr><th>Events</th><td>Nothing is set aside. Where earnings fall before expiry, or a dividend falls before expiry on a short leg, the row is marked and the challenge in stage 4 carries the flag.</td><td>Shown, not filtered. A control to include or exclude such candidates is deferred</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <ul>
+    <li><strong>Set aside, not hidden.</strong> A candidate that fails a filter is listed beneath the comparison with the reason and a label in place of its rank. It may be opened for inspection and cannot be selected.</li>
+    <li><strong>Within a payoff shape, the cheaper construction is kept.</strong> The other construction has the same payoff, so it is shown inside the detail of the one kept and is not ranked separately.</li>
+    <li><strong>If no candidate remains,</strong> the screen says so and shows why each was set aside.</li>
+  </ul>
+
+  <h3 class="sec">Ranking by a chosen priority</h3>
+  <p>The remaining candidates are different trades, so no single ordering is correct for every purpose. The user selects what matters most and the system ranks on that measure alone.</p>
+  <div class="panel">
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Priority</th><th>Ranked by</th><th>Favours</th></tr></thead>
+        <tbody>
+          <tr><th>Match the view <span class="role">default</span></th><td>Pays when the view is right, highest first.</td><td>Structures that pay whenever the direction is right, whatever the size of the move.</td></tr>
+          <tr><th>Larger payoff</th><td>What the candidate pays if the underlying moves one usual range in the direction of the view, as a multiple of its maximum loss, highest first. For a range-bound view, what it pays if the underlying finishes where it started.</td><td>Structures that pay more for a move of ordinary size, and pay less often.</td></tr>
+          <tr><th>Lowest cost</th><td>Trading cost as a share of the amount at risk, lowest first.</td><td>Structures that lose least to the bid and ask.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <ul>
+    <li><strong>Why "larger payoff" is measured at one usual range.</strong> A bought option has no limit on its gain, so ranking on maximum gain would place it first every time, whatever the prices. One usual range is a measured quantity and gives every structure a finite figure on the same basis. A bought option keeps gaining beyond that point; the screen says so, and the ranking does not reward it.</li>
+    <li><strong>Ties</strong> are settled by lower trading cost, then by fewer legs.</li>
+    <li><strong>The first-ranked candidate is the recommendation,</strong> with the reason stated in a sentence. Changing the priority changes the recommendation, and the priority in force is recorded.</li>
+    <li><strong>The recommendation is not a forecast.</strong> It identifies the candidate that best serves the chosen priority. It does not state that the trade is worth taking.</li>
+    <li><strong>Gross richness is never a ranking measure.</strong> No candidate is ranked on how expensive its options appear.</li>
+  </ul>
+
+  <h2 id="p5">5. The output</h2>
+  <p>The stage presents one screen. The expiry is at the top, the ranked comparison is in the middle, and the detail of a candidate opens in place beneath its row. In the example below the ranking and the detail respond; the expiry is fixed.</p>
+  <div class="panel outp" id="outp">
+    <div class="ui-row"><span class="ui-tag app">APPLICATION SCREEN</span><span>Stage 3 output. The only screen of this stage.</span></div>
+    <div class="mock-tag">ILLUSTRATIVE · FICTIONAL UNDERLYING · FIGURES DO NOT DESCRIBE A REAL CONTRACT</div>
+    <div class="cm-head" style="margin-top:12px"><span class="cm-tk mono">EXMP</span><span class="cm-chip">BULLISH</span><span class="sub" style="margin:0">Researched view, 30-day horizon · price $100.00 · quotes 11:42, delayed 15 minutes</span></div>
+    <p class="sub">Options imply a move of ±6.2% by 18 December. The usual range over that period is ±5%.</p>
+
+    <h4 class="viz-h">Expiry</h4>
+    <div class="exps">
+      <div class="exp on"><div><b>18 December</b><span class="mono">32 days</span></div><p>Serves the 30-day horizon · 2 days beyond it</p><small>From the thesis · selected</small></div>
+      <div class="exp"><div><b>15 January</b><span class="mono">60 days</span></div><p>Serves the 60-day horizon · on the horizon date</p><small>Switch to this expiry</small></div>
+      <div class="exp"><div><b>19 February</b><span class="mono">95 days</span></div><p>Serves the 90-day horizon · 5 days beyond it</p><small>Switch to this expiry</small></div>
+    </div>
+    <p class="sub">Next earnings report: 24 February, after this expiry. Next dividend date: none declared.</p>
+
+    <div class="ctrl-row">
+      <div class="ctrl"><span class="ctrl-l" id="lblPri">Rank by</span><div class="seg" role="group" aria-labelledby="lblPri" id="segPri"></div></div>
+      <div class="ctrl"><span class="ctrl-l">Filters</span><div class="chips"><span>Liquidity <b>stage 1 controls</b></span><span>Cost cap <b>5% of risk</b></span><span>Events <b>shown, not filtered</b></span></div></div>
+    </div>
+
+    <div class="mxl"><label for="mxl">Maximum loss for this trade <small>optional</small></label><span class="mxl-in"><i>$</i><input id="mxl" type="text" inputmode="numeric" autocomplete="off" placeholder="one contract each" aria-describedby="mxlNote"></span><span class="sub" id="mxlNote" style="margin:0"></span></div>
+    <div class="orows" id="orows"></div>
+    <p class="sub"><strong>Set aside: none.</strong> A candidate set aside by a filter is listed here with the reason.</p>
+    <div class="cm-actions" style="justify-content:flex-end"><span class="cm-btn">Stop</span><span class="cm-btn primary" id="outGo"></span></div>
+  </div>
+  <ul>
+    <li><strong>Maximum loss for this trade.</strong> An optional figure entered on this screen, once the prices are visible. Left empty, every candidate is shown for one contract. With a figure entered, each candidate shows the number of contracts that fit within it, and its maximum loss, maximum gain and trading cost are restated for that number as the user types. The ranking, the break-even and the chance figures do not change.</li>
+    <li><strong>A candidate that does not fit stays visible.</strong> Where one contract already exceeds the figure, the row shows no contracts and states what one contract risks.</li>
+    <li><strong>Chart levels appear in the detail only.</strong> The 60-day high and low of the daily close are drawn on the payoff chart and described in one sentence. The levels in the example are illustrative.</li>
+    <li><strong>The cost cap is a control on the screen.</strong> A slider from 2% to 10%, default 5%. Moving it re-ranks the candidates on the quotes already retrieved, and it stays in place when every candidate is set aside, so the cap can be raised. The example above shows the setting only.</li>
+    <li><strong>A wide leg is stated.</strong> Where a leg of a spread is quoted wider than the user's bid-ask setting, a sentence under that leg gives its quoted spread and says that cost is judged on the whole structure.</li>
+    <li><strong>Market closed.</strong> Where the symbol is in the daily snapshot the screen is built from it and marked provisional; the user may still continue.</li>
+    <li><strong>One detail open at a time.</strong> Opening a candidate closes the one previously open, so the comparison stays in view.</li>
+    <li><strong>Each expiry is labelled with the horizons it serves.</strong> Horizons from the research brief that lead to the same expiry are merged into one option.</li>
+    <li><strong>Switching expiry rebuilds the screen.</strong> Candidates, strikes, the usual range and the history-based figures are recalculated for the new period.</li>
+    <li><strong>Stop ends the workflow.</strong> Continue passes the selected candidate to stage 4.</li>
+  </ul>
+
+  <h2 id="p6">6. Decision and record</h2>
+  <p>The user selects the recommended candidate, another candidate, or none. Every decision taken in the stage is written as a decision record, and the records are retained in memory if the contract is traded.</p>
+  <div class="panel">
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Recorded</th><th>Content</th></tr></thead>
+        <tbody>
+          <tr><th>Chain used</th><td>Time of the quotes, and whether they were live or from the snapshot.</td></tr>
+          <tr><th>Expiry</th><td>The expiries offered, the one selected, and whether it was the default from the thesis.</td></tr>
+          <tr><th>Horizon amendment</th><td>Where the user switched expiry: the original horizon, the new one and the time of the change. The thesis record itself is not altered.</td></tr>
+          <tr><th>Filters</th><td>The settings in force, including the cost cap and each change to it, and each candidate set aside with the reason.</td></tr>
+          <tr><th>Maximum loss for the trade</th><td>The figure entered, if any, each change to it, and the number of contracts it gives for the selected candidate.</td></tr>
+          <tr><th>Candidates</th><td>Every candidate with its legs, quotes and all measures as shown, and its position relative to the chart levels.</td></tr>
+          <tr><th>Ranking</th><td>The priority in force, the order produced, the recommended candidate and the stated reason.</td></tr>
+          <tr><th>Selection</th><td>The candidate the user selected, or that none was selected.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <h3 class="sec">What is handed to stage 4</h3>
+  <ul>
+    <li>The selected candidate, with its legs, quotes and measures, and the proposed number of contracts. The final size is confirmed in stage 5.</li>
+    <li>The thesis record from stage 2, with any horizon amendment attached.</li>
+    <li>The candidates not selected, so that the challenge can ask why a different structure was not preferred.</li>
+  </ul>
+
+  <details class="why">
+    <summary>Why the stage ranks by a chosen priority</summary>
+  <ul>
+    <li><strong>The candidates are not equivalent.</strong> Two constructions at the same strikes differ only in trading cost, and there the cheaper is simply better. A spread that needs a move, a spread that needs no adverse move and a single option are different trades. No evidence available to the system shows that one of them earns more.</li>
+    <li><strong>Why "Match the view" is the default.</strong> The researched view states a direction and states no size of move. The structure most faithful to that view is the one that pays whenever the direction is right.</li>
+    <li><strong>Why single options are included.</strong> A bought call or put has a known maximum loss, the premium paid. It is the simplest expression of a directional view and the least expensive to trade.</li>
+    <li><strong>Why chart levels do not place strikes.</strong> No measurement available to the system shows that these levels hold, and any definition of a level involves arbitrary choices. Letting them move a strike would change every figure on the screen on the strength of an untested input. Showing them and recording the outcome tests the idea at no cost. The general definition of a level is still to be settled; the first version uses the 60-day high and low of the daily close.</li>
+    <li><strong>What is not built.</strong> Uncovered short options, because the loss has no fixed limit. Cash-secured puts and covered calls, because they commit the price of the shares. Structures across two expiries, because their payoff cannot be stated at a single date.</li>
+    <li><strong>Why a cost cap as well as the liquidity gate.</strong> The gate tests each contract alone. A spread's net price is much smaller than either leg, so two contracts that each pass can form a structure that costs a large share of the amount at risk to trade.</li>
+    <li><strong>The cost cap is a control.</strong> The 5% default is a design choice, confirmed by the user as an adjustable setting. Counted on live chains on 19 November 2026 across 33 views: 35 of 72 candidates were over the cap at 5%, 54 at 2% and 15 at 10%. The control was put on the screen for that reason. After the bid-ask setting stopped being applied leg by leg, 27 of 86 were over the cap at 5%.</li>
+    <li><strong>The poor-match mark is a warning only.</strong> Confirmed by the user. The factor of two is a design choice. Estimating a position's value at the horizon, which would remove the need for the warning, is deferred: it requires a pricing model and assumptions about volatility.</li>
+  </ul>
+  </details>
+
+  <div class="note">
+    <p><strong>Known data gaps.</strong> Earnings dates carry no time of day, so the report day counts as before expiry. A future ex-dividend date appears only once it is declared; until then the screen says "none declared". Symbols the data does not cover show "not available".</p>
+    <p><strong>Implementation status.</strong> The stage was built on 19 November 2026 and this page was revised the same day to match the decisions taken during the build. The application's screen uses trading terms for the same things (expiration, breakeven, slippage, "best fit" for the first-ranked candidate); the mapping is in <code>docs/product-shell.md</code>, section 3. Decision record: <code>docs/decisions/2026-11-17-stage-3-contract-selection.md</code>.</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  var modeBtn = document.getElementById('mode'), root = document.documentElement;
+  function isDark() { var t = root.getAttribute('data-theme'); return t ? t === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches; }
+  function label() { modeBtn.textContent = isDark() ? 'Switch to light' : 'Switch to dark'; }
+  modeBtn.addEventListener('click', function () { root.setAttribute('data-theme', isDark() ? 'light' : 'dark'); label(); });
+  label();
+})();
+(function () {
+  document.querySelectorAll('[data-tabs]').forEach(function (box) {
+    var tabs = Array.prototype.slice.call(box.querySelectorAll(':scope > .tablist > [role="tab"]'));
+    function select(i, focus) {
+      tabs.forEach(function (t, k) {
+        var on = k === i;
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+        t.tabIndex = on ? 0 : -1;
+        document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+      });
+      if (focus) tabs[i].focus();
+    }
+    tabs.forEach(function (t, i) {
+      t.addEventListener('click', function () { select(i, false); });
+      t.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight') { e.preventDefault(); select((i + 1) % tabs.length, true); }
+        else if (e.key === 'ArrowLeft') { e.preventDefault(); select((i - 1 + tabs.length) % tabs.length, true); }
+      });
+    });
+    select(0, false);
+  });
+  var bgLink = document.querySelector('.toc a[href="#p7"]'), bg = document.getElementById('bg');
+  if (bgLink && bg) bgLink.addEventListener('click', function () { bg.open = true; });
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details.why').forEach(function (d) { d.open = true; });
+  });
+})();
+</script>
+<script>
+(function () {
+  var NS = 'http://www.w3.org/2000/svg';
+  var SPOT = 100, LO = 95, HI = 105, XMIN = 88, XMAX = 112;
+  var CALL = {90: 10.15, 92.5: 7.85, 95: 5.70, 97.5: 3.85, 100: 2.40, 102.5: 1.35, 105: 0.70, 107.5: 0.32, 110: 0.14};
+  var STRIKES = [90, 92.5, 95, 97.5, 100, 102.5, 105, 107.5, 110];
+  function prem(t, k) { return t === 'C' ? CALL[k] : +(CALL[k] - (SPOT - k)).toFixed(2); }
+  function leg(a, t, k) { return {a: a, t: t, k: k, p: prem(t, k)}; }
+
+  var VIEWS = [
+    {id: 'bull', name: 'Bullish', shapes: [
+      {id: 'move', name: 'Requires a rise', card: 'Spread above the price', pays: 'Pays in full at or above $105.',
+        cons: [{name: 'With calls', title: 'Call debit spread, 100 / 105', legs: [leg(1, 'C', 100), leg(-1, 'C', 105)]},
+               {name: 'With puts', title: 'Put credit spread, 100 / 105', legs: [leg(1, 'P', 100), leg(-1, 'P', 105)]}]},
+      {id: 'hold', name: 'Requires no fall', card: 'Spread below the price', pays: 'Pays in full at or above $100.',
+        cons: [{name: 'With puts', title: 'Put credit spread, 95 / 100', legs: [leg(1, 'P', 95), leg(-1, 'P', 100)]},
+               {name: 'With calls', title: 'Call debit spread, 95 / 100', legs: [leg(1, 'C', 95), leg(-1, 'C', 100)]}]},
+      {id: 'single', name: 'Single option', sub: 'One call bought at the price', card: 'Long call', pays: 'Profit grows without limit above $102.40.', open: 'No limit', note: ' One leg. The most that can be lost is the premium paid.',
+        cons: [{name: 'Long call', title: 'Long call, 100', legs: [leg(1, 'C', 100)]}]}]},
+    {id: 'bear', name: 'Bearish', shapes: [
+      {id: 'move', name: 'Requires a fall', card: 'Spread below the price', pays: 'Pays in full at or below $95.',
+        cons: [{name: 'With puts', title: 'Put debit spread, 100 / 95', legs: [leg(1, 'P', 100), leg(-1, 'P', 95)]},
+               {name: 'With calls', title: 'Call credit spread, 95 / 100', legs: [leg(-1, 'C', 95), leg(1, 'C', 100)]}]},
+      {id: 'hold', name: 'Requires no rise', card: 'Spread above the price', pays: 'Pays in full at or below $100.',
+        cons: [{name: 'With calls', title: 'Call credit spread, 100 / 105', legs: [leg(-1, 'C', 100), leg(1, 'C', 105)]},
+               {name: 'With puts', title: 'Put debit spread, 105 / 100', legs: [leg(1, 'P', 105), leg(-1, 'P', 100)]}]},
+      {id: 'single', name: 'Single option', sub: 'One put bought at the price', card: 'Long put', pays: 'Profit grows as the price falls below $97.60.', open: '$9,760', openSub: 'if the price fell to zero', note: ' One leg. The most that can be lost is the premium paid.',
+        cons: [{name: 'Long put', title: 'Long put, 100', legs: [leg(1, 'P', 100)]}]}]},
+    {id: 'range', name: 'Range-bound', shapes: [
+      {id: 'std', name: 'At the usual range', sub: 'Short strikes at the edges of the usual range', card: 'Iron condor', pays: 'Pays in full between $95 and $105.',
+        cons: [{name: 'Iron condor', title: 'Iron condor, 92.5 / 95 / 105 / 107.5', legs: [leg(1, 'P', 92.5), leg(-1, 'P', 95), leg(-1, 'C', 105), leg(1, 'C', 107.5)]}]},
+      {id: 'wide', name: 'Wider', sub: 'Short strikes 1.25 usual ranges out', card: 'Wider iron condor', pays: 'Pays in full between $92.50 and $107.50.',
+        cons: [{name: 'Iron condor', title: 'Iron condor, 90 / 92.5 / 107.5 / 110', legs: [leg(1, 'P', 90), leg(-1, 'P', 92.5), leg(-1, 'C', 107.5), leg(1, 'C', 110)]}]}]}
+  ];
+  var st = {v: 0, s: 0, c: 0};
+
+  function payoff(legs, S) {
+    var x = 0;
+    legs.forEach(function (l) { x += l.a * ((l.t === 'C' ? Math.max(S - l.k, 0) : Math.max(l.k - S, 0)) - l.p); });
+    return x;
+  }
+  function knots(legs) {
+    var ks = legs.map(function (l) { return l.k; }).concat([XMIN, XMAX]);
+    ks = ks.filter(function (v, i) { return ks.indexOf(v) === i; }).sort(function (a, b) { return a - b; });
+    return ks.map(function (k) { return [k, payoff(legs, k)]; });
+  }
+  function stats(legs) {
+    var pts = knots(legs), net = 0, be = [];
+    legs.forEach(function (l) { net += l.a * l.p; });
+    var ys = pts.map(function (p) { return p[1]; });
+    for (var i = 1; i < pts.length; i++) {
+      var a = pts[i - 1], b = pts[i];
+      if ((a[1] < 0 && b[1] > 0) || (a[1] > 0 && b[1] < 0)) be.push(a[0] + (b[0] - a[0]) * (0 - a[1]) / (b[1] - a[1]));
+    }
+    return {net: net, max: Math.max.apply(null, ys), min: Math.min.apply(null, ys), be: be, pts: pts};
+  }
+  function money(x, sign) { var v = Math.round(Math.abs(x) * 100); return (sign ? (x >= 0 ? '+' : '−') : '') + '$' + v.toLocaleString('en-US'); }
+  function px(x) { return '$' + (Math.round(x * 100) / 100).toFixed(2); }
+  function el(n, a, txt) { var e = document.createElementNS(NS, n); for (var k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; return e; }
+  function svg(w, h) { return el('svg', {viewBox: '0 0 ' + w + ' ' + h, width: w, height: h}); }
+  function cur() { var v = VIEWS[st.v], s = v.shapes[st.s], c = s.cons[st.c]; return {v: v, s: s, c: c}; }
+
+  // ---- candidate cards
+  function thumb(legs) {
+    var w = 96, h = 52, s = svg(w, h), pts = knots(legs);
+    var X = function (x) { return 4 + (x - XMIN) / (XMAX - XMIN) * (w - 8); }, Y = function (y) { return h / 2 - y / 4 * (h / 2 - 5); };
+    s.appendChild(el('rect', {x: X(LO), y: 2, width: X(HI) - X(LO), height: h - 4, fill: 'var(--band)'}));
+    s.appendChild(el('line', {x1: 2, x2: w - 2, y1: Y(0), y2: Y(0), stroke: 'var(--ink-3)', 'stroke-width': 1}));
+    s.appendChild(el('polyline', {points: pts.map(function (p) { return X(p[0]) + ',' + Y(p[1]); }).join(' '), fill: 'none', stroke: 'var(--series-1)', 'stroke-width': 2, 'stroke-linejoin': 'round'}));
+    s.setAttribute('aria-hidden', 'true');
+    return s;
+  }
+  var groups = document.getElementById('candGroups'), cardBtns = [];
+  VIEWS.forEach(function (v, vi) {
+    var g = document.createElement('div'); g.className = 'cand-group';
+    var h = document.createElement('h4'); h.textContent = v.name; g.appendChild(h);
+    v.shapes.forEach(function (s, si) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'cand';
+      b.appendChild(thumb(s.cons[0].legs));
+      var d = document.createElement('div');
+      d.innerHTML = '<b></b><span></span><span></span>';
+      d.children[0].textContent = s.card; d.children[1].textContent = (s.sub || s.name) + '.'; d.children[2].textContent = s.pays;
+      b.appendChild(d);
+      b.addEventListener('click', function () { st.v = vi; st.s = si; st.c = 0; render(); document.getElementById('explorer').scrollIntoView({behavior: 'smooth', block: 'nearest'}); });
+      g.appendChild(b); cardBtns.push({b: b, v: vi, s: si});
+    });
+    groups.appendChild(g);
+  });
+
+  // ---- segmented controls
+  function seg(host, items, active, on) {
+    host.textContent = '';
+    items.forEach(function (t, i) {
+      var b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.setAttribute('aria-pressed', i === active ? 'true' : 'false');
+      b.addEventListener('click', function () { on(i); }); host.appendChild(b);
+    });
+  }
+
+  // ---- strike ladder
+  function drawLadder() {
+    var host = document.getElementById('ladder'), w = Math.max(280, host.clientWidth), h = 118, s = svg(w, h), c = cur();
+    var ml = 14, mr = 14, X = function (x) { return ml + (x - XMIN) / (XMAX - XMIN) * (w - ml - mr); }, yAx = 78;
+    var small = w < 480;
+    s.appendChild(el('rect', {class: 'bandr', x: X(LO), y: 26, width: X(HI) - X(LO), height: yAx - 26}));
+    s.appendChild(el('text', {x: X(SPOT), y: 20, 'text-anchor': 'middle', 'font-size': 11}, 'Usual range, $95 to $105'));
+    s.appendChild(el('line', {class: 'ax', x1: X(XMIN), x2: X(XMAX), y1: yAx, y2: yAx}));
+    STRIKES.forEach(function (k, i) {
+      s.appendChild(el('line', {class: 'ax', x1: X(k), x2: X(k), y1: yAx, y2: yAx + 5}));
+      if (!small || i % 2 === 0) s.appendChild(el('text', {class: 'mono-t', x: X(k), y: yAx + 19, 'text-anchor': 'middle', 'font-size': 11}, String(k)));
+    });
+    s.appendChild(el('path', {class: 'mkfill', d: 'M' + X(SPOT) + ' ' + (yAx - 1) + ' l-5 -8 h10 z'}));
+    s.appendChild(el('text', {x: X(SPOT), y: h - 4, 'text-anchor': 'middle', 'font-size': 11}, 'Price today, $100'));
+    var legs = c.c.legs.slice().sort(function (a, b) { return a.k - b.k; });
+    legs.forEach(function (l, i) {
+      var cw = 46, ch = 20, cx = X(l.k), row = (legs.length > 2 && i % 2 === 1) ? 1 : 0, cy = 34 + row * 22;
+      if (legs.length === 2 && Math.abs(X(legs[1].k) - X(legs[0].k)) < cw + 4) cy = 34 + i * 22;
+      s.appendChild(el('line', {class: 'lead', x1: cx, x2: cx, y1: cy + ch, y2: yAx - (l.k === SPOT ? 10 : 0)}));
+      s.appendChild(el('rect', {class: l.a > 0 ? 'chipb' : 'chips', x: cx - cw / 2, y: cy, width: cw, height: ch, rx: 4}));
+      s.appendChild(el('text', {class: l.a > 0 ? 'chipb-t' : 'chips-t', x: cx, y: cy + 14, 'text-anchor': 'middle', 'font-size': 11}, (l.a > 0 ? 'Buy ' : 'Sell ') + l.t));
+    });
+    host.textContent = ''; host.appendChild(s);
+  }
+
+  // ---- payoff chart
+  var geom = null;
+  function drawPayoff() {
+    var host = document.getElementById('payoff'), w = Math.max(280, host.clientWidth), small = w < 480, h = small ? 230 : 280, s = svg(w, h), c = cur(), S = stats(c.c.legs);
+    var ml = 50, mr = 12, mt = 22, mb = 36, YM = 4;
+    var X = function (x) { return ml + (x - XMIN) / (XMAX - XMIN) * (w - ml - mr); }, Y = function (y) { return mt + (YM - y) / (2 * YM) * (h - mt - mb); };
+    s.appendChild(el('rect', {class: 'bandr', x: X(LO), y: mt, width: X(HI) - X(LO), height: h - mt - mb}));
+    [-4, -2, 0, 2, 4].forEach(function (v) {
+      s.appendChild(el('line', {class: v === 0 ? 'zero' : 'ax', x1: ml, x2: w - mr, y1: Y(v), y2: Y(v)}));
+      s.appendChild(el('text', {class: 'mono-t', x: ml - 8, y: Y(v) + 4, 'text-anchor': 'end', 'font-size': 11}, (v > 0 ? '+' : v < 0 ? '−' : '') + '$' + Math.abs(v * 100)));
+    });
+    [90, 95, 100, 105, 110].forEach(function (k) {
+      s.appendChild(el('line', {class: 'ax', x1: X(k), x2: X(k), y1: h - mb, y2: h - mb + 5}));
+      s.appendChild(el('text', {class: 'mono-t', x: X(k), y: h - mb + 19, 'text-anchor': 'middle', 'font-size': 11}, '$' + k));
+    });
+    s.appendChild(el('text', {x: (ml + w - mr) / 2, y: h - 3, 'text-anchor': 'middle', 'font-size': 11}, 'Underlying price at expiry'));
+    // profit and loss areas, split at break-evens
+    var pts = S.pts.slice(), all = pts.concat(S.be.map(function (b) { return [b, 0]; })).sort(function (a, b) { return a[0] - b[0]; });
+    function area(sign) {
+      var d = '', open = false;
+      for (var i = 0; i < all.length; i++) {
+        var p = all[i], y = Math.max(0, sign * p[1]) * sign;
+        if (!open) { d += 'M' + X(p[0]) + ' ' + Y(0) + ' L' + X(p[0]) + ' ' + Y(y); open = true; } else d += ' L' + X(p[0]) + ' ' + Y(y);
+      }
+      d += ' L' + X(all[all.length - 1][0]) + ' ' + Y(0) + ' Z';
+      return d;
+    }
+    var clip = el('clipPath', {id: 'pfClip'}); clip.appendChild(el('rect', {x: ml, y: mt, width: w - ml - mr, height: h - mt - mb})); s.appendChild(clip);
+    s.appendChild(el('path', {class: 'gainf', d: area(1), 'clip-path': 'url(#pfClip)'}));
+    s.appendChild(el('path', {class: 'lossf', d: area(-1), 'clip-path': 'url(#pfClip)'}));
+    s.appendChild(el('line', {class: 'spot', x1: X(SPOT), x2: X(SPOT), y1: mt, y2: h - mb}));
+    s.appendChild(el('text', {x: X(SPOT), y: mt - 8, 'text-anchor': 'middle', 'font-size': 11}, 'Price today'));
+    if (c.s.open) s.appendChild(el('text', {class: 'strong-t', x: st.v === 0 ? w - mr - 4 : ml + 4, y: Y(1) + 4, 'text-anchor': st.v === 0 ? 'end' : 'start', 'font-size': 12}, 'Gain continues beyond the chart'));
+    s.appendChild(el('polyline', {class: 'pline', 'clip-path': 'url(#pfClip)', points: pts.map(function (p) { return X(p[0]) + ',' + Y(p[1]); }).join(' ')}));
+    // direct labels: maximum gain and loss, placed on the flat segments
+    function flat(val) { var seg = null; for (var i = 1; i < pts.length; i++) if (Math.abs(pts[i][1] - val) < 1e-6 && Math.abs(pts[i - 1][1] - val) < 1e-6) { var len = pts[i][0] - pts[i - 1][0]; if (!seg || len > seg[1] - seg[0]) seg = [pts[i - 1][0], pts[i][0]]; } return seg; }
+    [[S.max, 'Maximum gain ', -8], [S.min, 'Maximum loss ', 16]].forEach(function (m) {
+      if (c.s.open && m[0] === S.max) return;
+      var f = flat(m[0]); if (!f) return;
+      var mid = (f[0] + f[1]) / 2, anchor = 'middle', x = X(mid);
+      if (x < ml + 70) { x = ml + 4; anchor = 'start'; } if (x > w - mr - 70) { x = w - mr - 4; anchor = 'end'; }
+      s.appendChild(el('text', {class: 'strong-t', x: x, y: Y(m[0]) + m[2], 'text-anchor': anchor, 'font-size': 12}, m[1] + money(m[0], true)));
+    });
+    S.be.forEach(function (b, i) {
+      s.appendChild(el('circle', {class: 'dot', cx: X(b), cy: Y(0), r: 5}));
+      var right = b > SPOT, profitSide = payoff(c.c.legs, b + (right ? 1 : -1)) > 0;
+      s.appendChild(el('text', {x: X(b) + (right ? 9 : -9), y: Y(0) + (profitSide ? 16 : -8), 'text-anchor': right ? 'start' : 'end', 'font-size': 11}, (small ? '' : 'Break-even ') + px(b)));
+    });
+    // hover layer
+    var cross = el('line', {class: 'cross', y1: mt, y2: h - mb, visibility: 'hidden'}), hd = el('circle', {class: 'dot', r: 5, visibility: 'hidden'});
+    s.appendChild(cross); s.appendChild(hd);
+    var hit = el('rect', {x: ml, y: mt, width: w - ml - mr, height: h - mt - mb, fill: 'transparent'});
+    s.appendChild(hit);
+    host.textContent = ''; host.appendChild(s);
+    var tip = document.getElementById('tip'), box = document.getElementById('explorer');
+    function move(ev) {
+      var r = s.getBoundingClientRect(), xx = (ev.clientX - r.left) / r.width * w;
+      var price = XMIN + (xx - ml) / (w - ml - mr) * (XMAX - XMIN); price = Math.max(XMIN, Math.min(XMAX, Math.round(price * 4) / 4));
+      var v = payoff(c.c.legs, price);
+      cross.setAttribute('x1', X(price)); cross.setAttribute('x2', X(price)); cross.setAttribute('visibility', 'visible');
+      hd.setAttribute('cx', X(price)); hd.setAttribute('cy', Y(Math.min(v, YM))); hd.setAttribute('visibility', 'visible');
+      tip.hidden = false; tip.innerHTML = 'At <b>' + px(price) + '</b>: <b>' + money(v, true) + '</b> per contract';
+      var br = box.getBoundingClientRect(), left = r.left - br.left + X(price) / w * r.width + 12, top = r.top - br.top + Y(v) / h * r.height - 34;
+      if (left + tip.offsetWidth > br.width - 8) left = left - tip.offsetWidth - 24;
+      tip.style.left = Math.max(4, left) + 'px'; tip.style.top = Math.max(0, top) + 'px';
+    }
+    function leave() { cross.setAttribute('visibility', 'hidden'); hd.setAttribute('visibility', 'hidden'); tip.hidden = true; }
+    hit.addEventListener('pointermove', move); hit.addEventListener('pointerdown', move); hit.addEventListener('pointerleave', leave);
+  }
+
+  // ---- tiles and legs
+  function drawFacts() {
+    var c = cur(), S = stats(c.c.legs), t = document.getElementById('tiles');
+    var debit = S.net > 0;
+    var items = [
+      ['Net premium', money(S.net), debit ? 'debit, paid' : 'credit, received'],
+      ['Maximum loss', money(S.min), 'per contract'],
+      ['Maximum gain', c.s.open || money(S.max), c.s.openSub || 'per contract'],
+      ['Break-even', S.be.map(px).join(' and '), 'at expiry']
+    ];
+    t.textContent = '';
+    items.forEach(function (it) { var d = document.createElement('div'); d.className = 'tile'; d.innerHTML = '<span></span><b></b><small></small>'; d.children[0].textContent = it[0]; d.children[1].textContent = it[1]; d.children[2].textContent = it[2]; t.appendChild(d); });
+    var tb = document.getElementById('legs');
+    tb.innerHTML = '<thead><tr><th>Leg</th><th>Contract</th><th>Strike</th><th>Premium</th></tr></thead>';
+    var body = document.createElement('tbody');
+    c.c.legs.forEach(function (l) {
+      var tr = document.createElement('tr');
+      [[l.a > 0 ? 'Buy' : 'Sell', ''], [l.t === 'C' ? 'Call' : 'Put', ''], ['$' + l.k.toFixed(2), 'n'], ['$' + l.p.toFixed(2), 'n']].forEach(function (cell) { var td = document.createElement('td'); td.textContent = cell[0]; if (cell[1]) td.className = cell[1]; tr.appendChild(td); });
+      body.appendChild(tr);
+    });
+    tb.appendChild(body);
+  }
+
+  function render() {
+    var v = VIEWS[st.v], s = v.shapes[st.s];
+    seg(document.getElementById('segView'), VIEWS.map(function (x) { return x.name; }), st.v, function (i) { st.v = i; st.s = 0; st.c = 0; render(); });
+    seg(document.getElementById('segShape'), v.shapes.map(function (x) { return x.name; }), st.s, function (i) { st.s = i; st.c = 0; render(); });
+    var cc = document.getElementById('ctrlCons');
+    cc.hidden = s.cons.length < 2;
+    if (s.cons.length > 1) seg(document.getElementById('segCons'), s.cons.map(function (x) { return x.name; }), st.c, function (i) { st.c = i; render(); });
+    document.getElementById('exTitle').textContent = s.cons[st.c].title;
+    document.getElementById('exNote').textContent = s.pays + (s.cons.length > 1 ? ' The other construction uses the same strikes and has the same payoff.' : (s.note || ' Four legs: a put spread below the range and a call spread above it.'));
+    cardBtns.forEach(function (c) { c.b.setAttribute('aria-pressed', c.v === st.v && c.s === st.s ? 'true' : 'false'); });
+    document.getElementById('tip').hidden = true;
+    drawLadder(); drawPayoff(); drawFacts();
+  }
+
+  // ---- expiry timeline
+  var EXP = [[4, false], [11, true], [18, false], [25, false], [32, true], [60, true], [95, true], [123, true]];
+  var HZ = [7, 14, 30, 60, 90], hz = 2;
+  function drawTimeline() {
+    var host = document.getElementById('timeline'), w = Math.max(280, host.clientWidth), h = 96, s = svg(w, h), small = w < 480;
+    var ml = 16, mr = 16, DM = 130, X = function (d) { return ml + d / DM * (w - ml - mr); }, y = 50;
+    var cat = document.getElementById('chkCat').checked ? HZ[hz] + 5 : null, need = cat != null ? cat + 1 : HZ[hz];
+    var pick = null; EXP.forEach(function (e) { if (pick == null && e[1] && e[0] >= need) pick = e[0]; });
+    s.appendChild(el('line', {class: 'ax', x1: X(0), x2: X(DM), y1: y, y2: y}));
+    [0, 30, 60, 90, 120].forEach(function (d) {
+      s.appendChild(el('line', {class: 'ax', x1: X(d), x2: X(d), y1: y, y2: y + 5}));
+      s.appendChild(el('text', {class: 'mono-t', x: X(d), y: y + 34, 'text-anchor': d === 0 ? 'start' : 'middle', 'font-size': 11}, d === 0 ? 'Today' : 'Day ' + d));
+    });
+    EXP.forEach(function (e) {
+      s.appendChild(el('circle', {class: e[1] ? 'e-dot' : 'e-ring', cx: X(e[0]), cy: y, r: 5}));
+      if (e[0] === pick) s.appendChild(el('circle', {class: 'e-pick', cx: X(e[0]), cy: y, r: 10}));
+    });
+    var hx = X(HZ[hz]);
+    s.appendChild(el('path', {class: 'mkfill', d: 'M' + hx + ' ' + (y - 24) + ' l5 6 l-5 6 l-5 -6 z'}));
+    if (cat != null) s.appendChild(el('path', {class: 'mkfill', d: 'M' + X(cat) + ' ' + (y - 24) + ' l6 11 h-12 z', transform: 'translate(0,0)'}));
+    if (pick != null) {
+      var px0 = X(pick), anchor = px0 > w - 110 ? 'end' : 'start';
+      s.appendChild(el('text', {class: 'strong-t', x: px0 + (anchor === 'start' ? 14 : -14), y: y - 10, 'text-anchor': anchor, 'font-size': 12}, small ? 'Day ' + pick : 'Chosen expiry, day ' + pick));
+    }
+    host.textContent = ''; host.appendChild(s);
+    var out = document.getElementById('tlOut'), gap = pick - HZ[hz];
+    out.textContent = pick == null ? 'No eligible expiry is listed on or after the required date.' :
+      'Chosen expiry: day ' + pick + (gap === 0 ? ', on the horizon date.' : ', ' + gap + (gap === 1 ? ' day' : ' days') + ' after the horizon.') + (cat != null ? ' It falls after the catalyst on day ' + cat + '.' : '');
+    seg(document.getElementById('segHz'), HZ.map(function (d) { return d + ' days'; }), hz, function (i) { hz = i; drawTimeline(); });
+  }
+  document.getElementById('chkCat').addEventListener('change', drawTimeline);
+
+  render(); drawTimeline();
+  var lastW = 0;
+  function onResize() { var w = document.getElementById('payoff').clientWidth; if (w !== lastW) { lastW = w; drawLadder(); drawPayoff(); drawTimeline(); } }
+  if (window.ResizeObserver) new ResizeObserver(onResize).observe(document.getElementById('explorer')); else window.addEventListener('resize', onResize);
+})();
+</script>
+<script>
+(function () {
+  var NS = 'http://www.w3.org/2000/svg';
+  var C = [
+    {id: 'pcs', nm: 'Put credit spread, 95 / 100', need: 'Needs no fall below $98.30.', loss: 330, gain: 170, be: '$98.30', right: 100, base: 62, impl: 60, cost: 7, n: 1, nl: 2,
+      legs: [['Sell 100 put', 2.35, 2.45], ['Buy 95 put', 0.68, 0.72]], net: 'Net credit $170 at the midpoint', gk: ['+0.31', '+$4', '−$6'],
+      oth: 'Call debit spread, 95 / 100, has the same payoff. Trading cost $16 per contract, 5% of risk. Not kept: it costs more to trade.', pts: [[88, -3.3], [95, -3.3], [100, 1.7], [112, 1.7]], bex: 98.3,
+      lv: 'The break-even, $98.30, is above the 60-day low, $97.00, and below the 60-day high, $104.00.', g1: 170, why: {match: 'paid in every past period in which the view was right'}},
+    {id: 'cds', nm: 'Call debit spread, 100 / 105', need: 'Needs a rise above $101.70.', loss: 170, gain: 330, be: '$101.70', right: 71, base: 41, impl: 38, cost: 7, n: 2, nl: 2,
+      legs: [['Buy 100 call', 2.35, 2.45], ['Sell 105 call', 0.68, 0.72]], net: 'Net debit $170 at the midpoint', gk: ['+0.29', '−$3', '+$5'],
+      oth: 'Put credit spread, 100 / 105, has the same payoff. Trading cost $19 per contract, 11% of risk. Not kept: it costs more to trade.', pts: [[88, -1.7], [100, -1.7], [105, 3.3], [112, 3.3]], bex: 101.7, lv: 'The break-even, $101.70, is above the 60-day low, $97.00, and below the 60-day high, $104.00.', g1: 330, why: {}},
+    {id: 'lc', nm: 'Long call, 100', need: 'Single option. Needs a rise above $102.40.', loss: 240, gain: Infinity, be: '$102.40', right: 63, base: 36, impl: 33, cost: 5, n: 1, nl: 1,
+      legs: [['Buy 100 call', 2.35, 2.45]], net: 'Net debit $240 at the midpoint', gk: ['+0.52', '−$5', '+$11'],
+      oth: 'A single option has one construction.', pts: [[88, -2.4], [100, -2.4], [112, 9.6]], bex: 102.4,
+      lv: 'The break-even, $102.40, is above the 60-day low, $97.00, and below the 60-day high, $104.00.', g1: 260, more: ' The gain keeps growing beyond that.', why: {cost: 'lowest trading cost as a share of the amount at risk'}}
+  ];
+  var PRI = [['match', 'Match the view', 3], ['payoff', 'Larger payoff', -9], ['cost', 'Lowest cost', 5]];
+  var HEAD = ['', 'Structure', 'Max loss', 'Max gain', 'Break-even', 'Pays when view is right', 'Chance: base / implied', 'Trading cost', 'Contracts', ''];
+  var st = {p: 0, open: 'pcs', cap: null};
+  function qty(c) { return st.cap == null ? 1 : Math.floor(st.cap / c.loss); }
+  function usd(x) { return '$' + Math.round(x).toLocaleString('en-US'); }
+  function key(c, p) { return p === 'match' ? -c.right : p === 'payoff' ? -(c.g1 / c.loss) : c.cost / c.loss; }
+  function h(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+  function s(n, a, txt) { var e = document.createElementNS(NS, n); for (var k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; return e; }
+  function chart(c, m) {
+    var w = 520, ht = 220, g = s('svg', {viewBox: '0 0 520 220', role: 'img', 'aria-label': 'Profit or loss at expiry for ' + c.nm + ', breaking even at ' + c.be});
+    var X = function (p) { return 44 + (p - 88) / 24 * 466; }, Y = function (v) { return 100 - v / 4 * 80; };
+    var cid = 'oc-' + c.id, cp = s('clipPath', {id: cid}); cp.appendChild(s('rect', {x: 44, y: 20, width: 466, height: 160})); g.appendChild(cp);
+    g.appendChild(s('rect', {class: 'bandr', x: X(95), y: 20, width: X(105) - X(95), height: 160}));
+    [-4, -2, 0, 2, 4].forEach(function (v) {
+      g.appendChild(s('line', {class: v ? 'ax' : 'zero', x1: 44, x2: 510, y1: Y(v), y2: Y(v)}));
+      g.appendChild(s('text', {class: 'mono-t', x: 38, y: Y(v) + 4, 'text-anchor': 'end', 'font-size': 10}, (v > 0 ? '+' : v < 0 ? '−' : '') + usd(Math.abs(v * 100 * m))));
+    });
+    [90, 95, 100, 105, 110].forEach(function (k) { g.appendChild(s('text', {class: 'mono-t', x: X(k), y: 196, 'text-anchor': 'middle', 'font-size': 10}, '$' + k)); });
+    var pts = c.pts, lo = pts.filter(function (p) { return p[0] < c.bex; }), hi = pts.filter(function (p) { return p[0] > c.bex; });
+    function area(arr, first) { var q = first ? arr.concat([[c.bex, 0]]) : [[c.bex, 0]].concat(arr); return 'M' + X(q[0][0]) + ' ' + Y(0) + q.map(function (p) { return ' L' + X(p[0]) + ' ' + Y(p[1]); }).join('') + ' L' + X(q[q.length - 1][0]) + ' ' + Y(0) + ' Z'; }
+    g.appendChild(s('path', {class: 'lossf', d: area(lo, true), 'clip-path': 'url(#' + cid + ')'}));
+    g.appendChild(s('path', {class: 'gainf', d: area(hi, false), 'clip-path': 'url(#' + cid + ')'}));
+    [[97, '60-day low $97', 'end', -4], [104, '60-day high $104', 'start', 4]].forEach(function (L) { g.appendChild(s('line', {class: 'lvl', x1: X(L[0]), x2: X(L[0]), y1: 20, y2: 180})); g.appendChild(s('text', {class: 'lvl-t', x: X(L[0]) + L[3], y: 31, 'text-anchor': L[2], 'font-size': 10}, L[1])); });
+    g.appendChild(s('line', {class: 'spot', x1: X(100), x2: X(100), y1: 20, y2: 180}));
+    g.appendChild(s('text', {x: X(100), y: 13, 'text-anchor': 'middle', 'font-size': 11}, 'Price today'));
+    g.appendChild(s('polyline', {class: 'pline', 'clip-path': 'url(#' + cid + ')', points: pts.map(function (p) { return X(p[0]) + ',' + Y(p[1]); }).join(' ')}));
+    g.appendChild(s('circle', {class: 'dot', cx: X(c.bex), cy: Y(0), r: 5}));
+    g.appendChild(s('text', {x: X(c.bex) + 9, y: Y(0) + 15, 'font-size': 11}, 'Break-even ' + c.be));
+    g.appendChild(s('text', {class: 'strong-t', x: 48, y: Y(-c.loss / 100) + 15, 'font-size': 12}, 'Maximum loss −' + usd(c.loss * m)));
+    g.appendChild(s('text', {class: 'strong-t', x: 506, y: c.gain === Infinity ? 64 : Y(c.gain / 100) - 7, 'text-anchor': 'end', 'font-size': 12}, c.gain === Infinity ? 'Gain continues above the chart' : 'Maximum gain +' + usd(c.gain * m)));
+    g.appendChild(s('text', {x: 277, y: 214, 'text-anchor': 'middle', 'font-size': 11}, 'Underlying price at expiry · shaded band is the usual range'));
+    return g;
+  }
+  function detail(c) {
+    var d = h('div', 'odet'), a = h('div', 'oc'), b = h('div', 'os');
+    var q = qty(c), m = Math.max(q, 1);
+    a.appendChild(h('h4', '', 'Profit or loss at expiry, ' + (m === 1 ? 'for one contract' : 'for ' + m + ' contracts')));
+    var v = h('div', 'viz'); v.appendChild(chart(c, m)); a.appendChild(v);
+    var kl = h('p', 'keyline'); kl.textContent = '60-day high and low of the daily close · description only, they place no strike'; a.appendChild(kl);
+    var t = h('div', 'tiles');
+    [['Pays when view is right, before trading cost', c.right + '%'], ['Base-rate chance of profit, before trading cost', c.base + '%'], ['Market-implied chance, approximate', c.impl + '%']].forEach(function (x) { var e = h('div', 'tile'); e.appendChild(h('span', '', x[0])); e.appendChild(h('b', '', x[1])); t.appendChild(e); });
+    a.appendChild(t);
+    b.appendChild(h('h4', '', 'Legs and quotes'));
+    var tb = h('table'); tb.innerHTML = '<thead><tr><th>Leg</th><th>Bid</th><th>Ask</th><th>Mid</th></tr></thead>';
+    var body = h('tbody');
+    c.legs.forEach(function (l) { var tr = h('tr'); tr.appendChild(h('td', '', l[0])); [l[1], l[2], (l[1] + l[2]) / 2].forEach(function (x) { tr.appendChild(h('td', 'n', x.toFixed(2))); }); body.appendChild(tr); });
+    tb.appendChild(body); b.appendChild(tb);
+    b.appendChild(h('p', 'sub', c.net.replace(/\$(\d+)/, function (x, d) { return usd(d * m); }) + (m === 1 ? ', one contract' : ', ' + m + ' contracts') + ' · trading cost ' + usd(c.cost * m) + ', ' + Math.round(c.cost / c.loss * 100) + '% of the amount at risk'));
+    b.appendChild(h('h4', '', 'Exposure, per contract'));
+    var ex = h('div', 'ex3'); [['Delta', 0], ['Theta, per day', 1], ['Vega, per point', 2]].forEach(function (x) { var e = h('div', '', x[0]); e.appendChild(h('b', '', c.gk[x[1]])); ex.appendChild(e); }); b.appendChild(ex);
+    b.appendChild(h('h4', '', 'Checks'));
+    [['Earnings before expiry', 'No'], [c.nl > 1 ? 'Dividend before expiry, short leg' : 'Dividend before expiry', c.nl > 1 ? 'None declared' : 'No short leg'], ['Order size against open interest', 'Within 10%'], ['Contracts', String(qty(c))]].forEach(function (x) { var k = h('div', 'kv'); k.appendChild(h('span', '', x[0])); k.appendChild(h('span', '', x[1])); b.appendChild(k); });
+    b.appendChild(h('h4', '', 'Chart levels'));
+    b.appendChild(h('p', 'sub', c.lv + ' Description only.'));
+    var o = h('div', 'oth'); o.appendChild(h('strong', '', 'Other construction. ')); o.appendChild(document.createTextNode(c.oth)); b.appendChild(o);
+    d.appendChild(a); d.appendChild(b); return d;
+  }
+  function render() {
+    var host = document.getElementById('orows'), p = PRI[st.p];
+    var order = C.slice().sort(function (x, y) { return key(x, p[0]) - key(y, p[0]) || x.cost - y.cost || x.nl - y.nl; });
+    if (st.open === '__top') st.open = order[0].id;
+    host.textContent = '';
+    var hd = h('div', 'ohead'); HEAD.forEach(function (t, i) { hd.appendChild(h('span', i === p[2] + 2 ? 'hl' : '', t + (i === p[2] + 2 ? ' ▾' : ''))); }); host.appendChild(hd);
+    order.forEach(function (c, i) {
+      var box = h('div', 'ocand' + (i === 0 ? ' rec' : '') + (st.open === c.id ? ' open' : '')), r = h('div', 'orow');
+      var q = qty(c), m = Math.max(q, 1);
+      r.appendChild(h('span', 'v rk', String(i + 1)));
+      var nm = h('span', 'nm', c.nm); nm.setAttribute('data-rank', i + 1); r.appendChild(nm);
+      [['Max loss', usd(c.loss * m)], ['Max gain', c.gain === Infinity ? 'No limit' : usd(c.gain * m)], ['Break-even', c.be], ['Pays when view is right', c.right + '%'], ['Chance: base / implied', c.base + '% / ' + c.impl + '%'], ['Trading cost', usd(c.cost * m) + ' · ' + Math.round(c.cost / c.loss * 100) + '%'], ['Contracts', String(q)]].forEach(function (x) { var e = h('span', 'v', x[1]); e.setAttribute('data-l', x[0]); r.appendChild(e); });
+      var bt = h('button', '', st.open === c.id ? 'Hide ▴' : 'Detail ▾'); bt.type = 'button'; bt.setAttribute('aria-expanded', st.open === c.id ? 'true' : 'false'); bt.setAttribute('aria-label', (st.open === c.id ? 'Hide detail of ' : 'Show detail of ') + c.nm);
+      bt.addEventListener('click', function () { st.open = st.open === c.id ? null : c.id; render(); });
+      r.appendChild(bt);
+      r.appendChild(h('span', 'why1', q === 0 ? 'No contracts fit: one contract risks ' + usd(c.loss) + ', above the figure entered. Figures shown are for one contract.' : p[0] === 'payoff' ? (i === 0 ? 'Recommended: pays ' : 'Pays ') + '$' + (c.g1 / c.loss).toFixed(2) + ' per $1 at risk if the price rises one usual range, to $105.' + (c.more || '') : i === 0 ? 'Recommended: ' + (c.why[p[0]] || 'ranked first on the chosen priority') + '.' : c.need));
+      box.appendChild(r); if (st.open === c.id) box.appendChild(detail(c)); host.appendChild(box);
+    });
+    var seg = document.getElementById('segPri'); seg.textContent = '';
+    PRI.forEach(function (x, i) { var b = h('button', '', x[1]); b.type = 'button'; b.setAttribute('aria-pressed', i === st.p ? 'true' : 'false'); b.addEventListener('click', function () { st.p = i; st.open = '__top'; render(); }); seg.appendChild(b); });
+    var pick = C.filter(function (c) { return c.id === st.open; })[0] || order[0];
+    document.getElementById('outGo').textContent = 'Continue with ' + pick.nm.split(',')[0].toLowerCase();
+  }
+  var inp = document.getElementById('mxl'), note = document.getElementById('mxlNote');
+  inp.addEventListener('input', function () {
+    var v = parseFloat(inp.value.replace(/[^0-9.]/g, ''));
+    st.cap = isFinite(v) && v > 0 ? v : null;
+    note.textContent = st.cap == null ? 'Every candidate is shown for one contract.' : 'Contracts, loss, gain and cost are restated to fit ' + usd(st.cap) + '.';
+    render();
+  });
+  note.textContent = 'Every candidate is shown for one contract.';
+  render();
+})();
+</script>
+
+<script>
+/* When this page is shown inside the Tradecraft manual (docs/site/manual.html): follow the manual's theme,
+   hide this page's own theme button and link line, and report its height and its sections to the manual. */
+(function () {
+  if (window.parent === window) return;
+  var root = document.documentElement;
+  var st = document.createElement('style');
+  st.textContent = '.mode, .manual-link { display: none !important; } html { overflow: hidden; } .wrap { padding-top: 4px !important; padding-bottom: 12px !important; }';
+  document.head.appendChild(st);
+  function report() {
+    var toc = [].map.call(document.querySelectorAll('h2'), function (h) {
+      return {text: h.textContent.replace(/^\s*\d+\.\s*/, '').trim(), top: Math.round(h.getBoundingClientRect().top + window.scrollY)};
+    });
+    // The height of the content itself, not of the window: a window-sized measure would grow each time the manual resizes the frame.
+    var wrap = document.querySelector('.wrap') || document.body;
+    var height = Math.ceil(wrap.getBoundingClientRect().bottom + window.scrollY) + 16;
+    if (Math.abs(height - last) < 2) return;
+    last = height;
+    parent.postMessage({tradecraft: 'page', height: height, toc: toc}, '*');
+  }
+  var last = 0;
+  window.addEventListener('message', function (e) { var d = e.data || {}; if (d.tradecraft === 'theme') root.setAttribute('data-theme', d.theme); });
+  window.addEventListener('load', report);
+  window.addEventListener('resize', report);
+  if (window.ResizeObserver) new ResizeObserver(report).observe(document.body);
+  report();
+})();
+</script>

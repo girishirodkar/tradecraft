@@ -1,0 +1,5 @@
+# For the scripts in scripts/ only (they run on the system Python).
+# The Tradecraft application's packages are in pyproject.toml and uv.lock.
+# none — stdlib only
+pandas>=2.0
+numpy>=1.24

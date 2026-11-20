@@ -1,0 +1,986 @@
+<title>Challenge Stage</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Ledger (light) / Night Desk (dark), per docs/site/THEME.md.
+   Layout: one reading column (max 860px); figures in plain panels. Probabilities and input numbers set in mono. */
+:root {
+  --bg: #f5f7fa; --surface: #ffffff; --ink: #17212b; --ink-2: #44515f; --ink-3: #5f6c7b;
+  --line: #d9e0e8; --accent: #1c5cab; --band: #e8f0fa;
+  --series-1: #2a78d6; --series-2: #eb6834; --good: #0a7d0a; --crit: #c23232;
+  --display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+  --text: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161b; --surface: #1b2027; --ink: #eef1f4; --ink-2: #c1c9d2; --ink-3: #9aa5b1;
+    --line: #2f3742; --accent: #86b6ef; --band: #1f2c3d;
+    --series-1: #3987e5; --series-2: #d95926; --good: #3fbf3f; --crit: #e66767;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161b; --surface: #1b2027; --ink: #eef1f4; --ink-2: #c1c9d2; --ink-3: #9aa5b1;
+  --line: #2f3742; --accent: #86b6ef; --band: #1f2c3d;
+  --series-1: #3987e5; --series-2: #d95926; --good: #3fbf3f; --crit: #e66767;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--text); font-size: 16px; line-height: 1.6; }
+.wrap { max-width: 860px; margin: 0 auto; padding-block: 40px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(2rem, 5vw, 2.75rem); font-weight: 600; letter-spacing: -0.01em; }
+h2 { font-size: 1.5rem; font-weight: 600; margin-top: 56px; }
+h3 { font-size: 1.0625rem; font-weight: 600; }
+p { margin: 12px 0 0; max-width: 68ch; }
+.lede { font-size: 1.125rem; color: var(--ink-2); }
+.meta { font-family: var(--mono); font-size: 0.8125rem; color: var(--ink-3); letter-spacing: 0.02em; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 14px; }
+.mode { font: inherit; font-size: 0.8125rem; padding: 6px 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); cursor: pointer; }
+.mode:hover { border-color: var(--accent); }
+.mode:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+ul { margin: 12px 0 0; padding-left: 20px; max-width: 68ch; }
+li + li { margin-top: 6px; }
+strong { font-weight: 600; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 20px; margin-top: 20px; min-width: 0; }
+.sub { color: var(--ink-3); font-size: 0.875rem; max-width: none; margin-top: 4px; }
+figure { margin: 0; }
+figcaption { color: var(--ink-3); font-size: 0.875rem; margin-top: 12px; max-width: 68ch; }
+.scroll { overflow-x: auto; }
+.scroll svg { display: block; height: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-2); font-size: 0.8125rem; }
+td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink-3); width: 2.5em; }
+
+.stages { list-style: none; padding: 0; margin: 20px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 8px; max-width: none; counter-reset: st; }
+.stages li { counter-increment: st; margin: 0; border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; background: var(--surface); font-size: 0.875rem; line-height: 1.35; min-width: 0; }
+.stages li::before { content: counter(st); display: block; font-family: var(--mono); font-size: 0.75rem; color: var(--ink-3); margin-bottom: 4px; }
+.stages li.here { background: var(--band); border-color: var(--accent); font-weight: 600; }
+.stages li.here::before { content: counter(st) "  this page"; color: var(--accent); }
+
+.steps { list-style: none; padding: 0; margin: 20px 0 0; max-width: none; counter-reset: s; display: grid; }
+.steps li { counter-increment: s; margin: 0; display: grid; grid-template-columns: 34px 1fr; gap: 14px; padding-bottom: 18px; position: relative; }
+.steps li::before { content: counter(s); font-family: var(--mono); font-size: 0.8125rem; width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid var(--accent); color: var(--accent); background: var(--surface); display: grid; place-items: center; position: relative; z-index: 1; }
+.steps li::after { content: ""; position: absolute; left: 16.5px; top: 34px; bottom: 0; width: 1.5px; background: var(--line); }
+.steps li:last-child { padding-bottom: 0; } .steps li:last-child::after { display: none; }
+.steps b { display: block; font-weight: 600; } .steps span { color: var(--ink-2); font-size: 0.9375rem; }
+
+/* role chips: the six roles are named in words; the tint only groups them */
+.role { display: inline-block; font-size: 0.75rem; font-weight: 500; padding: 1px 8px; border-radius: 3px; border: 1px solid var(--line); white-space: nowrap; color: var(--ink); background: var(--bg); }
+.role.strong { border-color: var(--accent); background: var(--band); }
+
+/* thesis card mock */
+.card-mock { max-width: 600px; display: grid; gap: 10px; }
+.card-mock p { margin: 0; }
+.mock-tag { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.04em; color: var(--ink-3); border: 1px dashed var(--line); border-radius: 4px; padding: 3px 8px; justify-self: start; }
+.cm-head { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 12px; }
+.cm-tk { font-size: 1.375rem; font-weight: 500; }
+.cm-chip { font-family: var(--mono); font-size: 0.8125rem; font-weight: 500; border: 1.5px solid var(--ink); border-radius: 4px; padding: 1px 8px; }
+.cm-warn { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.03em; color: var(--ink-2); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; justify-self: start; }
+.cm-facts { margin: 4px 0 0; display: grid; grid-template-columns: minmax(0, 140px) minmax(0, 1fr); gap: 8px 16px; font-size: 0.9375rem; }
+.cm-facts dt { color: var(--ink-3); font-size: 0.875rem; } .cm-facts dd { margin: 0; }
+.cm-h { font-size: 0.875rem; margin-top: 8px; }
+.ladder { min-width: 500px; }
+.ladder th small { display: block; font-weight: 400; font-size: 0.75rem; color: var(--ink-3); }
+.ladder td.r, .ladder th.r { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ladder thead th.r { font-family: var(--text); }
+.ladder tr.in th, .ladder tr.in td { background: var(--band); font-weight: 600; }
+.ladder tr.in th small { color: var(--accent); }
+.ladder tr.out td, .ladder tr.out th { color: var(--ink-3); }
+.fam { list-style: none; padding: 0; margin: 0; max-width: none; display: grid; gap: 0; }
+.fam li { margin: 0; display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 1fr); gap: 4px 16px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 0.9375rem; }
+.fam b { font-weight: 600; } .fam small { display: block; color: var(--ink-3); font-size: 0.75rem; font-weight: 400; }
+.cm-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.cm-btn { font-size: 0.875rem; padding: 7px 14px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--ink); }
+.cm-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 600; }
+
+/* probability scale */
+.scale { position: relative; height: 150px; margin: 8px 0 0; }
+.scale .axis { position: absolute; left: 0; right: 0; top: 70px; height: 8px; border-radius: 4px; background: var(--line); }
+.scale .cap { position: absolute; top: 62px; height: 24px; border-radius: 4px; background: var(--band); border: 1px solid var(--accent); }
+.scale .mk { position: absolute; top: 58px; width: 3px; height: 32px; background: var(--ink); transform: translateX(-1.5px); }
+.scale .mk.s1 { background: var(--series-1); width: 5px; transform: translateX(-2.5px); }
+.scale .lb { position: absolute; transform: translateX(-50%); font-size: 0.75rem; line-height: 1.25; text-align: center; white-space: nowrap; color: var(--ink); }
+.scale .lb b { display: block; font-family: var(--mono); font-weight: 500; font-size: 0.875rem; }
+.scale .lb.up { top: 6px; } .scale .lb.dn { top: 98px; }
+.scale .lb.r { transform: translateX(-100%); text-align: right; padding-right: 2px; } .scale .lb.l { transform: none; text-align: left; padding-left: 2px; }
+.scale .tick { position: absolute; top: 132px; transform: translateX(-50%); font-family: var(--mono); font-size: 0.6875rem; color: var(--ink-3); }
+
+.flow-m { display: none; gap: 8px; }
+.flow-m .fa { border: 1.5px solid var(--line); border-radius: 6px; padding: 10px 12px; display: grid; gap: 2px; font-size: 0.875rem; }
+.flow-m .fa span { color: var(--ink-2); }
+.flow-m .fa.hi { border-color: var(--series-1); background: var(--band); }
+.flow-m .fa.dash { border-style: dashed; }
+.flow-m .arrow { text-align: center; color: var(--ink-3); font-size: 0.75rem; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; }
+.two .panel { margin-top: 0; }
+.checks { list-style: none; padding: 0; margin: 14px 0 0; max-width: none; display: grid; }
+.checks li { margin: 0; display: grid; grid-template-columns: 26px 1fr; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 0.9375rem; }
+.checks li::before { content: "\2713"; color: var(--good); font-family: var(--mono); }
+.note { border-top: 1px solid var(--line); margin-top: 56px; padding-top: 20px; color: var(--ink-3); font-size: 0.875rem; }
+.note p { max-width: 72ch; }
+@media (max-width: 600px) { .flow-svg { display: none !important; } .flow-m { display: grid; } }
+@media (max-width: 480px) { .cm-facts, .fam li { grid-template-columns: 1fr; gap: 2px; } .cm-facts dd { margin-bottom: 8px; } }
+@media (max-width: 520px) { .ladder { min-width: 0; } .ladder td:last-child { font-size: 0.8125rem; } .ladder .tc { display: none; } .ladder th, .ladder td { padding: 8px 6px; } }
+
+h4 { font-family: var(--display); font-size: 1rem; font-weight: 600; margin: 28px 0 0; line-height: 1.25; }
+.grade { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.02em; text-transform: uppercase; color: var(--ink-3); border: 1px solid var(--line); border-radius: 3px; padding: 0 5px; white-space: nowrap; vertical-align: 1px; }
+h3.sec { margin-top: 40px; }
+[hidden] { display: none !important; }
+.toc { margin-top: 24px; }
+.toc ol { list-style: none; counter-reset: toc; padding: 0; margin: 0; max-width: none; display: flex; flex-wrap: wrap; gap: 6px 8px; }
+.toc li { counter-increment: toc; margin: 0; }
+.toc a { display: inline-block; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink-2); font-size: 0.875rem; text-decoration: none; }
+.toc a::before { content: counter(toc) "\00a0\00a0"; font-family: var(--mono); color: var(--ink-3); }
+.toc a:hover, .toc a:focus-visible { border-color: var(--accent); color: var(--accent); }
+h2[id] { scroll-margin-top: 16px; }
+.tabs { margin-top: 20px; }
+.tablist { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: thin; }
+.tablist button { font: inherit; font-size: 0.9375rem; white-space: nowrap; padding: 10px 14px; min-height: 44px; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; color: var(--ink-3); cursor: pointer; }
+.tablist button[aria-selected="true"] { color: var(--ink); font-weight: 600; border-bottom-color: var(--accent); }
+.tablist button:hover { color: var(--ink); }
+.tablist button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tabcap { color: var(--ink-2); font-size: 0.9375rem; margin: 14px 0 0; max-width: 68ch; }
+[role="tabpanel"] > .panel { margin-top: 14px; }
+.print-only { display: none; }
+details.why { margin-top: 16px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+details.why > summary { cursor: pointer; padding: 11px 16px; font-size: 0.9375rem; font-weight: 600; color: var(--accent); list-style-position: inside; }
+details.why > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+details.why[open] > summary { border-bottom: 1px solid var(--line); }
+details.why > :not(summary) { margin-left: 16px; margin-right: 16px; }
+details.why > ul { margin-top: 12px; margin-bottom: 14px; }
+details.why > .panel { border: 0; padding: 0; margin-top: 12px; margin-bottom: 14px; background: none; }
+details.why > p { margin-top: 12px; }
+details.why > h4 { margin-top: 18px; }
+details.why > h4:first-of-type { margin-top: 14px; }
+@media print { [role="tabpanel"][hidden] { display: block !important; } .tablist, .mode, .toc { display: none; } .print-only { display: block; } }
+
+/* ---- stage 3: candidates ---- */
+.cand-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin-top: 20px; }
+.cand-group { min-width: 0; }
+.cand-group > h4 { margin: 0 0 8px; font-family: var(--mono); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+.cand { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: center; width: 100%; text-align: left; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px; margin-top: 8px; cursor: pointer; }
+.cand:hover { border-color: var(--accent); }
+.cand:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cand[aria-pressed="true"] { border-color: var(--accent); background: var(--band); }
+.cand b { display: block; font-size: 0.9375rem; font-weight: 600; line-height: 1.3; }
+.cand span { display: block; font-size: 0.8125rem; color: var(--ink-2); line-height: 1.4; margin-top: 2px; }
+.cand svg { display: block; width: 96px; height: 52px; }
+.explorer .mock-tag, .panel > .mock-tag { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; color: var(--ink-3); }
+.ctrl-row { display: flex; flex-wrap: wrap; gap: 14px 24px; margin-top: 14px; align-items: flex-end; }
+.ctrl { min-width: 0; }
+.ctrl-l { display: block; font-size: 0.75rem; color: var(--ink-3); margin-bottom: 5px; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--bg); }
+.seg button { font: inherit; font-size: 0.875rem; padding: 8px 12px; min-height: 40px; border: 0; border-right: 1px solid var(--line); background: none; color: var(--ink-2); cursor: pointer; white-space: nowrap; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: inset 0 -2px 0 var(--accent); }
+.seg button:hover { color: var(--ink); }
+.seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.chk { display: inline-flex; gap: 8px; align-items: center; font-size: 0.875rem; color: var(--ink-2); min-height: 40px; cursor: pointer; }
+.chk input { width: 16px; height: 16px; accent-color: var(--accent); }
+.ex-title { font-weight: 600; margin-top: 18px; max-width: none; }
+.viz-h { font-family: var(--text); font-size: 0.8125rem; font-weight: 600; color: var(--ink-2); margin: 22px 0 6px; }
+.viz { position: relative; width: 100%; }
+.viz svg { display: block; width: 100%; height: auto; overflow: visible; }
+.viz text { font-family: var(--text); fill: var(--ink-2); }
+.viz .mono-t { font-family: var(--mono); }
+.viz .ax { stroke: var(--line); stroke-width: 1; }
+.viz .zero { stroke: var(--ink-3); stroke-width: 1; }
+.viz .bandr { fill: var(--band); }
+.viz .pline { fill: none; stroke: var(--series-1); stroke-width: 2; stroke-linejoin: round; }
+.viz .gainf { fill: var(--good); opacity: 0.13; }
+.viz .lossf { fill: var(--crit); opacity: 0.13; }
+.viz .spot { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; }
+.viz .dot { fill: var(--series-1); stroke: var(--surface); stroke-width: 2; }
+.viz .cross { stroke: var(--ink-3); stroke-width: 1; }
+.viz .chipb { fill: var(--series-1); }
+.viz .chips { fill: var(--surface); stroke: var(--series-1); stroke-width: 1.5; }
+.viz .chipb-t { fill: #fff; font-weight: 600; }
+.viz .chips-t { fill: var(--ink); font-weight: 600; }
+.viz .lead { stroke: var(--ink-3); stroke-width: 1; }
+.viz .strong-t { fill: var(--ink); font-weight: 600; }
+.viz .e-dot { fill: var(--series-1); stroke: var(--surface); stroke-width: 2; }
+.viz .e-ring { fill: var(--surface); stroke: var(--ink-3); stroke-width: 1.5; }
+.viz .e-pick { fill: none; stroke: var(--accent); stroke-width: 2; }
+.viz .mkfill { fill: var(--ink); }
+.tip { position: absolute; z-index: 5; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 0.8125rem; line-height: 1.35; padding: 6px 9px; border-radius: 4px; white-space: nowrap; }
+.tip b { font-family: var(--mono); font-weight: 500; }
+.explorer { position: relative; }
+.keyline { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.8125rem; color: var(--ink-3); margin-top: 8px; max-width: none; }
+.keyline span { display: inline-flex; align-items: center; gap: 6px; }
+.keyline b { font-family: var(--mono); font-weight: 500; color: var(--ink); }
+.sw { display: inline-block; width: 16px; height: 10px; border-radius: 2px; }
+.sw.band { background: var(--band); border: 1px solid var(--line); }
+.sw.line { height: 0; border-top: 2px solid var(--series-1); border-radius: 0; }
+.sw.gain { background: var(--good); opacity: 0.3; }
+.sw.loss { background: var(--crit); opacity: 0.3; }
+.mk { display: inline-block; width: 10px; height: 10px; }
+.mk.dot { border-radius: 50%; background: var(--series-1); }
+.mk.ring { border-radius: 50%; border: 1.5px solid var(--ink-3); }
+.mk.dia { background: var(--ink); transform: rotate(45deg) scale(0.8); }
+.mk.tri { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 10px solid var(--ink); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 18px; }
+.tile { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; min-width: 0; }
+.tile span { display: block; font-size: 0.75rem; color: var(--ink-3); }
+.tile b { display: block; font-family: var(--mono); font-weight: 500; font-size: 1.125rem; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.tile small { display: block; font-size: 0.75rem; color: var(--ink-3); margin-top: 1px; }
+table.legs { margin-top: 16px; }
+table.legs td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.exps { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-top: 8px; }
+.exp { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; min-width: 0; }
+.exp.on { border: 2px solid var(--accent); padding: 9px 11px; }
+.exp > div { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.exp > div span { font-size: 0.8125rem; color: var(--ink-2); }
+.exp p { margin: 2px 0 0; font-size: 0.8125rem; color: var(--ink-2); }
+.exp small { display: block; margin-top: 4px; font-size: 0.75rem; color: var(--accent); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips span { border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; font-size: 0.8125rem; color: var(--ink-3); min-height: 0; }
+.chips b { font-family: var(--mono); font-weight: 400; color: var(--ink); }
+.orows { border: 1px solid var(--line); border-radius: 6px; margin-top: 18px; overflow: hidden; }
+.orow, .ohead { display: grid; grid-template-columns: 1.4em minmax(0, 2fr) repeat(7, minmax(0, 1fr)) 76px; gap: 2px 10px; align-items: center; padding: 10px 12px; }
+.ohead { font-size: 0.75rem; color: var(--ink-3); border-bottom: 1px solid var(--line); align-items: end; }
+.ohead .hl { color: var(--accent); font-weight: 600; }
+.ocand + .ocand { border-top: 1px solid var(--line); }
+.ocand.open > .orow { background: var(--band); }
+.orow { font-size: 0.875rem; }
+.orow .v { font-family: var(--mono); font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
+.orow .nm { font-weight: 600; line-height: 1.3; }
+.orow .why1 { grid-column: 2 / -1; font-size: 0.75rem; color: var(--ink-3); }
+.ocand.rec .why1 { color: var(--accent); }
+.orow button { font: inherit; font-size: 0.8125rem; min-height: 40px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); cursor: pointer; }
+.orow button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ocand.open .orow button { border-color: var(--accent); color: var(--accent); }
+.odet { display: flex; flex-wrap: wrap; gap: 20px 28px; padding: 16px 16px 20px; border-top: 1px solid var(--line); }
+.odet > div { min-width: 0; }
+.odet .oc { flex: 3 1 340px; }
+.odet .os { flex: 2 1 240px; }
+.odet h4 { margin: 0 0 6px; font-size: 0.8125rem; color: var(--ink-2); }
+.odet .os h4:not(:first-child) { margin-top: 16px; }
+.odet table { font-size: 0.8125rem; }
+.odet td.n { color: var(--ink); width: auto; }
+.odet .kv { display: flex; justify-content: space-between; gap: 12px; font-size: 0.8125rem; padding: 2px 0; }
+.odet .kv span:last-child { color: var(--ink-3); }
+.odet .ex3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; font-size: 0.75rem; color: var(--ink-3); }
+.odet .ex3 b { display: block; font-family: var(--mono); font-weight: 400; font-size: 0.875rem; color: var(--ink); }
+.odet .oth { border: 1px dashed var(--line); border-radius: 6px; padding: 8px 10px; font-size: 0.8125rem; color: var(--ink-2); margin-top: 16px; }
+.odet .tiles { margin-top: 10px; }
+@media (max-width: 760px) {
+  .ohead { display: none; }
+  .orow { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 12px; align-items: start; }
+  .orow .rk { display: none; }
+  .orow .nm, .orow .why1 { grid-column: 1 / -1; }
+  .orow .nm::before { content: attr(data-rank) ". "; font-family: var(--mono); font-weight: 400; }
+  .orow .v::before { content: attr(data-l); display: block; font-family: var(--text); font-size: 0.6875rem; color: var(--ink-3); }
+  .orow button { grid-column: 1 / -1; }
+}
+/* Wide layout, 17 November 2026: the page uses the available width; cards and panels flex to fill it. */
+.wrap { max-width: 1120px; }
+p, ul, figcaption, .tabcap { max-width: 84ch; }
+.sub, .ex-title, .keyline, .verdict, .stages, .steps, .checks, .fam, .toc ol { max-width: none; }
+/* Cards, tables and figures keep their earlier size (860px at most) and sit centred in the wider page. */
+.wrap > .panel, .wrap > .two, .wrap > .tabs, .wrap > .cand-groups, .wrap > .stages, details.why > .panel { max-width: 860px; margin-left: auto; margin-right: auto; }
+[role="tabpanel"] > .panel { margin-left: auto; margin-right: auto; }
+/* UI call-outs, 17 November 2026: every mock-up says whether it is a screen of the application or an explanation. */
+h3#ui { margin-top: 36px; }
+.ui-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 0 10px; }
+.ui-tag { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; border-radius: 4px; padding: 3px 8px; white-space: nowrap; }
+.ui-tag.app { background: var(--accent); color: var(--surface); border: 1px solid var(--accent); }
+.ui-tag.ex { border: 1px dashed var(--ink-3); color: var(--ink-2); }
+.ui-row span:last-child { font-size: 0.8125rem; color: var(--ink-2); }
+.ui-list { list-style: none; padding: 0; margin: 12px 0 0; max-width: none; display: grid; gap: 8px; }
+.ui-list li { margin: 0; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-size: 0.9375rem; }
+.ui-list b { font-weight: 600; }
+.ui-list small { color: var(--ink-3); font-size: 0.8125rem; }
+details.why > .cand-groups { max-width: 860px; margin-left: auto; margin-right: auto; }
+.mxl { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 16px; }
+.mxl label { font-size: 0.875rem; font-weight: 600; }
+.mxl label small { font-weight: 400; color: var(--ink-3); margin-left: 4px; }
+.mxl-in { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); padding-left: 10px; }
+.mxl-in:focus-within { border-color: var(--accent); outline: 2px solid var(--accent); outline-offset: 1px; }
+.mxl-in i { font-style: normal; font-family: var(--mono); color: var(--ink-3); }
+.mxl-in input { font: inherit; font-family: var(--mono); font-size: 0.9375rem; width: 11.5em; min-height: 40px; padding: 6px 10px 6px 6px; border: 0; background: none; color: var(--ink); outline: none; }
+.viz .lvl { stroke: var(--series-2); stroke-width: 1.5; stroke-dasharray: 2 3; }
+.viz .lvl-t { fill: var(--ink-2); font-family: var(--mono); }
+/* ---- stage 4: challenge ---- */
+.by { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; border-radius: 4px; padding: 2px 8px; white-space: nowrap; border: 1px solid var(--line); color: var(--ink-2); }
+.by.agent { background: var(--band); border-color: var(--accent); color: var(--accent); }
+.flow4 { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; margin-top: 4px; }
+.flow4 .col { display: grid; gap: 10px; flex: 1 1 110px; min-width: 0; align-content: start; }
+.flow4 .node { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; background: var(--bg); display: grid; gap: 4px; align-content: start; min-width: 0; }
+.flow4 .node.agent { border-color: var(--accent); }
+.flow4 .node b { font-size: 0.875rem; line-height: 1.3; }
+.flow4 .node i { font-style: normal; font-family: var(--mono); font-size: 0.75rem; color: var(--ink-3); }
+.flow4 .arr { flex: 0 0 auto; align-self: center; color: var(--ink-3); font-size: 1.125rem; }
+.flow4 .par { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; color: var(--ink-3); min-height: 1.2em; }
+@media (max-width: 760px) { .flow4 { flex-direction: column; } .flow4 .arr { transform: rotate(90deg); } .flow4 .col { flex-basis: auto; } .flow4 .par:empty { display: none; } }
+.scards { display: grid; gap: 14px; margin-top: 20px; max-width: 860px; margin-left: auto; margin-right: auto; }
+.scard { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; min-width: 0; }
+.scard header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.scard .n { font-family: var(--mono); font-size: 0.8125rem; width: 28px; height: 28px; border: 1px solid var(--accent); color: var(--accent); border-radius: 50%; display: inline-grid; place-items: center; flex: 0 0 auto; }
+.scard h3 { font-size: 1.0625rem; flex: 1 1 200px; }
+.scard > p { margin-top: 8px; max-width: none; color: var(--ink-2); font-size: 0.9375rem; }
+.scard dl { margin: 12px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px 20px; border-top: 1px solid var(--line); padding-top: 12px; }
+.scard dt { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; color: var(--ink-3); }
+.scard dd { margin: 2px 0 0; font-size: 0.875rem; }
+.res4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; max-width: 860px; margin: 20px auto 0; }
+.res4 > div { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; }
+.res4 p { margin: 8px 0 0; font-size: 0.875rem; color: var(--ink-2); }
+.rs { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; border-radius: 4px; padding: 2px 8px; border: 1px solid var(--line); white-space: nowrap; }
+.rs.ok { border-color: var(--good); color: var(--good); }
+.rs.fl { border-color: var(--series-2); color: var(--ink); background: color-mix(in srgb, var(--series-2) 16%, transparent); }
+.rs.na { color: var(--ink-3); }
+.rs.un { border-style: dashed; border-color: var(--ink-3); color: var(--ink-2); }
+.cgroup { max-width: 860px; margin: 24px auto 0; }
+.cgroup > h4 { margin: 0 0 8px; font-size: 0.9375rem; }
+.cgroup > h4 .mono { color: var(--accent); margin-right: 6px; }
+details.tchk { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; margin-top: 8px; }
+details.tchk > summary { list-style: none; cursor: pointer; display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; min-height: 44px; }
+details.tchk > summary::-webkit-details-marker { display: none; }
+details.tchk > summary::after { content: "+"; margin-left: auto; font-family: var(--mono); color: var(--accent); }
+details.tchk[open] > summary::after { content: "−"; }
+details.tchk > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+details.tchk .n { font-family: var(--mono); font-size: 0.8125rem; width: 28px; height: 28px; border: 1px solid var(--accent); color: var(--accent); border-radius: 50%; display: inline-grid; place-items: center; flex: 0 0 auto; }
+details.tchk .cn { display: grid; gap: 2px; min-width: 0; }
+details.tchk .cn span { font-size: 0.875rem; color: var(--ink-2); }
+details.tchk > :not(summary) { margin-left: 14px; margin-right: 14px; }
+details.tchk > .scroll { border-top: 1px solid var(--line); padding-top: 8px; }
+details.tchk table { table-layout: fixed; }
+details.tchk table th { white-space: normal; width: 38%; overflow-wrap: anywhere; color: var(--ink); font-size: 0.875rem; }
+details.tchk > ul { font-size: 0.9375rem; max-width: none; }
+details.tchk > p { margin-bottom: 14px; }
+.wrap > .panel.wide { max-width: none; }
+.ready { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 12px; margin-top: 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); padding: 10px 12px; }
+.ready > div { display: grid; gap: 2px; min-width: 0; flex: 1 1 260px; }
+.ready span:not(.rs) { font-size: 0.8125rem; color: var(--ink-2); }
+.chcols { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; margin-top: 16px; }
+.chl { flex: 3 1 420px; min-width: 0; display: grid; gap: 12px; }
+.chr { flex: 2 1 300px; min-width: 0; display: grid; gap: 12px; }
+.collab { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; color: var(--ink-3); }
+.cbox { border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; min-width: 0; }
+.cbox h4 { margin: 0; font-size: 0.8125rem; color: var(--ink-2); }
+.cbox p { margin: 6px 0 0; max-width: none; font-size: 0.9375rem; }
+.cline { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 8px; font-size: 0.9375rem; }
+.cline.obj, .cline.chk2 { display: flex; gap: 10px; align-items: flex-start; }
+.cline.obj .mono { color: var(--accent); }
+.cline small { display: block; font-family: var(--mono); font-size: 0.6875rem; color: var(--ink-3); margin-top: 2px; }
+.cline.chk2 > div { display: grid; min-width: 0; }
+.cline.chk2 span:not(.rs) { font-size: 0.8125rem; color: var(--ink-2); }
+.cline.more { color: var(--accent); font-size: 0.875rem; }
+.chead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.chead h4 { font-size: 0.9375rem; color: var(--ink); flex: 1 1 80px; }
+.chead .mono { font-size: 0.6875rem; color: var(--ink-2); }
+.chact { display: grid; gap: 8px; }
+.chact .cm-btn { text-align: center; }
+</style>
+
+<div class="wrap">
+  <p class="sub manual-link" style="margin:0 0 10px"><a href="manual.html" style="color:var(--accent)">&larr; Tradecraft manual</a> &nbsp;·&nbsp; Stages: <a href="liquidity-gate.html" style="color:var(--accent)">1 Liquidity gate</a> &nbsp;<a href="thesis-stage.html" style="color:var(--accent)">2 Thesis</a> &nbsp;<a href="market-contracts.html" style="color:var(--accent)">3 Market and contracts</a> &nbsp;<a href="challenge.html" style="color:var(--accent)">4 Challenge</a></p>
+  <div class="top"><div class="meta">TRADECRAFT · DRAFT · 17 NOVEMBER 2026 · ON-DEMAND MODE, STAGE 4</div><button type="button" class="mode" id="mode">Switch to dark</button></div>
+  <h1>Challenge</h1>
+  <p class="lede">Stage 4 tests the thesis and the selected contract before any money is committed. Fixed checks run first, in code. A critic agent then does the part that rules cannot. The stage reports what it finds in words and leaves the decision with the user.</p>
+
+  <nav class="toc" aria-label="Contents">
+    <ol>
+      <li><a href="#p1">Overview</a></li>
+      <li><a href="#p2">The steps</a></li>
+      <li><a href="#p3">Checks on the thesis</a></li>
+      <li><a href="#p4">Checks on the contract</a></li>
+      <li><a href="#p5">The question and the evidence</a></li>
+      <li><a href="#p6">The critic</a></li>
+      <li><a href="#p7">The challenge screen</a></li>
+      <li><a href="#p8">Decision and record</a></li>
+    </ol>
+  </nav>
+
+  <h2 id="p1">1. Overview</h2>
+  <p>By this point the system has drafted a view and proposed a contract for it. Both came from the same pipeline, so neither has yet been questioned. This stage questions them. It covers the thesis and, because stage 3 now proposes the contract, the choice of structure as well.</p>
+
+  <div class="two">
+    <div class="panel">
+      <h3>What the stage receives</h3>
+      <p>The hand-off from stage 3: the selected candidate with its legs, quotes and measures; the thesis record with its complete evidence set and any horizon amendment; the candidates not selected; and how the choice was made, including the expiry, the filters, the priority and the ranking.</p>
+    </div>
+    <div class="panel">
+      <h3>What the stage does not do</h3>
+      <p>It does not change the thesis or the contract. It does not produce a score or a confidence figure. It does not set position size or place orders. In the version built first, it does not block a trade: it advises, and the user decides.</p>
+    </div>
+  </div>
+
+  <h3 class="sec">What the stage produces</h3>
+  <div class="panel">
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Component</th><th>Definition</th></tr></thead>
+        <tbody>
+          <tr><th>Thesis checks</th><td>The result of each fixed check on the thesis, passed or flagged, with the evidence item cited.</td></tr>
+          <tr><th>Contract checks</th><td>The result of each fixed check on the selected candidate, passed or flagged, with the figure that triggered it.</td></tr>
+          <tr><th>Objections</th><td>The critic's objections, each with its basis in the retrieved evidence and its status.</td></tr>
+          <tr><th>The two cases</th><td>The strongest case for the thesis and the strongest case against it, written by the critic at the same length and shown side by side.</td></tr>
+          <tr><th>How the trade loses</th><td>Two or three specific paths to a loss for the selected structure.</td></tr>
+          <tr><th>Readiness</th><td>Set in code: whether anything the decision relies on has gone out of date. It is not a verdict on the trade.</td></tr>
+          <tr><th>User decision</th><td>Proceed to stage 5, return to stage 3 to select another candidate, or stop.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <ul>
+    <li><strong>Rules first, the critic second.</strong> Whatever can be checked by a fixed rule is checked in code. Instructing a model to be critical tends to produce the appearance of criticism, so the critic is confined to the judgements a rule cannot make.</li>
+    <li><strong>Both sides, always.</strong> Evidence is retrieved for and against the thesis, and the critic must write the strongest case for it and the strongest case against it, at the same length. A one-sided challenge sways the reader without informing them.</li>
+    <li><strong>Words, not a score.</strong> Objections are stated with their evidence. No rating and no confidence figure is shown.</li>
+    <li><strong>Everything is recorded.</strong> Each check, each objection and the user's decision are written as decision records, including objections the user proceeds past.</li>
+  </ul>
+
+  <h3 class="sec" id="ui">Screens in this stage</h3>
+  <div class="panel">
+    <p class="sub" style="margin-top:0">A figure marked <strong>application screen</strong> is what the user sees in the application. A figure marked <strong>explanation only</strong> illustrates a rule and is not part of the application.</p>
+    <ul class="ui-list">
+      <li><span class="ui-tag app">APPLICATION SCREEN</span><b>Challenge</b><small>One screen: a readiness line, the critic's two cases, loss paths and objections on the left, the two sets of checks and the actions on the right. Shown in part 7.</small></li>
+    </ul>
+    <p class="sub">The diagram, the step cards and the check cards on this page are explanation.</p>
+  </div>
+
+  <h2 id="p2">2. The steps</h2>
+  <p>The stage has six steps. Four are fixed rules in code and two are carried out by agents. The two checklists do not depend on each other and run at the same time; the remaining steps run in sequence.</p>
+
+  <figure class="panel">
+    <div class="ui-row"><span class="ui-tag ex">EXPLANATION ONLY</span><span>The order of the steps. Not a screen in the application.</span></div>
+    <div class="flow4" role="img" aria-label="Steps 1 and 2 run in parallel. Step 3 restates the thesis, step 4 retrieves evidence, step 5 is the critique, which also receives the results of steps 1 and 2, and step 6 presents and records.">
+      <div class="col">
+        <span class="par">IN PARALLEL</span>
+        <div class="node"><b>1. Checklist on the thesis</b><i>code</i></div>
+        <div class="node"><b>2. Checklist on the contract</b><i>code</i></div>
+      </div>
+      <span class="arr" aria-hidden="true">→</span>
+      <div class="col"><span class="par"></span><div class="node"><b>3. Restate the thesis as a question</b><i>code</i></div></div>
+      <span class="arr" aria-hidden="true">→</span>
+      <div class="col"><span class="par"></span><div class="node agent"><b>4. Retrieve evidence</b><i>agent</i></div></div>
+      <span class="arr" aria-hidden="true">→</span>
+      <div class="col"><span class="par"></span><div class="node agent"><b>5. Critique</b><i>agent</i></div></div>
+      <span class="arr" aria-hidden="true">→</span>
+      <div class="col"><span class="par"></span><div class="node"><b>6. Present and record</b><i>code</i></div></div>
+    </div>
+    <figcaption>The critique in step 5 receives the results of both checklists as well as the retrieved evidence. Step 3 works from the thesis alone.</figcaption>
+  </figure>
+
+  <div class="scards">
+    <article class="scard">
+      <header><span class="n">1</span><h3>Checklist on the thesis</h3><span class="by">CODE</span></header>
+      <p>Tests the thesis against fixed rules: whether it rests on a rejected signal, whether every finding it relies on carries a grade, whether it is contested or weakly supported, and whether the view runs against the base rate.</p>
+      <dl>
+        <div><dt>PURPOSE</dt><dd>Catch the faults a rule can catch, in the same way every time.</dd></div>
+        <div><dt>INPUT</dt><dd>The thesis record: the view, its basis, the evidence with grades, and the base rate.</dd></div>
+        <div><dt>OUTPUT</dt><dd>A list of thesis checks, each passed or flagged, with the evidence item cited.</dd></div>
+      </dl>
+    </article>
+    <article class="scard">
+      <header><span class="n">2</span><h3>Checklist on the contract</h3><span class="by">CODE</span></header>
+      <p>Tests the selected candidate against fixed rules: fit with the view, the expiry against any catalyst date, a poor-match expiry, the gap between the base-rate and market-implied chances, trading cost, and whether the structure sells premium.</p>
+      <dl>
+        <div><dt>PURPOSE</dt><dd>Challenge the choice of structure as well as the thesis.</dd></div>
+        <div><dt>INPUT</dt><dd>The selected candidate, the candidates not selected, the expiry, the priority and the ranking.</dd></div>
+        <div><dt>OUTPUT</dt><dd>A list of contract checks, each passed or flagged, with the figure that triggered it.</dd></div>
+      </dl>
+    </article>
+    <article class="scard">
+      <header><span class="n">3</span><h3>Restate the thesis as a question</h3><span class="by">CODE</span></header>
+      <p>Removes confident wording and first-person framing, and turns the claim into a neutral question.</p>
+      <dl>
+        <div><dt>PURPOSE</dt><dd>Prevent the critic from agreeing with a statement because it is asserted.</dd></div>
+        <div><dt>INPUT</dt><dd>The claim and basis of the thesis.</dd></div>
+        <div><dt>OUTPUT</dt><dd>The question the critic works on.</dd></div>
+      </dl>
+    </article>
+    <article class="scard">
+      <header><span class="n">4</span><h3>Retrieve evidence</h3><span class="by agent">AGENT · EVIDENCE RETRIEVER</span></header>
+      <p>Searches the research corpus for findings that support the question and findings that oppose it.</p>
+      <dl>
+        <div><dt>PURPOSE</dt><dd>Give the critic grounds from the project's own research, on both sides.</dd></div>
+        <div><dt>INPUT</dt><dd>The question from step 3 and the signals the thesis relies on.</dd></div>
+        <div><dt>OUTPUT</dt><dd>Supporting and opposing findings, each with its source and grade. Empty if nothing relevant is found.</dd></div>
+      </dl>
+    </article>
+    <article class="scard">
+      <header><span class="n">5</span><h3>Critique</h3><span class="by agent">AGENT · CRITIC</span></header>
+      <p>Identifies which claims the thesis depends on, a rejected signal presented under another name, and claims that do not fit together. Writes the strongest case for the thesis.</p>
+      <dl>
+        <div><dt>PURPOSE</dt><dd>Carry out the judgement that rules cannot.</dd></div>
+        <div><dt>INPUT</dt><dd>The question, the retrieved findings and the results of both checklists.</dd></div>
+        <div><dt>OUTPUT</dt><dd>Objections, each with its basis and status, and the strongest case for the thesis.</dd></div>
+      </dl>
+    </article>
+    <article class="scard">
+      <header><span class="n">6</span><h3>Present and record</h3><span class="by">CODE</span></header>
+      <p>Shows one challenge screen and takes the user's decision.</p>
+      <dl>
+        <div><dt>PURPOSE</dt><dd>Put the challenge before the user ahead of any sizing, and keep it on file.</dd></div>
+        <div><dt>INPUT</dt><dd>The outputs of steps 1, 2 and 5.</dd></div>
+        <div><dt>OUTPUT</dt><dd>The challenge screen, and decision records for every objection and for the user's choice: proceed, return to stage 3, or stop.</dd></div>
+      </dl>
+    </article>
+  </div>
+
+  <ul>
+    <li><strong>What passes to stage 5.</strong> The selected candidate and the thesis, unchanged, with the full list of flags and objections attached.</li>
+    <li><strong>If the user returns to stage 3,</strong> the challenge is kept on record and runs again on the newly selected candidate.</li>
+  </ul>
+
+  <h2 id="p3">3. Checks on the thesis</h2>
+  <p>Step 1 runs twelve fixed checks on the thesis. Each reads fields that the earlier stages have already recorded. None involves a model.</p>
+
+  <h3 class="sec">Four possible results</h3>
+  <div class="res4">
+    <div><span class="rs ok">PASSED</span><p>The check ran and found nothing.</p></div>
+    <div><span class="rs fl">FLAGGED</span><p>The check found something. The item that triggered it is cited.</p></div>
+    <div><span class="rs na">NOT APPLICABLE</span><p>The check does not apply to this view or instrument.</p></div>
+    <div><span class="rs un">COULD NOT BE CHECKED</span><p>The data was missing. Shown as plainly as a flag.</p></div>
+  </div>
+  <ul>
+    <li><strong>A check never reports "passed" for want of data.</strong> Missing data gives "could not be checked".</li>
+    <li><strong>A flag does not block.</strong> It is put before the user and passed to the critic.</li>
+    <li><strong>Checks that would be flagged on every request are left out,</strong> since a flag that is always raised says nothing. Check 8 is the one stated exception.</li>
+  </ul>
+
+  <h3 class="sec">The twelve checks</h3>
+  <div class="ui-row" style="max-width:860px;margin:16px auto 0"><span class="ui-tag ex">EXPLANATION ONLY</span><span>The rules behind the challenge screen. Select a check to see its results and notes.</span></div>
+  <div class="cgroup">
+    <h4><span class="mono">A</span> What the thesis rests on</h4>
+    <details class="tchk">
+      <summary><span class="n">1</span><span class="cn"><b>Rejected signal</b><span>The basis or a cited finding matches a wording on the rejected-signal list.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged</th><td>One entry per signal found: its name, the phrase matched, where it was found, and why the signal was rejected.</td></tr><tr><th>Passed</th><td>No match.</td></tr></tbody></table></div>
+      <ul><li>A match is a flag. Whether the thesis depends on the signal is for the critic, which also looks for rejected signals described in other words.</li><li>Matching on wordings produces occasional false alarms, for example the word &quot;support&quot; in an ordinary sentence. These are accepted.</li></ul>
+      <p class="sub"><strong>Data:</strong> Ready. The list is a file in the repository.</p>
+    </details>
+    <details class="tchk">
+      <summary><span class="n">2</span><span class="cn"><b>Narrow support</b><span>The view rests on one finding, or on one evidence family.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged: single finding</th><td>Only one supporting finding graded moderate or strong.</td></tr><tr><th>Flagged: single family</th><td>Two or more such findings, all from one family.</td></tr><tr><th>Passed</th><td>Supporting findings from at least two families.</td></tr></tbody></table></div>
+      <ul><li>Weak findings do not count.</li><li>Supporting findings from the same family dated the same day count as one, since they usually report the same event.</li><li>In a supplied thesis, a supported claim takes the family of the evidence that supports it.</li><li>For an index, the check counts lead evidence.</li></ul>
+      <p class="sub"><strong>Data:</strong> Ready. Each evidence item now records its family.</p>
+    </details>
+    <details class="tchk">
+      <summary><span class="n">3</span><span class="cn"><b>Strength of support</b><span>No supporting finding is graded strong, or the basis cites a weak finding.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged: moderate at best</th><td>No supporting finding is graded strong.</td></tr><tr><th>Flagged: weak finding cited</th><td>The basis cites a finding graded weak.</td></tr><tr><th>Passed</th><td>At least one strong supporting finding, and no weak finding cited.</td></tr></tbody></table></div>
+      <ul><li>The output names which of the three grade tests each flagged finding failed: primary source, recent, specific.</li><li>A finding with no grade is treated as weak and reported as ungraded.</li></ul>
+      <p class="sub"><strong>Data:</strong> Ready.</p>
+    </details>
+    <details class="tchk">
+      <summary><span class="n">4</span><span class="cn"><b>Contested</b><span>Sector or macro evidence graded moderate or strong opposes the view.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged: contested</th><td>At least one opposing finding graded moderate or strong.</td></tr><tr><th>Passed, with a note</th><td>Opposing findings exist but all are weak; they are listed.</td></tr><tr><th>Passed</th><td>None found, and sector and macro evidence was retrieved.</td></tr><tr><th>Could not be checked</th><td>No sector or macro evidence was retrieved.</td></tr></tbody></table></div>
+      <ul><li>The two sides are shown and never netted.</li><li>For a supplied thesis, any claim marked contradicted in stage 2 is also listed and flagged.</li></ul>
+      <p class="sub"><strong>Data:</strong> Ready.</p>
+    </details>
+  </div>
+  <div class="cgroup">
+    <h4><span class="mono">B</span> The view against the measured figures</h4>
+    <details class="tchk">
+      <summary><span class="n">5</span><span class="cn"><b>Against the base rate</b><span>The outcome the view needs occurred in fewer than half of past periods of that length.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged</th><td>Under 50%.</td></tr><tr><th>Passed</th><td>50% or more.</td></tr><tr><th>Not applicable</th><td>A range-bound view, or no directional view.</td></tr></tbody></table></div>
+      <ul><li>A plain threshold at 50%. The output always shows the figure&#x27;s uncertainty, so a marginal flag is visible.</li><li>Most bearish views are flagged, because stocks have drifted upward over time. That is intended.</li><li>Uses the horizon in force, including one amended in stage 3.</li></ul>
+      <p class="sub"><strong>Data:</strong> Ready.</p>
+    </details>
+    <details class="tchk">
+      <summary><span class="n">6</span><span class="cn"><b>Event inside the window</b><span>A scheduled event falls between today and the expiry, or a catalyst the thesis depends on falls after the expiry.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged: event inside</th><td>The event falls between today and the expiry.</td></tr><tr><th>Flagged: catalyst outside</th><td>A dated catalyst falls after the expiry.</td></tr><tr><th>Passed</th><td>The date is known and outside the window, or the catalyst is inside it.</td></tr><tr><th>Could not be checked</th><td>The date is not available.</td></tr></tbody></table></div>
+      <ul><li>The window runs to the expiry, since the position is exposed until the option expires.</li><li>Each event type has its own line: earnings date, a dated ruling or vote, Federal Reserve decision, inflation and employment releases, heavy earnings period for an index, and the thesis&#x27;s own catalyst.</li></ul>
+      <p class="sub"><strong>Data:</strong> Partly. Earnings dates have no data source, so that line reads &quot;could not be checked&quot;.</p>
+    </details>
+  </div>
+  <div class="cgroup">
+    <h4><span class="mono">C</span> Risk flags and invalidation</h4>
+    <details class="tchk">
+      <summary><span class="n">7</span><span class="cn"><b>Risk flags</b><span>A risk flag raised in stage 2 reduces size or adds an invalidation condition.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged</th><td>At least one such flag.</td></tr><tr><th>Flagged: severe flag overridden</th><td>The system declined to give a view and the user supplied a thesis.</td></tr><tr><th>Passed, with a note</th><td>Only a note-level flag.</td></tr><tr><th>Passed</th><td>None raised, and the filings were read.</td></tr><tr><th>Could not be checked</th><td>The filings or calendar could not be read.</td></tr></tbody></table></div>
+      <ul><li>Each flag is listed with its trigger, its effect and whether it works against the view.</li><li>Dated flags are timed by check 6; this check lists them and refers to it.</li></ul>
+      <p class="sub"><strong>Data:</strong> Ready.</p>
+    </details>
+    <details class="tchk">
+      <summary><span class="n">8</span><span class="cn"><b>Invalidation cannot be watched</b><span>An invalidation condition has no data source, nothing watches it, or a finding has no condition.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged: cannot be watched</th><td>At least one condition has no data source.</td></tr><tr><th>Flagged: not watched automatically</th><td>Every condition has a source, but the Monitor is not built.</td></tr><tr><th>Flagged: no condition</th><td>A finding the thesis rests on has no invalidation condition.</td></tr><tr><th>Passed</th><td>Every condition has a source and the Monitor is active.</td></tr></tbody></table></div>
+      <ul><li>Each invalidation condition now carries a type from a fixed list, which code maps to a data source.</li><li>This check stays flagged until the Monitor is built. It tells the user that watching the conditions falls to them, and where to look.</li></ul>
+      <p class="sub"><strong>Data:</strong> Ready, with the type field added to the stage 2 record.</p>
+    </details>
+  </div>
+  <div class="cgroup">
+    <h4><span class="mono">D</span> How the thesis came about</h4>
+    <details class="tchk">
+      <summary><span class="n">9</span><span class="cn"><b>Origin and edits</b><span>The thesis was edited, its direction was reversed, it was supplied and not fully supported, or it was entered after no view.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged: edited</th><td>Each changed field, before and after.</td></tr><tr><th>Flagged: direction changed</th><td>The edit reversed the direction; the thesis is treated as supplied.</td></tr><tr><th>Flagged: supplied, not fully supported</th><td>Partly supported, not supported, or rests on a rejected signal.</td></tr><tr><th>Flagged: entered after no view</th><td>With the reason for the no view.</td></tr><tr><th>Passed</th><td>Drafted by the system and accepted unchanged; or supplied and well supported, with a note.</td></tr></tbody></table></div>
+      <ul><li>The verdict on a supplied thesis follows a fixed rule: one contradicted claim keeps it at &quot;partly supported&quot;, and weak evidence does not count as support.</li></ul>
+      <p class="sub"><strong>Data:</strong> Ready. The verdict rule is now written.</p>
+    </details>
+    <details class="tchk">
+      <summary><span class="n">10</span><span class="cn"><b>Earlier overrides and gaps</b><span>An earlier check was overruled, or a figure rests on provisional data.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged</th><td>Any override, or provisional data.</td></tr><tr><th>Passed, with a note</th><td>Neither, but one or more inputs were unavailable; they are listed.</td></tr><tr><th>Passed</th><td>None of these.</td></tr></tbody></table></div>
+      <ul><li>Collected from the decision records: liquidity gate overruled, recommended horizon not taken, horizon amended by switching expiry, maximum loss raised after the candidates were shown, snapshot data used.</li><li>Unavailable inputs are a note for now, because they are missing on every request until a data provider is chosen.</li></ul>
+      <p class="sub"><strong>Data:</strong> Ready.</p>
+    </details>
+    <details class="tchk">
+      <summary><span class="n">11</span><span class="cn"><b>Price moved since the freeze</b><span>The price has moved half a usual range or more since the thesis was frozen, or the thesis is more than one session old.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged: moved with the view</th><td>Part of the expected move may already have happened.</td></tr><tr><th>Flagged: moved against the view</th><td>The thesis may already be in doubt.</td></tr><tr><th>Flagged: thesis is stale</th><td>Frozen more than one trading session ago. The screen offers to run stage 2 again.</td></tr><tr><th>Passed</th><td>Under half a usual range, and from the current or previous session.</td></tr><tr><th>Could not be checked</th><td>No current price.</td></tr></tbody></table></div>
+      <ul><li>The thesis resolves against its reference close; the contracts are built around the current price.</li><li>Half a usual range and one session are design choices.</li></ul>
+      <p class="sub"><strong>Data:</strong> Ready.</p>
+    </details>
+    <details class="tchk">
+      <summary><span class="n">12</span><span class="cn"><b>Volatility state</b><span>The state is active, or a range-bound view is no longer in a quiet state.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged: active</th><td>Moves outside the usual range have been more common after an active state.</td></tr><tr><th>Flagged: no longer quiet</th><td>A range-bound view, and the state is now normal.</td></tr><tr><th>Flagged: invalidation met</th><td>A range-bound view, and the state is now active.</td></tr><tr><th>Passed, with a note</th><td>A directional view in a quiet state: moves have tended to be smaller.</td></tr><tr><th>Passed</th><td>Normal; or quiet with a range-bound view.</td></tr></tbody></table></div>
+      <ul><li>The check reports the state and adjusts no figure.</li><li>After an active state the close stayed inside the usual range about 60% of the time, against the 68% the range is built for. Observed on 16 November 2026, not confirmed by a pre-registered test.</li></ul>
+      <p class="sub"><strong>Data:</strong> Ready.</p>
+    </details>
+  </div>
+
+  <details class="why">
+    <summary>The rejected-signal list used by check 1</summary>
+  <p>Fourteen signals that could be cited as a reason for direction. Each was researched or measured for this project and rejected. The list is one file, read by this check, by the critic, and by the check on a supplied thesis in stage 2.</p>
+  <div class="panel"><div class="scroll"><table><thead><tr><th>Signal</th><th>Basis</th><th>Why it was rejected</th></tr></thead><tbody><tr><th>Unusual options flow</th><td>Researched and rejected</td><td>Large or unusual option trades did not give a usable signal of direction at retail scale.</td></tr><tr><th>Implied-volatility rank as a cheap or expensive verdict</th><td>Researched and rejected</td><td>Where implied volatility sits in its own past range does not show that options are cheap or expensive.</td></tr><tr><th>Put/call ratio, skew or put-call parity as direction</th><td>Researched and rejected</td><td>These option-market readings did not give a usable signal of direction.</td></tr><tr><th>Dealer gamma exposure</th><td>Researched and rejected</td><td>Estimates of dealer positioning available to a retail user are unreliable and did not predict direction.</td></tr><tr><th>Max pain</th><td>Researched and rejected</td><td>The price at which most options expire worthless did not predict where the stock closes.</td></tr><tr><th>Chart patterns and candlesticks</th><td>Researched and rejected</td><td>Named chart and candlestick patterns are display only in this system and may not support a direction.</td></tr><tr><th>Fibonacci and Elliott wave</th><td>Researched and rejected</td><td>Display only in this system; not accepted as support for a direction.</td></tr><tr><th>Agreement across timeframes</th><td>Researched and rejected</td><td>Counting how many timeframes agree adds no information beyond the trend itself. Timeframes are shown side by side and never combined.</td></tr><tr><th>Price trend or momentum as direction</th><td>Measured for this project</td><td>Measured 16 November 2026 on 20 years of prices for 105 names: trend shifted the chance of closing higher by under a point, in the mean-reverting direction, and not consistently for any one name. Trend is description only.</td></tr><tr><th>Support or resistance as a reason for direction</th><td>Measured for this project</td><td>Chart levels are description only. They were withdrawn as a basis for direction and for exits on 17 November 2026: their definition is arbitrary and nothing measured shows that they hold.</td></tr><tr><th>Social media sentiment</th><td>Researched and rejected</td><td>Sentiment on social platforms did not give a usable signal of direction.</td></tr><tr><th>Institutional holdings filings</th><td>Researched and rejected</td><td>Quarterly holdings filings are months old when published and did not give a usable signal.</td></tr><tr><th>Accounting accruals</th><td>Researched and rejected</td><td>The accruals effect did not survive as a usable signal in liquid names.</td></tr><tr><th>Sector rotation or industry momentum</th><td>Researched and rejected</td><td>Sector rotation and industry momentum did not add a usable signal. Sector evidence may qualify a view; it may not start one.</td></tr></tbody></table></div></div>
+  </details>
+  <details class="why">
+    <summary>What was left out, and what is provisional</summary>
+  <ul>
+    <li><strong>"No demonstrated edge"</strong> is not a check. It is true of every view and is already on the label.</li>
+    <li><strong>Repeated requests on one underlying</strong> cannot be detected, because choosing Stop after a no view records nothing.</li>
+    <li><strong>Provisional values.</strong> Half a usual range and one session in check 11, and the same-day rule in check 2, are design choices.</li>
+    <li><strong>Routine results until data sources are chosen.</strong> Check 6 reports the earnings date as "could not be checked", check 8 is flagged, and check 10 carries a note of unavailable inputs.</li>
+  </ul>
+  </details>
+
+  <h2 id="p4">4. Checks on the contract</h2>
+  <p>Step 2 runs eleven fixed checks on the selected candidate. They exist because stage 3 now proposes the contract: a contract the system proposed has to be questioned as well as the thesis it expresses. The four possible results are the same as for the thesis checks.</p>
+  <div class="ui-row" style="max-width:860px;margin:16px auto 0"><span class="ui-tag ex">EXPLANATION ONLY</span><span>The rules behind the challenge screen. Select a check to see its results and notes.</span></div>
+  <div class="cgroup">
+    <h4><span class="mono">A</span> Does the structure fit the view?</h4>
+    <details class="tchk">
+      <summary><span class="n">1</span><span class="cn"><b>Can lose when the view is right</b><span>&quot;Pays when the view is right&quot; is below 100%: the structure needs a move, and the direction alone is not enough.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged</th><td>The figure is below 100%.</td></tr><tr><th>Passed</th><td>The structure made money in every past period in which the view&#x27;s outcome occurred.</td></tr></tbody></table></div>
+      <ul><li>This is the gap between being right about direction and making money.</li><li>The output gives the figure, the break-even, and the move needed in percent and in usual ranges.</li></ul>
+      <p class="sub"><strong>Data:</strong> Ready.</p>
+    </details>
+    <details class="tchk">
+      <summary><span class="n">2</span><span class="cn"><b>Volatility state against the structure</b><span>The state is active and the structure collects premium, or the state is quiet and the structure needs a move.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged</th><td>Either condition.</td></tr><tr><th>Passed</th><td>Neither.</td></tr><tr><th>Could not be checked</th><td>The state could not be calculated.</td></tr></tbody></table></div>
+      <ul><li>Larger moves hurt a structure that collects premium, and they have been more common after an active state.</li><li>Moves have tended to be smaller after a quiet state, which works against a structure that needs one.</li></ul>
+      <p class="sub"><strong>Data:</strong> Ready. Uses thesis check 12.</p>
+    </details>
+    <details class="tchk">
+      <summary><span class="n">3</span><span class="cn"><b>Poor-match expiry</b><span>The expiry is more than twice the horizon away.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged</th><td>The stage 3 poor-match mark is set.</td></tr><tr><th>Passed</th><td>It is not.</td></tr></tbody></table></div>
+      <ul><li>The figures assume the position is held to expiry. The view covers only the first part of that period.</li></ul>
+      <p class="sub"><strong>Data:</strong> Ready.</p>
+    </details>
+  </div>
+  <div class="cgroup">
+    <h4><span class="mono">B</span> Is the price reasonable?</h4>
+    <details class="tchk">
+      <summary><span class="n">4</span><span class="cn"><b>Chance gap</b><span>The base-rate chance of profit is below the market-implied chance by more than the base-rate figure&#x27;s own uncertainty.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged</th><td>The gap exceeds the uncertainty for that horizon, about 3 points at 30 days and 1.5 at 7.</td></tr><tr><th>Passed</th><td>It does not.</td></tr><tr><th>Could not be checked</th><td>Implied volatility is missing from the feed.</td></tr></tbody></table></div>
+      <ul><li>The threshold is the figure&#x27;s own margin of error, so no number is invented.</li><li>History flatters bullish structures. For a bullish trade, a base-rate figure below the market&#x27;s is the stronger warning.</li></ul>
+      <p class="sub"><strong>Data:</strong> Ready.</p>
+    </details>
+    <details class="tchk">
+      <summary><span class="n">5</span><span class="cn"><b>Market expects a larger move</b><span>The move implied by option prices is at least 1.25 times the usual range for the same period.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged</th><td>The ratio is 1.25 or more.</td></tr><tr><th>Passed</th><td>It is lower.</td></tr><tr><th>Could not be checked</th><td>Implied volatility is missing from the feed.</td></tr></tbody></table></div>
+      <ul><li>A large implied move often means the market is pricing an event. With no earnings-date source, this is the one indication the system has that an event may be coming.</li><li>The 1.25 threshold is provisional. It will be replaced by a figure measured from the stored daily snapshots.</li></ul>
+      <p class="sub"><strong>Data:</strong> Ready, with a provisional threshold.</p>
+    </details>
+    <details class="tchk">
+      <summary><span class="n">6</span><span class="cn"><b>Trading cost high</b><span>Trading cost is in the top fifth of the cost cap: 4% of the amount at risk or more at the default setting.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged</th><td>Cost at or above 80% of the cap.</td></tr><tr><th>Passed</th><td>Below it.</td></tr></tbody></table></div>
+      <ul><li>The output gives the cost in dollars and as a share of risk, with the cheapest candidate&#x27;s cost for comparison.</li><li>Closing the position before expiry costs about the same again.</li></ul>
+      <p class="sub"><strong>Data:</strong> Ready.</p>
+    </details>
+  </div>
+  <div class="cgroup">
+    <h4><span class="mono">C</span> What is the user exposed to?</h4>
+    <details class="tchk">
+      <summary><span class="n">7</span><span class="cn"><b>Premium-selling structure</b><span>The structure collects premium: a credit spread or an iron condor.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged</th><td>The structure is a net credit.</td></tr><tr><th>Passed</th><td>It is a net debit.</td></tr></tbody></table></div>
+      <ul><li>A flag with context, not a prohibition. This project&#x27;s own tests found that rule-based premium selling on the index earned no extra return after 2012.</li><li>The output gives the credit and the maximum loss as a multiple of it.</li></ul>
+      <p class="sub"><strong>Data:</strong> Ready.</p>
+    </details>
+    <details class="tchk">
+      <summary><span class="n">8</span><span class="cn"><b>Early assignment</b><span>A short leg is in the money at entry, or a dividend falls before expiry on a short leg, on an instrument that can be exercised early.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged</th><td>Either condition.</td></tr><tr><th>Passed</th><td>Neither, with the dividend date known.</td></tr><tr><th>Not applicable</th><td>A cash-settled index option, which cannot be exercised early.</td></tr><tr><th>Could not be checked</th><td>The dividend date is not available.</td></tr></tbody></table></div>
+      <ul><li>Single stocks and exchange-traded funds can be assigned early. SPX and XSP cannot.</li><li>Exercise and settlement style is read from a small table in the repository.</li></ul>
+      <p class="sub"><strong>Data:</strong> Partly. Ex-dividend dates have no data source.</p>
+    </details>
+    <details class="tchk">
+      <summary><span class="n">9</span><span class="cn"><b>Order size</b><span>The order is more than 10% of the open interest on any leg.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged</th><td>Any leg exceeds 10%.</td></tr><tr><th>Passed</th><td>None does.</td></tr><tr><th>Could not be checked</th><td>Open interest is missing for a leg.</td></tr></tbody></table></div>
+      <ul><li>The same rule as in stage 1, applied to the number of contracts proposed in stage 3.</li></ul>
+      <p class="sub"><strong>Data:</strong> Ready.</p>
+    </details>
+  </div>
+  <div class="cgroup">
+    <h4><span class="mono">D</span> How was it chosen?</h4>
+    <details class="tchk">
+      <summary><span class="n">10</span><span class="cn"><b>Recommendation passed over</b><span>The user selected a candidate other than the first-ranked one.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged</th><td>The selected candidate is not the recommendation. The two are compared on the measure of the chosen priority.</td></tr><tr><th>Passed, with a note</th><td>The first-ranked candidate was selected under a priority other than the default.</td></tr><tr><th>Passed</th><td>The first-ranked candidate was selected under the default priority.</td></tr></tbody></table></div>
+      <ul><li>Passing over the recommendation is the user&#x27;s right. The challenge states what was given up.</li></ul>
+      <p class="sub"><strong>Data:</strong> Ready.</p>
+    </details>
+    <details class="tchk">
+      <summary><span class="n">11</span><span class="cn"><b>Price moved since selection</b><span>The structure&#x27;s price has moved by more than its trading cost since it was selected.</span></span></summary>
+      <div class="scroll"><table><tbody><tr><th>Flagged</th><td>The move exceeds the trading cost. The screen offers to return to stage 3.</td></tr><tr><th>Passed</th><td>It does not.</td></tr><tr><th>Could not be checked</th><td>The market is closed. The figures are from the last session.</td></tr></tbody></table></div>
+      <ul><li>The stage fetches fresh quotes for the selected legs when it starts.</li><li>If the price has moved by more than it costs to trade, the figures the choice rested on are out of date.</li></ul>
+      <p class="sub"><strong>Data:</strong> Ready.</p>
+    </details>
+  </div>
+
+  <details class="why">
+    <summary>What is covered elsewhere, and what is provisional</summary>
+  <ul>
+    <li><strong>Left to the thesis checks,</strong> so that nothing is said twice: events inside the window and a catalyst after the expiry (check 6); a switched expiry, a raised maximum loss and snapshot data (check 10).</li>
+    <li><strong>Chart levels</strong> are not checked. They are shown beside each candidate in stage 3 as context.</li>
+    <li><strong>Provisional value.</strong> The 1.25 threshold in check 5, to be replaced by a measured figure.</li>
+    <li><strong>Routine result until a data source is chosen.</strong> Check 8 reports the dividend date as "could not be checked".</li>
+  </ul>
+  </details>
+
+  <h2 id="p5">5. The question and the evidence</h2>
+  <p>Steps 3 and 4 prepare what the critic works from: a neutral question in place of the thesis as written, and passages from the project's research on both sides of it.</p>
+
+  <h3 class="sec">Restating the thesis as a question</h3>
+  <div class="two">
+    <div class="panel">
+      <div class="ui-row"><span class="ui-tag ex">EXPLANATION ONLY</span><span>As a user might write it</span></div>
+      <p style="margin-top:0">"I'm confident this is going higher. Guidance was clearly raised and estimates keep climbing, so it's an easy 30-day call."</p>
+    </div>
+    <div class="panel">
+      <div class="ui-row"><span class="ui-tag ex">EXPLANATION ONLY</span><span>As the critic receives it</span></div>
+      <p style="margin-top:0">Do the following support a close above the reference price for EXMP at 30 days?</p>
+      <ol style="margin:8px 0 0;padding-left:20px"><li>Guidance was raised at the latest report.</li><li>Consensus estimates rose 3% over the last 30 days.</li></ol>
+    </div>
+  </div>
+  <ul>
+    <li><strong>A fixed template in code.</strong> No model is involved. The direction, the horizon and each claim were already separated in stage 2, and the template assembles them.</li>
+    <li><strong>Withheld from the critic:</strong> the original wording, the written basis, and who wrote the thesis. A model tends to agree with a confident statement, and more so when it is presented as someone's own belief.</li>
+    <li><strong>Nothing is lost.</strong> The original text stays in the record and on the user's screen.</li>
+  </ul>
+
+  <h3 class="sec">Retrieving evidence</h3>
+  <div class="panel">
+    <div class="scroll">
+      <table>
+        <thead><tr><th></th><th>Evidence from stage 2</th><th>Evidence retrieved in this stage</th></tr></thead>
+        <tbody>
+          <tr><th>About</th><td>This company: its filings, results and guidance.</td><td>Whether this kind of reasoning has worked.</td></tr>
+          <tr><th>Example</th><td>"Guidance was raised on 3 November."</td><td>"Is a guidance raise followed by a higher price, and for how long?"</td></tr>
+          <tr><th>Source</th><td>Company filings and market data.</td><td>The project's research reports, specification and decision records.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <ul>
+    <li><strong>The project's research only.</strong> The web is not searched. The research already records what was found and how strong it was.</li>
+    <li><strong>Each topic is searched both ways:</strong> for findings that the reasoning has worked, and for findings that it has not. There is one topic per claim and one for the type of structure selected.</li>
+    <li><strong>A relevance bar, and a cap.</strong> A passage that does not clearly bear on the topic is dropped. At most three passages per side per topic.</li>
+    <li><strong>One retry.</strong> A search that returns nothing is reworded once, then reported as "nothing found".</li>
+    <li><strong>No conclusion.</strong> The retriever returns passages with their sources. It does not say which side is stronger.</li>
+  </ul>
+
+  <h2 id="p6">6. The critic</h2>
+  <p>Step 5 is the one step that needs judgement. The critic receives the question, the retrieved passages and the results of both checklists. It does not see the original wording and is not told who wrote the thesis.</p>
+
+  <h3 class="sec">Nine tasks</h3>
+  <div class="panel">
+    <div class="scroll">
+      <table>
+        <thead><tr><th>#</th><th>Task</th><th>What keeps it grounded</th></tr></thead>
+        <tbody>
+          <tr><td class="n">1</td><th>Find what the thesis depends on</th><td>Names the claim whose removal would leave nothing.</td></tr>
+          <tr><td class="n">2</td><th>Spot a rejected signal in other words</th><td>Cites the claim and the entry on the rejected-signal list.</td></tr>
+          <tr><td class="n">3</td><th>Find claims that do not fit together</th><td>Cites the claims.</td></tr>
+          <tr><td class="n">4</td><th>Read the two checklists together</th><td>Cites the checks that are one problem.</td></tr>
+          <tr><td class="n">5</td><th>Write the strongest case for the thesis</th><td>Required in every run.</td></tr>
+          <tr><td class="n">6</td><th>Priced-in test</th><td>Code supplies the price move since each finding became public. The critic interprets a figure and does not guess.</td></tr>
+          <tr><td class="n">7</td><th>Write the strongest case against</th><td>Built only from recorded opposing evidence, the base rate, the flags and the retrieved passages. The same length as the case for.</td></tr>
+          <tr><td class="n">8</td><th>How this trade loses</th><td>Two or three specific paths, each citing a check or a finding.</td></tr>
+          <tr><td class="n">9</td><th>What is missing</th><td>Limited to what stage 2 recorded as unavailable or not found. The critic may not invent a gap.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3 class="sec">Rules</h3>
+  <div class="two">
+    <div class="panel"><h3>What the critic must do</h3><p>Cite the grounds for every objection: a check, a claim or a retrieved passage. State for every claim whether it holds, holds only in a narrower form, or does not hold. Write both cases at the same length.</p></div>
+    <div class="panel"><h3>What the critic may not do</h3><p>Give a verdict, a score or a confidence figure. Advise whether to trade. Raise more than five objections. Name a gap or a fact that is not in the record or the retrieved passages.</p></div>
+  </div>
+  <ul>
+    <li><strong>The critic may concede.</strong> With clean checks and nothing found against, the right output is the two cases and few or no objections.</li>
+    <li><strong>The critic's output is checked in code before the user sees it.</strong> Every citation must exist, every claim must have a standing, both cases must be present, and the cap must be respected. An output that fails is returned once. If it fails again, the screen shows the two checklists and states that the critic's output was rejected.</li>
+    <li><strong>Model.</strong> In the first version the critic runs on the same model family as the agent that drafted the thesis, and the screen says so. Two instances of one model tend to share blind spots, so a different family remains the aim.</li>
+    <li><strong>Limits.</strong> The critic does no new research. If stage 2 did not find adverse news, the critic will not find it either.</li>
+  </ul>
+
+  <h2 id="p7">7. The challenge screen</h2>
+  <p>Step 6 presents one screen. The critic's judgement is on the left and the fixed-rule checks are on the right, so that a model's argument and a rule's finding are never confused. A readiness line at the top states whether anything the decision relies on has gone out of date.</p>
+
+  <div class="panel wide" id="chs">
+    <div class="ui-row"><span class="ui-tag app">APPLICATION SCREEN</span><span>Challenge. The only screen of this stage.</span></div>
+    <div class="mock-tag">ILLUSTRATIVE · FICTIONAL UNDERLYING · FIGURES DO NOT DESCRIBE A REAL CONTRACT</div>
+    <div class="cm-head" style="margin-top:12px"><span class="cm-tk mono">EXMP</span><span class="cm-chip">BULLISH</span><span class="sub" style="margin:0">30-day horizon · put credit spread, 95 / 100, expiry 18 December · 1 contract</span></div>
+    <div class="ready"><span class="rs ok">READY</span><div><b>No blocking conditions. 6 items for your judgement.</b><span>The thesis is from this session and the contract's price has not moved by more than its trading cost.</span></div></div>
+    <p class="sub">The critic runs on the same model family as the agent that drafted the thesis. Treat its agreement with caution.</p>
+
+    <div class="chcols">
+      <div class="chl">
+        <span class="collab">THE CRITIC · JUDGEMENT</span>
+        <div class="cbox"><h4>The strongest case for</h4><p>Raised guidance is a recent, company-specific fact from a primary source. Estimates have followed it up 3% in 30 days. Nothing found in sector or macro evidence opposes the view.</p></div>
+        <div class="cbox"><h4>The strongest case against</h4><p>Both supports come from one event, the latest report. The stock has risen 4.1% since then, about 0.8 of a usual range. A Federal Reserve decision falls on day 22, inside the window.</p></div>
+        <div class="cbox"><h4>How this trade loses</h4>
+          <div class="cline"><b>A close below $98.30.</b> That has happened in 38% of past 32-day periods.</div>
+          <div class="cline"><b>The Fed decision on day 22.</b> A market-wide move, whatever the company does.</div>
+          <div class="cline"><b>Guidance is reversed.</b> Nothing would alert you. The condition is not watched.</div>
+        </div>
+        <div class="cbox"><h4>Objections, most serious first</h4>
+          <div class="cline obj"><span class="mono">1</span><div><b>The two supporting findings are one event.</b> The estimate revisions followed the guidance raise.<small>THESIS CHECK 2 · CLAIMS 1, 2</small></div></div>
+          <div class="cline obj"><span class="mono">2</span><div><b>The market may already have reacted.</b> Up 4.1% since the report, 0.8 of a usual range.<small>PRICED-IN TEST · CLAIM 1</small></div></div>
+          <div class="cline obj"><span class="mono">3</span><div><b>This structure collects premium.</b> The project's tests found no extra return from rule-based premium selling after 2012.<small>CONTRACT CHECK 7 · RESEARCH PASSAGE</small></div></div>
+        </div>
+      </div>
+      <div class="chr">
+        <span class="collab">THE CHECKS · FIXED RULES</span>
+        <div class="cbox"><div class="chead"><h4>Thesis</h4><span class="mono">3 flagged · 1 not checked · 8 passed</span></div>
+          <div class="cline chk2"><span class="rs fl">FLAG</span><div><b>Narrow support</b><span>Two findings, one family.</span></div></div>
+          <div class="cline chk2"><span class="rs fl">FLAG</span><div><b>Event inside the window</b><span>Federal Reserve decision, day 22.</span></div></div>
+          <div class="cline chk2"><span class="rs fl">FLAG</span><div><b>Invalidation is not watched</b><span>Check the company's filings yourself.</span></div></div>
+          <div class="cline chk2"><span class="rs un">N/C</span><div><b>Earnings date</b><span>No data source.</span></div></div>
+          <div class="cline more">8 passed ▾</div>
+        </div>
+        <div class="cbox"><div class="chead"><h4>Contract</h4><span class="mono">1 flagged · 1 not checked · 9 passed</span></div>
+          <div class="cline chk2"><span class="rs fl">FLAG</span><div><b>Premium-selling structure</b><span>Credit $170 against a maximum loss of $330.</span></div></div>
+          <div class="cline chk2"><span class="rs un">N/C</span><div><b>Early assignment</b><span>No dividend date.</span></div></div>
+          <div class="cline more">9 passed ▾</div>
+        </div>
+        <div class="chact"><span class="cm-btn primary">Proceed to decision</span><span class="cm-btn">Return to contracts</span><span class="cm-btn">Stop</span></div>
+      </div>
+    </div>
+    <p class="sub">More detail on request: each claim's standing, the priced-in reading, what is missing, the passages cited, and the user's original wording.</p>
+  </div>
+
+  <h3 class="sec">The readiness line</h3>
+  <p>The critic gives no go or no-go. The readiness line is set by code from the checks. It concerns whether the inputs to the decision are still valid, and says nothing about whether the trade is a good one.</p>
+  <div class="panel">
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Readiness</th><th>When</th><th>What the screen suggests</th></tr></thead>
+        <tbody>
+          <tr><th><span class="rs fl">NOT READY</span></th><td>The thesis is stale; the contract's price has moved by more than its trading cost since selection; a range-bound view's invalidation condition has been met; or the critic's output was rejected.</td><td>The specific remedy: run stage 2 again, or return to stage 3.</td></tr>
+          <tr><th><span class="rs ok">READY</span> with items</th><td>None of those, and at least one check is flagged or could not be checked.</td><td>"No blocking conditions", with the number of items for the user's judgement.</td></tr>
+          <tr><th><span class="rs ok">READY</span></th><td>None of those, and nothing flagged.</td><td>"No blocking conditions."</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <ul>
+    <li><strong>Validity, not merit.</strong> "Not ready" means something the decision relies on has gone out of date.</li>
+    <li><strong>Flags are not counted into a rating.</strong> Six flagged items do not make a trade worse than two; that depends on which they are.</li>
+    <li><strong>It does not block.</strong> The user may proceed past "not ready", and that is recorded.</li>
+    <li><strong>"Could not be checked" is shown with the flags,</strong> never with the passes. Passed checks are collapsed into one line.</li>
+  </ul>
+
+  <h2 id="p8">8. Decision and record</h2>
+  <p>The user reads the challenge and chooses to proceed, to return to stage 3, or to stop. No typed response to the objections is required.</p>
+  <div class="panel">
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Recorded</th><th>Content</th></tr></thead>
+        <tbody>
+          <tr><th>Checks</th><td>All twenty-three results, with the item or figure that triggered each.</td></tr>
+          <tr><th>The question</th><td>The restated question and claims given to the critic.</td></tr>
+          <tr><th>Retrieved evidence</th><td>Every passage returned, with its source, and each topic that returned nothing.</td></tr>
+          <tr><th>The critic's output</th><td>In full: objections, the standing of each claim, both cases, the loss paths, the priced-in reading and what is missing.</td></tr>
+          <tr><th>Output check</th><td>Whether the critic's output passed the code check, and whether it was returned once.</td></tr>
+          <tr><th>Model</th><td>The model the critic ran on.</td></tr>
+          <tr><th>Readiness</th><td>The readiness line shown, and the conditions behind it.</td></tr>
+          <tr><th>Decision</th><td>Proceed, return to stage 3, or stop, with the time. Proceeding past "not ready" is marked.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <h3 class="sec">What is handed to stage 5</h3>
+  <ul>
+    <li>The thesis and the selected contract, unchanged.</li>
+    <li>The full list of flags and objections, including any the user proceeded past.</li>
+    <li>Three results that stage 5 uses directly: risk flags and events, which reduce size; invalidation that cannot be watched, which makes the price-based exit matter more; and the volatility state.</li>
+  </ul>
+  <ul>
+    <li><strong>If the user returns to stage 3,</strong> this challenge is kept on record and a new one runs on the newly selected candidate.</li>
+  </ul>
+
+  <div class="note">
+    <p><strong>Scope of the first version.</strong> The challenge advises and does not block. The critic's power to block a trade, the structured override, and the test of the critic's own accuracy on planted theses are designed in outline and are not part of the first version.</p>
+    <p><strong>Known data gaps.</strong> Earnings dates and ex-dividend dates have no data source. Until one is chosen, thesis check 6 and contract check 8 report those parts as "could not be checked".</p>
+    <p><strong>Provisional values.</strong> The same-day rule in thesis check 2, the two thresholds in thesis check 11, and the 1.25 threshold in contract check 5 are design choices.</p>
+    <p><strong>Implementation status.</strong> This page documents the design. The stage is not yet implemented.</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  var modeBtn = document.getElementById('mode'), root = document.documentElement;
+  function isDark() { var t = root.getAttribute('data-theme'); return t ? t === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches; }
+  function label() { modeBtn.textContent = isDark() ? 'Switch to light' : 'Switch to dark'; }
+  modeBtn.addEventListener('click', function () { root.setAttribute('data-theme', isDark() ? 'light' : 'dark'); label(); });
+  label();
+})();
+(function () {
+  document.querySelectorAll('[data-tabs]').forEach(function (box) {
+    var tabs = Array.prototype.slice.call(box.querySelectorAll(':scope > .tablist > [role="tab"]'));
+    function select(i, focus) {
+      tabs.forEach(function (t, k) {
+        var on = k === i;
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+        t.tabIndex = on ? 0 : -1;
+        document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+      });
+      if (focus) tabs[i].focus();
+    }
+    tabs.forEach(function (t, i) {
+      t.addEventListener('click', function () { select(i, false); });
+      t.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight') { e.preventDefault(); select((i + 1) % tabs.length, true); }
+        else if (e.key === 'ArrowLeft') { e.preventDefault(); select((i - 1 + tabs.length) % tabs.length, true); }
+      });
+    });
+    select(0, false);
+  });
+  var bgLink = document.querySelector('.toc a[href="#p7"]'), bg = document.getElementById('bg');
+  if (bgLink && bg) bgLink.addEventListener('click', function () { bg.open = true; });
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details.why').forEach(function (d) { d.open = true; });
+  });
+})();
+</script>
+
+<script>
+/* When this page is shown inside the Tradecraft manual (docs/site/manual.html): follow the manual's theme,
+   hide this page's own theme button and link line, and report its height and its sections to the manual. */
+(function () {
+  if (window.parent === window) return;
+  var root = document.documentElement;
+  var st = document.createElement('style');
+  st.textContent = '.mode, .manual-link { display: none !important; } html { overflow: hidden; } .wrap { padding-top: 4px !important; padding-bottom: 12px !important; }';
+  document.head.appendChild(st);
+  function report() {
+    var toc = [].map.call(document.querySelectorAll('h2'), function (h) {
+      return {text: h.textContent.replace(/^\s*\d+\.\s*/, '').trim(), top: Math.round(h.getBoundingClientRect().top + window.scrollY)};
+    });
+    // The height of the content itself, not of the window: a window-sized measure would grow each time the manual resizes the frame.
+    var wrap = document.querySelector('.wrap') || document.body;
+    var height = Math.ceil(wrap.getBoundingClientRect().bottom + window.scrollY) + 16;
+    if (Math.abs(height - last) < 2) return;
+    last = height;
+    parent.postMessage({tradecraft: 'page', height: height, toc: toc}, '*');
+  }
+  var last = 0;
+  window.addEventListener('message', function (e) { var d = e.data || {}; if (d.tradecraft === 'theme') root.setAttribute('data-theme', d.theme); });
+  window.addEventListener('load', report);
+  window.addEventListener('resize', report);
+  if (window.ResizeObserver) new ResizeObserver(report).observe(document.body);
+  report();
+})();
+</script>

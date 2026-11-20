@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "updated": "2026-11-18",
+  "purpose": "Run limits for every agent and stage. Starting values from docs/build-plan.md section 4, not measurements; adjust after the first real runs and note the change here.",
+  "agents": {
+    "evidence_retriever":  {"max_tool_calls": 12, "time_seconds": 90,  "max_output_tokens": 4000},
+    "fundamental_analyst": {"max_tool_calls": 8,  "time_seconds": 90,  "max_output_tokens": 4000},
+    "regime_assessor":     {"max_tool_calls": 6,  "time_seconds": 90,  "max_output_tokens": 2500},
+    "technical_analyst":   {"max_tool_calls": 2,  "time_seconds": 90,  "max_output_tokens": 1500},
+    "thesis":              {"max_tool_calls": 0,  "time_seconds": 180, "max_output_tokens": 4000},
+    "critic":              {"max_tool_calls": 0,  "time_seconds": 180, "max_output_tokens": 4000}
+  },
+  "output_tokens_note": "On Claude Opus 5.5 and Haiku 5.5 thinking is always on and thinking tokens count against max_output_tokens. These caps were set before that was known; check the first real runs for replies cut off by thinking.",
+  "output_tokens_changes": ["18 November 2026: evidence_retriever and fundamental_analyst raised from 1,500 to 4,000 after the first live NVDA run cut both final answers off at 1,500 (each used its one return). Operator decision of the same day allows up to 4,000 for the Haiku agents and 8,000 for the Thesis agent. regime_assessor used 1,097 of 1,500 and technical_analyst 389: unchanged.", "19 November 2026: thesis raised from 2,500 to 4,000 by operator ruling, after directional drafts used up to 2,341 of 2,500 on the six-symbol re-run (none was cut off).", "19 November 2026: regime_assessor raised from 1,500 to 2,500 by operator ruling, after its second answer came back empty on C, PEP and T in the 43-symbol run.", "19 November 2026 (operator decision, before stage 4 was built): critic raised from 2,500 to 4,000 and given no tool calls (was 4); stage 4's time limit raised from 180 to 300 seconds so that retrieval and the Critic both fit."],
+  "stages": {
+    "stage_2_seconds": 300,
+    "stage_4_seconds": 300
+  },
+  "text": {
+    "max_document_tokens": 15000,
+    "max_tool_result_tokens": 8000,
+    "max_input_tokens_per_call": 60000,
+    "max_input_note": "Added 18 November 2026 (operator approval). Keeps every call well under Haiku 5.5's 100,000-token price step; when the next call would exceed it, the new tool results are shortened and the agent is told to answer.",
+    "chars_per_token_estimate": 4
+  },
+  "retries": {
+    "validation_retries": 1,
+    "api_retries": 2,
+    "api_retries_note": "Done by the harness inside the agent's deadline, not by the SDK (whose retries would each get the full timeout again).",
+    "tool_retries": 1
+  },
+  "spend": {
+    "per_request_usd": 1.0,
+    "per_day_usd": 10.0,
+    "account_limit_usd": 50.0
+  },
+  "outside_services": {
+    "rate_limits": {
+      "www.sec.gov":               {"per_second": 5},
+      "data.sec.gov":              {"per_second": 5},
+      "efts.sec.gov":              {"per_second": 5},
+      "financialmodelingprep.com": {"per_minute": 700},
+      "api.stlouisfed.org":        {"per_minute": 100}
+    },
+    "rate_limit_note": "FMP's premium limit is 750 a minute; 700 leaves headroom. SEC asks for at most 10 a second; the build plan sets 5. FRED allows 120 a minute; 100 leaves headroom.",
+    "cache": "per source, per request, per calendar day (America/Los_Angeles)"
+  },
+  "reach": {
+    "network_domains": [
+      "cdn.cboe.com",
+      "cdn-api.cboe.com",
+      "financialmodelingprep.com",
+      "www.sec.gov",
+      "data.sec.gov",
+      "efts.sec.gov",
+      "query1.finance.yahoo.com",
+      "query2.finance.yahoo.com",
+      "api.stlouisfed.org",
+      "www.federalreserve.gov",
+      "www.nasdaqtrader.com"
+    ],
+    "read_roots": ["data", "config", "docs/research", "docs/decisions", "docs/factor-spec.md", "snapshots", "label_out/prices", "universe.txt"],
+    "write_roots": ["data"]
+  },
+  "concurrency": {
+    "requests_at_a_time": 1
+  }
+}

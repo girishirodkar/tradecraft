@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "purpose": "Developer-only switches that make one source fail once per request, so that a recovery can be shown. ALL MUST BE false EXCEPT WHILE SHOWING A RECOVERY. While any is true every page shows TEST FAILURE ON in its header. Read on every use, so a change needs no restart. docs/build-log.md, session of 19 November 2026 (afternoon).",
+  "option_chain_fail_once": false,
+  "stage2_source_fail_once": false,
+  "critic_fail_once": false,
+  "stage2_source_tool": "list_filings"
+}

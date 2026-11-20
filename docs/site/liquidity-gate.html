@@ -1,0 +1,608 @@
+<title>Liquidity Gate</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: one reading column (max 860px); figures sit in plain panels inside it.
+   The quote pair "bid / ask" is the page's own motif: set in mono wherever it appears. */
+:root {
+  --bg: #f5f7fa; --surface: #ffffff; --ink: #17212b; --ink-2: #44515f; --ink-3: #5f6c7b;
+  --line: #d9e0e8; --accent: #1c5cab; --band: #e8f0fa;
+  --series-1: #2a78d6; --series-2: #eb6834; --good: #0a7d0a; --crit: #c23232;
+  --display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+  --text: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161b; --surface: #1b2027; --ink: #eef1f4; --ink-2: #c1c9d2; --ink-3: #9aa5b1;
+    --line: #2f3742; --accent: #86b6ef; --band: #1f2c3d;
+    --series-1: #3987e5; --series-2: #d95926; --good: #3fbf3f; --crit: #e66767;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161b; --surface: #1b2027; --ink: #eef1f4; --ink-2: #c1c9d2; --ink-3: #9aa5b1;
+  --line: #2f3742; --accent: #86b6ef; --band: #1f2c3d;
+  --series-1: #3987e5; --series-2: #d95926; --good: #3fbf3f; --crit: #e66767;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--text); font-size: 16px; line-height: 1.6; }
+.wrap { max-width: 860px; margin: 0 auto; padding-block: 40px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(2rem, 5vw, 2.75rem); font-weight: 600; letter-spacing: -0.01em; }
+h2 { font-size: 1.5rem; font-weight: 600; margin-top: 56px; }
+h3 { font-size: 1.0625rem; font-weight: 600; }
+p { margin: 12px 0 0; max-width: 68ch; }
+.lede { font-size: 1.125rem; color: var(--ink-2); }
+.meta { font-family: var(--mono); font-size: 0.8125rem; color: var(--ink-3); letter-spacing: 0.02em; margin-bottom: 14px; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 14px; }
+.top .meta { margin-bottom: 0; }
+.mode { font: inherit; font-size: 0.8125rem; padding: 6px 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); cursor: pointer; }
+.mode:hover { border-color: var(--accent); }
+.mode:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+ul { margin: 12px 0 0; padding-left: 20px; max-width: 68ch; }
+li + li { margin-top: 6px; }
+strong { font-weight: 600; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 20px; margin-top: 20px; min-width: 0; }
+.panel h3 + .sub { margin-top: 4px; }
+.sub { color: var(--ink-3); font-size: 0.875rem; max-width: none; }
+figure { margin: 0; }
+figcaption { color: var(--ink-3); font-size: 0.875rem; margin-top: 12px; max-width: 68ch; }
+.scroll { overflow-x: auto; }
+figcaption.center { text-align: center; margin-inline: auto; text-wrap: balance; }
+.scroll svg { display: block; height: auto; }
+
+/* stage strip */
+.stages { list-style: none; padding: 0; margin: 20px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 8px; max-width: none; counter-reset: st; }
+.stages li { counter-increment: st; margin: 0; border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; background: var(--surface); font-size: 0.875rem; line-height: 1.35; min-width: 0; }
+.stages li::before { content: counter(st); display: block; font-family: var(--mono); font-size: 0.75rem; color: var(--ink-3); margin-bottom: 4px; }
+.stages li.here { background: var(--band); border-color: var(--accent); font-weight: 600; }
+.stages li.here::before { content: counter(st) "  this page"; color: var(--accent); }
+
+/* steps */
+.steps { list-style: none; padding: 0; margin: 20px 0 0; max-width: none; counter-reset: s; display: grid; gap: 0; }
+.steps li { counter-increment: s; margin: 0; display: grid; grid-template-columns: 34px 1fr; gap: 14px; padding-bottom: 18px; position: relative; }
+.steps li::before { content: counter(s); font-family: var(--mono); font-size: 0.8125rem; width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid var(--accent); color: var(--accent); background: var(--surface); display: grid; place-items: center; position: relative; z-index: 1; }
+.steps li::after { content: ""; position: absolute; left: 16.5px; top: 34px; bottom: 0; width: 1.5px; background: var(--line); }
+.steps li:last-child { padding-bottom: 0; } .steps li:last-child::after { display: none; }
+.steps b { display: block; font-weight: 600; } .steps span { color: var(--ink-2); font-size: 0.9375rem; }
+
+/* charts */
+.chart { margin-top: 16px; display: grid; gap: 10px; }
+.row { display: grid; grid-template-columns: 112px 1fr; gap: 12px; align-items: center; min-width: 0; }
+.row .lab { font-family: var(--mono); font-size: 0.8125rem; color: var(--ink-2); text-align: right; }
+.row .lab small { display: block; font-family: var(--text); font-size: 0.6875rem; color: var(--accent); letter-spacing: 0.03em; text-transform: uppercase; }
+.bars { display: grid; gap: 2px; min-width: 0; }
+.barline { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.bar { height: 14px; border-radius: 0 4px 4px 0; background: var(--series-1); min-width: 2px; flex: 0 0 auto; outline-offset: 2px; }
+.bar.s2 { background: var(--series-2); }
+.bar.dim { opacity: 0.45; }
+.bar:hover, .bar:focus-visible { filter: brightness(1.15); outline: 2px solid var(--ink); }
+.val { font-family: var(--mono); font-size: 0.8125rem; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; font-size: 0.8125rem; color: var(--ink-2); }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; background: var(--series-1); }
+.legend i.s2 { background: var(--series-2); }
+details { margin-top: 14px; font-size: 0.875rem; }
+summary { cursor: pointer; color: var(--accent); }
+table { border-collapse: collapse; width: 100%; font-size: 0.875rem; margin-top: 10px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-2); font-size: 0.8125rem; }
+td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+#tip { position: fixed; z-index: 20; pointer-events: none; background: var(--ink); color: var(--bg); padding: 6px 10px; border-radius: 4px; font-size: 0.8125rem; line-height: 1.35; max-width: 240px; }
+#tip b { font-family: var(--mono); font-weight: 500; display: block; }
+
+/* controls */
+.controls { display: grid; gap: 0; margin-top: 16px; }
+.ctl { display: grid; grid-template-columns: minmax(0, 200px) minmax(0, 1fr); gap: 8px 20px; padding: 16px 0; border-top: 1px solid var(--line); align-items: center; }
+.ctl:first-child { border-top: 0; padding-top: 4px; }
+.ctl .what b { display: block; } .ctl .what span { font-size: 0.875rem; color: var(--ink-3); }
+.track { position: relative; height: 8px; border-radius: 4px; background: var(--line); margin: 22px 0 22px; }
+.track .def { position: absolute; top: -4px; height: 16px; border-radius: 3px; background: var(--series-1); min-width: 6px; }
+.track .dl { position: absolute; top: -24px; transform: translateX(-50%); font-family: var(--mono); font-size: 0.75rem; color: var(--ink); white-space: nowrap; }
+.track .end { position: absolute; top: 14px; font-family: var(--mono); font-size: 0.75rem; color: var(--ink-3); }
+.track .end.r { right: 0; } .track .end.l { left: 0; }
+@media (max-width: 560px) { .ctl { grid-template-columns: 1fr; } .row { grid-template-columns: 1fr; gap: 4px; } .row .lab { text-align: left; } .row .lab small { display: inline; margin-left: 8px; } }
+.flow-m { display: none; gap: 8px; }
+.flow-m .fq { font-weight: 600; font-size: 0.9375rem; margin-top: 4px; }
+.flow-m .fa { border: 1.5px solid var(--line); border-radius: 6px; padding: 10px 12px; display: grid; gap: 2px; font-size: 0.875rem; }
+.flow-m .fa span { color: var(--ink-2); }
+.flow-m .fa.hi { border-color: var(--series-1); background: var(--band); }
+.flow-m .fa.dash { border-style: dashed; }
+@media (max-width: 600px) { .flow-svg { display: none !important; } .flow-m { display: grid; } }
+
+/* checker */
+.form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }
+.form label { display: grid; gap: 4px; font-size: 0.8125rem; color: var(--ink-2); }
+.form input { font: inherit; font-family: var(--mono); padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--ink); width: 100%; }
+.form input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.checks { list-style: none; padding: 0; margin: 16px 0 0; max-width: none; display: grid; gap: 0; }
+.checks li { margin: 0; display: grid; grid-template-columns: 64px 1fr; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 0.9375rem; }
+.checks .st { font-family: var(--mono); font-size: 0.8125rem; font-weight: 500; }
+.pass .st { color: var(--good); } .fail .st { color: var(--crit); } .flag .st { color: var(--ink-3); }
+.verdict { margin-top: 14px; padding: 12px 14px; border-radius: 4px; background: var(--band); font-weight: 600; max-width: none; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 20px; }
+.two .panel { margin-top: 0; }
+.note { border-top: 1px solid var(--line); margin-top: 56px; padding-top: 20px; color: var(--ink-3); font-size: 0.875rem; }
+.note p { max-width: 72ch; }
+.card-mock { max-width: 560px; display: grid; gap: 10px; }
+.card-mock p { margin: 0; }
+.mock-tag { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.04em; color: var(--ink-3); border: 1px dashed var(--line); border-radius: 4px; padding: 3px 8px; justify-self: start; }
+.cm-head { display: flex; align-items: center; gap: 12px; }
+.cm-tk { font-size: 1.375rem; font-weight: 500; }
+.cm-chip { font-family: var(--mono); font-size: 0.8125rem; font-weight: 500; color: var(--good); border: 1.5px solid var(--good); border-radius: 4px; padding: 1px 8px; }
+.cm-verdict { font-family: var(--display); font-size: 1.125rem; font-weight: 600; }
+.cm-h { font-size: 0.875rem; margin-top: 8px; }
+.cm-grid { margin-top: 0; }
+.cm-grid th small { display: block; font-weight: 400; font-size: 0.75rem; color: var(--ink-3); }
+.cm-grid tr.in th, .cm-grid tr.in td { background: var(--band); color: var(--ink); font-weight: 600; }
+.cm-grid tr.in th small { color: var(--accent); }
+.cm-grid tr.out td { color: var(--ink-3); }
+.cm-facts { margin: 8px 0 0; display: grid; grid-template-columns: minmax(0, 130px) minmax(0, 1fr); gap: 8px 16px; font-size: 0.9375rem; }
+.cm-facts dt { color: var(--ink-3); font-size: 0.875rem; } .cm-facts dd { margin: 0; }
+.cm-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.cm-btn { font-size: 0.875rem; padding: 7px 14px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--ink); }
+.cm-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 600; }
+@media (max-width: 480px) { .cm-facts { grid-template-columns: 1fr; gap: 2px; } .cm-facts dd { margin-bottom: 8px; } }
+@media (prefers-reduced-motion: no-preference) { .bar { transition: filter .12s; } }
+/* Wide layout, 17 November 2026: the page uses the available width; cards and panels flex to fill it. */
+.wrap { max-width: 1120px; }
+p, ul, figcaption, .tabcap { max-width: 84ch; }
+.sub, .ex-title, .keyline, .verdict, .stages, .steps, .checks, .fam, .toc ol { max-width: none; }
+/* Cards, tables and figures keep their earlier size (860px at most) and sit centred in the wider page. */
+.wrap > .panel, .wrap > .two, .wrap > .tabs, .wrap > .cand-groups, .wrap > .stages, details.why > .panel { max-width: 860px; margin-left: auto; margin-right: auto; }
+[role="tabpanel"] > .panel { margin-left: auto; margin-right: auto; }
+/* UI call-outs, 17 November 2026: every mock-up says whether it is a screen of the application or an explanation. */
+h3#ui { margin-top: 36px; }
+.ui-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 0 10px; }
+.ui-tag { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; border-radius: 4px; padding: 3px 8px; white-space: nowrap; }
+.ui-tag.app { background: var(--accent); color: var(--surface); border: 1px solid var(--accent); }
+.ui-tag.ex { border: 1px dashed var(--ink-3); color: var(--ink-2); }
+.ui-row span:last-child { font-size: 0.8125rem; color: var(--ink-2); }
+.ui-list { list-style: none; padding: 0; margin: 12px 0 0; max-width: none; display: grid; gap: 8px; }
+.ui-list li { margin: 0; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-size: 0.9375rem; }
+.ui-list b { font-weight: 600; }
+.ui-list small { color: var(--ink-3); font-size: 0.8125rem; }
+</style>
+
+<div class="wrap">
+  <p class="sub manual-link" style="margin:0 0 10px"><a href="manual.html" style="color:var(--accent)">&larr; Tradecraft manual</a> &nbsp;·&nbsp; Stages: <a href="liquidity-gate.html" style="color:var(--accent)">1 Liquidity gate</a> &nbsp;<a href="thesis-stage.html" style="color:var(--accent)">2 Thesis</a> &nbsp;<a href="market-contracts.html" style="color:var(--accent)">3 Market and contracts</a> &nbsp;<a href="challenge.html" style="color:var(--accent)">4 Challenge</a></p>
+  <div class="top"><div class="meta">TRADECRAFT · DRAFT · 15 NOVEMBER 2026 · ON-DEMAND MODE, STAGE 1</div><button type="button" class="mode" id="mode">Switch to dark</button></div>
+  <h1>The liquidity gate</h1>
+  <p class="lede">The liquidity gate is a pre-trade screen. Before any research is committed to an underlying, it establishes whether that underlying's listed options can be traded at an acceptable execution cost. Where they cannot, the request is halted unless the user overrides the result.</p>
+
+  <h3 class="sec" id="ui">Screens in this stage</h3>
+  <div class="panel">
+    <p class="sub" style="margin-top:0">This page mixes two kinds of figure. A figure marked <strong>application screen</strong> is what the user sees in the application. A figure marked <strong>explanation only</strong> illustrates a rule and is not part of the application.</p>
+    <ul class="ui-list">
+      <li><span class="ui-tag app">APPLICATION SCREEN</span><b>Screening summary</b><small>One card: the outcome, liquidity by tenor, execution cost and the actions. Shown below under "Stage output".</small></li>
+      <li><span class="ui-tag ex">SCREEN NOT YET DRAWN</span><b>Contract list</b><small>Opened by "View contracts". Lists every eligible contract.</small></li>
+      <li><span class="ui-tag ex">SCREEN NOT YET DRAWN</span><b>Control settings</b><small>Opened by "Adjust controls". The five controls and their ranges are set out below as a diagram.</small></li>
+      <li><span class="ui-tag ex">SCREEN NOT YET DRAWN</span><b>Override confirmation</b><small>Shown when the user overrides a fail: the execution cost and a one-line rationale.</small></li>
+    </ul>
+    <p class="sub">All charts, the worked example and the session diagram on this page are explanation.</p>
+  </div>
+
+  <h2>Execution cost: the bid-ask spread</h2>
+  <p>Every listed option is quoted two-sided. The <span class="mono">bid</span> is the highest price a buyer is currently willing to pay. The <span class="mono">ask</span>, or offer, is the lowest price a seller will accept. A market order buys at the ask and sells at the bid, so the spread between them is a transaction cost incurred on every round trip, independent of any view on the underlying.</p>
+
+  <figure class="panel">
+    <div class="scroll">
+      <svg viewBox="130 24 380 140" style="width:100%;max-width:560px;margin:0 auto" role="img" aria-label="An option quoted at 1.90 bid and 2.10 ask. A round trip at market costs 20 cents, about 10 percent of the mid price.">
+        <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+        <line x1="140" y1="96" x2="500" y2="96" stroke="currentColor" stroke-width="1.5" opacity="0.35"/>
+        <rect x="200" y="90" width="240" height="12" rx="3" fill="#2a78d6" opacity="0.85"/>
+        <line x1="200" y1="78" x2="200" y2="114" stroke="currentColor" stroke-width="2"/>
+        <line x1="440" y1="78" x2="440" y2="114" stroke="currentColor" stroke-width="2"/>
+        <line x1="320" y1="88" x2="320" y2="104" stroke="currentColor" stroke-width="1.5" opacity="0.6"/>
+        <text x="200" y="136" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="15" fill="currentColor">$1.90</text>
+        <text x="200" y="154" text-anchor="middle" font-size="12" fill="currentColor" opacity="0.75">bid: sell at market</text>
+        <text x="440" y="136" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="15" fill="currentColor">$2.10</text>
+        <text x="440" y="154" text-anchor="middle" font-size="12" fill="currentColor" opacity="0.75">ask: buy at market</text>
+        <text x="320" y="126" text-anchor="middle" font-size="11" fill="currentColor" opacity="0.6">mid $2.00</text>
+        <line x1="206" y1="56" x2="434" y2="56" stroke="currentColor" stroke-width="1.5" marker-start="url(#ah)" marker-end="url(#ah)"/>
+        <text x="320" y="44" text-anchor="middle" font-size="13" font-weight="600" fill="currentColor">spread $0.20, about 10% of mid</text>
+      </svg>
+    </div>
+    <figcaption class="center">A round trip at market on this contract costs about 10% of the premium before the underlying has moved. A resting limit order will often be filled inside the spread, so the quoted spread is an upper bound on execution cost, but it sets the order of magnitude.</figcaption>
+  </figure>
+
+  <p>Spreads are not uniform across the chain. Relative to premium, low-priced contracts are materially more expensive to trade than higher-priced ones.</p>
+
+  <div class="panel">
+    <h3>Median quoted spread, by premium</h3>
+    <p class="sub">Median bid-ask spread as a percentage of mid price. Contracts expiring 15 January 2027 with a two-sided quote.</p>
+    <div class="chart" id="c-price"></div>
+    <details><summary>View as table</summary><div class="scroll" id="t-price"></div></details>
+  </div>
+
+  <h2>Why the screen runs first</h2>
+  <ul>
+    <li><strong>Negligible cost.</strong> Retrieving a single option chain takes seconds. Researching an underlying with several AI agents takes minutes and incurs model costs.</li>
+    <li><strong>Early rejection.</strong> Where the options cannot be traded at an acceptable cost, there is no case for developing a thesis.</li>
+    <li><strong>A bounded opportunity set.</strong> Later stages select only from contracts that cleared the screen.</li>
+  </ul>
+
+  <h2>Screening procedure</h2>
+  <ol class="steps">
+    <li><div><b>Retrieve the option chain</b><span>From the live feed during the regular session; from the most recent daily snapshot outside it.</span></div></li>
+    <li><div><b>Reject invalid quotes</b><span>A contract with no bid, no ask, or a crossed market (bid above ask) fails unconditionally. Non-standard or adjusted series are flagged and excluded.</span></div></li>
+    <li><div><b>Compute per-contract measures</b><span>Quoted spread as a percentage of mid, days to expiration (DTE), and moneyness, measured as the distance from strike to spot.</span></div></li>
+    <li><div><b>Apply the five screening controls</b><span>Each contract is tested against each control independently.</span></div></li>
+    <li><div><b>Determine eligibility</b><span>An underlying is eligible when at least two contracts clear every control. A single qualifying contract does not constitute a tradeable market.</span></div></li>
+    <li><div><b>Report the outcome</b><span>Pass or fail, the number of eligible contracts and, on a fail, the binding control. A fail may be overridden by the user.</span></div></li>
+    <li><div><b>Write the decision record</b><span>The outcome, the data source and its timestamp, the control settings in force, the eligible count, and any override with its stated rationale.</span></div></li>
+  </ol>
+
+  <h2>Stage output: the screening summary</h2>
+  <p>The gate does not return the full list of eligible contracts. A liquid underlying can clear several hundred, and without a thesis there is no basis for choosing among them. The user is shown a one-screen summary and decides whether to proceed.</p>
+
+  <div class="panel card-mock" aria-label="Mock-up of the liquidity gate summary card">
+<div class="ui-row"><span class="ui-tag app">APPLICATION SCREEN</span><span>Screening summary. The only screen the user sees in this stage by default.</span></div>
+    <div class="mock-tag">MOCK-UP · ILLUSTRATIVE FIGURES</div>
+    <div class="cm-head"><span class="cm-tk mono">AAPL</span><span class="cm-chip">✓ PASS</span></div>
+    <p class="cm-verdict">23 contracts eligible at current settings.</p>
+    <p class="sub">Live chain, 15-minute delayed · as of 10:42 AM PT</p>
+
+    <h3 class="cm-h">Liquidity by tenor</h3>
+    <div class="scroll">
+      <table class="cm-grid">
+        <thead><tr><th>Days to expiration</th><th class="n">Calls</th><th class="n">Puts</th></tr></thead>
+        <tbody>
+          <tr class="out"><th>7 to 41 <small>outside current band</small></th><td class="n">21</td><td class="n">19</td></tr>
+          <tr class="in"><th>42 to 90 <small>current band</small></th><td class="n">12</td><td class="n">11</td></tr>
+          <tr class="out"><th>91 to 180 <small>outside current band</small></th><td class="n">8</td><td class="n">7</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <dl class="cm-facts">
+      <dt>Execution cost</dt><dd>Median quoted spread <span class="mono">3.1%</span> of mid. Range <span class="mono">1.2%</span> to <span class="mono">4.9%</span>.</dd>
+      <dt>Rejections by control</dt><dd><span class="mono">41</span> on spread, <span class="mono">18</span> on open interest, <span class="mono">6</span> on minimum premium.</dd>
+      <dt>Sensitivity</dt><dd>At a 7% spread limit, <span class="mono">31</span> contracts would be eligible.</dd>
+      <dt>Screening history</dt><dd>Eligible on 14 of the last 15 daily snapshots.</dd>
+    </dl>
+
+    <div class="cm-actions"><span class="cm-btn primary">Continue to thesis</span><span class="cm-btn">Adjust controls</span><span class="cm-btn">View contracts</span></div>
+  </div>
+  <ul>
+    <li><strong>Outcome first</strong>, with the data source and timestamp.</li>
+    <li><strong>The tenor grid shows availability.</strong> It indicates which expiration ranges carry tradeable contracts, so the feasible horizons are known before a thesis is drafted. It is not a selection list.</li>
+    <li><strong>The full list of eligible contracts is available on request</strong> through "View contracts". It is not the default view.</li>
+    <li><strong>On a fail</strong>, the card states the binding control and offers "Override and continue" in place of "Continue to thesis".</li>
+    <li><strong>No price levels are shown.</strong> The card reports counts and execution costs only, so it does not anchor the user's view of the underlying ahead of the thesis stage.</li>
+  </ul>
+
+  <h2>The five screening controls</h2>
+  <p>Each control has a default value and a permitted range. The marker shows the default, and the ends of the track show the range.</p>
+  <div class="panel">
+    <div class="ui-row"><span class="ui-tag ex">EXPLANATION ONLY</span><span>A diagram of the defaults and ranges. The settings screen that changes them is not yet drawn.</span></div>
+    <div class="controls">
+      <div class="ctl"><div class="what"><b>Bid-ask spread</b><span>Maximum, as a percentage of mid</span></div>
+        <div class="track"><span class="def" style="left:37.5%;width:6px"></span><span class="dl" style="left:37.5%">5%</span><span class="end l">2%</span><span class="end r">10%</span></div></div>
+      <div class="ctl"><div class="what"><b>Open interest</b><span>Minimum contracts outstanding</span></div>
+        <div class="track"><span class="def" style="left:9.1%;width:6px"></span><span class="dl" style="left:9.1%">100</span><span class="end l">10</span><span class="end r">1,000</span></div></div>
+      <div class="ctl"><div class="what"><b>Days to expiration (DTE)</b><span>A band, positioned by the thesis horizon</span></div>
+        <div class="track"><span class="def" style="left:20.2%;width:27.7%"></span><span class="dl" style="left:34%">42 to 90</span><span class="end l">7</span><span class="end r">180</span></div></div>
+      <div class="ctl"><div class="what"><b>Moneyness</b><span>Maximum distance of strike from spot</span></div>
+        <div class="track"><span class="def" style="left:20%;width:6px"></span><span class="dl" style="left:20%">10%</span><span class="end l">5%</span><span class="end r">30%</span></div></div>
+      <div class="ctl"><div class="what"><b>Minimum premium</b><span>Lowest acceptable mid price</span></div>
+        <div class="track"><span class="def" style="left:15.8%;width:6px"></span><span class="dl" style="left:15.8%">$0.20</span><span class="end l">$0.05</span><span class="end r">$1.00</span></div></div>
+    </div>
+  </div>
+  <ul>
+    <li><strong>Order size.</strong> An order exceeding 10% of a contract's open interest is flagged.</li>
+    <li><strong>Low-premium contracts.</strong> Below $1.00, the spread is reported in dollars as well as in percent.</li>
+  </ul>
+
+  <h3 style="margin-top:32px">Calibration of the ranges</h3>
+  <p>The ranges were calibrated on observed market data. Each chart below shows the effect of varying one control.</p>
+
+  <div class="panel">
+    <h3>The 103-name sample</h3>
+    <p>Counts are expressed out of 103 because the coverage universe held 103 underlyings on the observation date, 13 November 2026.</p>
+    <ul>
+      <li><strong>A curated starter universe.</strong> It comprises 7 index and sector ETFs (including SPY, QQQ and IWM) and 96 large-capitalisation US equities with actively traded options, diversified across technology, financials, healthcare, energy, consumer and industrials. It was selected by hand and follows no index methodology.</li>
+      <li><strong>Now 106 names.</strong> S&amp;P 500 index options (SPX), Mini-SPX (XSP) and the 20+ year Treasury bond ETF (TLT) were added on 15 November.</li>
+      <li><strong>It does not restrict what can be screened.</strong> The universe determines only which underlyings the daily snapshot records. During the regular session the gate screens any optionable underlying against the live chain. The universe is relevant only outside market hours and for displaying an underlying's screening history.</li>
+      <li><strong>Selection bias.</strong> These are among the most liquid names in the market. A broader universe would show a lower proportion of eligible underlyings.</li>
+    </ul>
+  </div>
+
+  <div class="panel">
+    <h3>Eligible underlyings, by spread limit</h3>
+    <p class="sub">Of the 103 underlyings in the coverage universe, the number with at least two contracts clearing every other control. Contracts expiring 15 January 2027.</p>
+    <div class="chart" id="c-gap"></div>
+    <figcaption>Between 2% and 10% the spread limit is the binding constraint. Above 10% nearly every underlying is already eligible, so a wider range would add nothing.</figcaption>
+    <details><summary>View as table</summary><div class="scroll" id="t-gap"></div></details>
+  </div>
+
+  <div class="panel">
+    <h3>Eligible underlyings, by open interest floor</h3>
+    <p class="sub">Of the same 103 underlyings, the number with at least two contracts inside a 5% spread, at two expirations.</p>
+    <div class="legend"><span><i></i>15 Jan, monthly expiration</span><span><i class="s2"></i>31 Dec, weekly expiration</span></div>
+    <div class="chart" id="c-oi"></div>
+    <figcaption>At the monthly expiration the floor is almost never binding, because a tight spread already implies open interest. At the weekly expiration far fewer underlyings are eligible at any floor, and raising it reduces the count further.</figcaption>
+    <details><summary>View as table</summary><div class="scroll" id="t-oi"></div></details>
+  </div>
+
+  <div class="panel">
+    <h3>Pass rate, by moneyness</h3>
+    <p class="sub">Share of contracts clearing the other controls at their defaults, by distance of strike from spot. Contracts expiring 15 January 2027.</p>
+    <div class="chart" id="c-strike"></div>
+    <figcaption>There is no discontinuity at 10%. Contracts 10% to 15% from spot clear the screen almost as often as those 5% to 10% away, which is why moneyness is an adjustable control and not a fixed limit.</figcaption>
+    <details><summary>View as table</summary><div class="scroll" id="t-strike"></div></details>
+  </div>
+
+  <h2>Worked example: screening a contract</h2>
+  <p>Enter a quote to see how the gate evaluates it at the default settings. The initial values are illustrative, not a live quote.</p>
+  <div class="panel">
+    <div class="ui-row"><span class="ui-tag ex">EXPLANATION ONLY</span><span>A calculator for this page. The application has no such form.</span></div>
+    <form class="form" id="chk" novalidate>
+      <label for="f-bid">Bid ($)<input id="f-bid" type="number" step="0.01" min="0" value="1.90"></label>
+      <label for="f-ask">Ask ($)<input id="f-ask" type="number" step="0.01" min="0" value="2.10"></label>
+      <label for="f-oi">Open interest<input id="f-oi" type="number" step="1" min="0" value="260"></label>
+      <label for="f-dte">Days to expiration<input id="f-dte" type="number" step="1" min="0" value="46"></label>
+      <label for="f-dist">Distance from spot (%)<input id="f-dist" type="number" step="0.5" min="0" value="6"></label>
+      <label for="f-qty">Order size (contracts)<input id="f-qty" type="number" step="1" min="1" value="2"></label>
+    </form>
+    <ul class="checks" id="chk-out" aria-live="polite"></ul>
+    <p class="verdict" id="chk-verdict"></p>
+  </div>
+
+  <h2>Data sourcing by market session</h2>
+  <p>The data source depends on the market session. Quotes outside regular trading hours are unreliable, so a live screen run after the close would produce misleading results.</p>
+
+  <figure class="panel">
+    <div class="scroll">
+      <svg viewBox="0 0 760 330" width="760" class="flow-svg" style="width:100%" role="img" aria-label="Decision flow. During the regular session the gate runs a live screen on any optionable underlying. Outside it, an underlying in the coverage universe is screened on the latest daily snapshot and the result is marked provisional. An underlying outside the universe cannot be assessed until the market opens.">
+        <defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+        <g font-size="13" fill="currentColor">
+          <rect x="16" y="40" width="150" height="50" rx="6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="91" y="70" text-anchor="middle">Underlying entered</text>
+          <rect x="216" y="40" width="150" height="50" rx="25" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="291" y="70" text-anchor="middle" font-weight="600">Market open?</text>
+          <rect x="216" y="170" width="150" height="50" rx="25" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="291" y="200" text-anchor="middle" font-weight="600">In universe?</text>
+          <line x1="166" y1="65" x2="210" y2="65" stroke="currentColor" stroke-width="1.5" marker-end="url(#a2)"/>
+          <line x1="366" y1="65" x2="444" y2="65" stroke="currentColor" stroke-width="1.5" marker-end="url(#a2)"/>
+          <text x="404" y="57" text-anchor="middle" font-size="12">yes</text>
+          <line x1="291" y1="90" x2="291" y2="164" stroke="currentColor" stroke-width="1.5" marker-end="url(#a2)"/>
+          <text x="303" y="132" font-size="12">no</text>
+          <line x1="366" y1="195" x2="444" y2="195" stroke="currentColor" stroke-width="1.5" marker-end="url(#a2)"/>
+          <text x="404" y="187" text-anchor="middle" font-size="12">yes</text>
+          <path d="M291 220 V285 H444" fill="none" stroke="currentColor" stroke-width="1.5" marker-end="url(#a2)"/>
+          <text x="303" y="258" font-size="12">no</text>
+          <rect x="450" y="26" width="294" height="78" rx="6" fill="#2a78d6" fill-opacity="0.14" stroke="#2a78d6" stroke-width="2"/>
+          <text x="466" y="52" font-weight="600">Live screen</text>
+          <text x="466" y="72" font-size="12">Live chain, 15-minute delayed</text>
+          <text x="466" y="90" font-size="12">Any optionable underlying. Result is final.</text>
+          <rect x="450" y="156" width="294" height="78" rx="6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="466" y="182" font-weight="600">Latest 11:00 snapshot</text>
+          <text x="466" y="202" font-size="12">Provisional, dated</text>
+          <text x="466" y="220" font-size="12">Contracts re-validated live before any order</text>
+          <rect x="450" y="246" width="294" height="78" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <text x="466" y="272" font-weight="600">Not assessable</text>
+          <text x="466" y="292" font-size="12">Thesis only</text>
+          <text x="466" y="310" font-size="12">No contract-level steps until the open</text>
+        </g>
+      </svg>
+    </div>
+    <div class="flow-m" aria-hidden="true">
+      <div class="fq">Underlying entered. Is the market open?</div>
+      <div class="fa hi"><b>Yes: live screen</b><span>Live chain, 15-minute delayed. Any optionable underlying. Result is final.</span></div>
+      <div class="fq">No. Is the underlying in the coverage universe?</div>
+      <div class="fa"><b>Yes: latest 11:00 snapshot</b><span>Provisional, dated. Contracts re-validated live before any order.</span></div>
+      <div class="fa dash"><b>No: not assessable</b><span>Thesis only. No contract-level steps until the open.</span></div>
+    </div>
+    <figcaption>The coverage universe is the 106 underlyings recorded by the daily batch job at 11:00 AM Pacific. It is used only outside market hours. A live screen covers any optionable underlying. "Open" means the regular session on a trading day.</figcaption>
+  </figure>
+
+  <div class="panel">
+    <div class="scroll">
+      <table style="min-width:620px">
+        <thead><tr><th></th><th>Market open</th><th>Closed, underlying in universe</th><th>Closed, underlying outside universe</th></tr></thead>
+        <tbody>
+          <tr><th>Data source</th><td>Live chain for the underlying</td><td>Most recent daily snapshot</td><td>None</td></tr>
+          <tr><th>Coverage</th><td>Any optionable underlying</td><td>The 106-name coverage universe only</td><td>Not applicable</td></tr>
+          <tr><th>Result</th><td>Final for this stage</td><td>Provisional, dated</td><td>Liquidity not assessable</td></tr>
+          <tr><th>Supporting context</th><td>Recent screening history, where in universe</td><td>The same history</td><td>None</td></tr>
+          <tr><th>Permitted next steps</th><td>The full workflow</td><td>Thesis and analysis; live re-validation before any order</td><td>Thesis only</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <ul>
+    <li><strong>A live result takes precedence over history.</strong> An underlying that was eligible for a month and fails today is treated as failing. History indicates only whether today's result is typical.</li>
+    <li><strong>A fail halts the request by default</strong>, with the binding control stated. The user may override it.</li>
+  </ul>
+
+  <h2>System-proposed and user-specified contracts</h2>
+  <div class="two">
+    <div class="panel"><h3>System-proposed contracts</h3><p>The controls are binding. The system never proposes a contract outside the current settings, nor one with fewer than 7 days to expiration.</p></div>
+    <div class="panel"><h3>User-specified contracts</h3><p>A contract specified by the user may fall outside any control. The system reports the execution cost and writes the override to the decision record. Invalid quotes still fail.</p></div>
+  </div>
+
+  <h2>Discretionary override</h2>
+  <p>The gate is advisory, and the decision rests with the user. Where an underlying or a contract fails the screen, the user may override the result and advance the underlying, or selected contracts, to the next stage.</p>
+  <ul>
+    <li><strong>Scope.</strong> Any of the five controls, the two-contract minimum, and a provisional or unavailable result outside market hours.</li>
+    <li><strong>Process.</strong> The system reports the execution cost of the failing contract, requires a one-line rationale, and records the override.</li>
+    <li><strong>Unchanged.</strong> The system does not propose a failing contract of its own accord. An override advances only contracts the user has selected.</li>
+    <li><strong>Exception.</strong> An invalid quote, with no bid or no ask, cannot be advanced because it carries no price.</li>
+  </ul>
+
+  <h2>Decision records and audit trail</h2>
+  <p>Every decision at every stage of the workflow generates a decision record at the time it is made. The gate's record is the first in the chain. Where a contract is ultimately traded, the complete chain is retained permanently in the system's memory and linked to that trade.</p>
+  <div class="panel">
+    <div class="scroll">
+      <table style="min-width:520px">
+        <thead><tr><th>Field</th><th>Content at the liquidity gate</th></tr></thead>
+        <tbody>
+          <tr><th>Stage</th><td>Liquidity gate</td></tr>
+          <tr><th>Decision</th><td>Pass, fail, or overridden</td></tr>
+          <tr><th>Decided by</th><td>System or user</td></tr>
+          <tr><th>Inputs</th><td>Live chain or snapshot, with timestamp or snapshot date</td></tr>
+          <tr><th>Settings</th><td>Control values in force</td></tr>
+          <tr><th>Reason</th><td>Binding control, or the user's stated rationale for an override</td></tr>
+          <tr><th>Time</th><td>Timestamp of the decision</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <ul>
+    <li><strong>Records are append-only.</strong> A subsequent decision adds a record. It does not amend an earlier one.</li>
+    <li><strong>Purpose.</strong> Once a position is closed, the system can reconstruct how it was originated and compare it with similar past decisions.</li>
+  </ul>
+
+  <h2>Pre-trade re-validation</h2>
+  <p>The screen is applied a second time once a thesis exists and specific contracts have been selected. That pass always runs against the live chain, on the exact contracts, immediately before position sizing and order ticket generation. The first pass determines whether an underlying merits research. The second confirms the contracts to be traded.</p>
+
+  <div class="note">
+    <p><strong>Data and limitations.</strong> All charts on this page derive from a single intraday snapshot taken on 13 November 2026, covering the 103 underlyings in the coverage universe on that date. A broader universe would show a lower proportion of eligible underlyings. The daily job now records these counts each trading day, and the ranges should be recalibrated once several weeks of observations are available.</p>
+    <p><strong>Implementation status.</strong> This page documents the design. The gate is not yet implemented, and the exchange calendar for holidays and early closes remains to be built.</p>
+  </div>
+</div>
+<div id="tip" hidden></div>
+
+<script>
+(function () {
+  var tip = document.getElementById('tip');
+  function showTip(el, x, y) {
+    tip.textContent = '';
+    var b = document.createElement('b'); b.textContent = el.dataset.v;
+    tip.appendChild(b); tip.appendChild(document.createTextNode(el.dataset.l));
+    tip.hidden = false;
+    var w = tip.offsetWidth, h = tip.offsetHeight;
+    tip.style.left = Math.max(8, Math.min(x + 12, window.innerWidth - w - 8)) + 'px';
+    tip.style.top = Math.max(8, y - h - 10) + 'px';
+  }
+  function wire(bar) {
+    bar.tabIndex = 0;
+    bar.addEventListener('pointermove', function (e) { showTip(bar, e.clientX, e.clientY); });
+    bar.addEventListener('pointerleave', function () { tip.hidden = true; });
+    bar.addEventListener('focus', function () { var r = bar.getBoundingClientRect(); showTip(bar, r.right, r.top); });
+    bar.addEventListener('blur', function () { tip.hidden = true; });
+  }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+  // rows: [{label, tag, series:[{v, text, tipLabel, s2, dim}]}], max = scale maximum
+  function chart(id, rows, max) {
+    var root = document.getElementById(id);
+    rows.forEach(function (r) {
+      var row = el('div', 'row');
+      var lab = el('div', 'lab', r.label);
+      if (r.tag) lab.appendChild(el('small', '', r.tag));
+      row.appendChild(lab);
+      var bars = el('div', 'bars');
+      r.series.forEach(function (s) {
+        var line = el('div', 'barline');
+        var bar = el('div', 'bar' + (s.s2 ? ' s2' : '') + (s.dim ? ' dim' : ''));
+        bar.style.width = 'calc(' + (100 * s.v / max).toFixed(2) + '% - ' + (7 * s.v / max).toFixed(1) + 'em)';
+        bar.dataset.v = s.text; bar.dataset.l = s.tipLabel;
+        bar.setAttribute('role', 'img'); bar.setAttribute('aria-label', s.tipLabel + ': ' + s.text);
+        wire(bar);
+        line.appendChild(bar); line.appendChild(el('span', 'val', s.text));
+        bars.appendChild(line);
+      });
+      row.appendChild(bars); root.appendChild(row);
+    });
+  }
+  function table(id, head, rows) {
+    var t = el('table'), th = el('thead'), tr = el('tr');
+    head.forEach(function (h, i) { var c = el('th', i ? 'n' : '', h); tr.appendChild(c); });
+    th.appendChild(tr); t.appendChild(th);
+    var tb = el('tbody');
+    rows.forEach(function (r) { var tr = el('tr'); r.forEach(function (c, i) { tr.appendChild(el('td', i ? 'n' : '', c)); }); tb.appendChild(tr); });
+    t.appendChild(tb); document.getElementById(id).appendChild(t);
+  }
+
+  var price = [['Under $0.05', 100, 439], ['$0.05 to $0.10', 91, 384], ['$0.10 to $0.20', 73, 437], ['$0.20 to $0.50', 42, 638], ['$0.50 to $1.00', 27, 571], ['$1.00 and up', 3.5, 9336]];
+  chart('c-price', price.map(function (p) { return { label: p[0], series: [{ v: p[1], text: p[1] + '%', tipLabel: p[0] + ', ' + p[2].toLocaleString() + ' contracts' }] }; }), 100);
+  table('t-price', ['Premium (mid)', 'Median spread', 'Contracts'], price.map(function (p) { return [p[0], p[1] + '%', p[2].toLocaleString()]; }));
+
+  var gap = [[2, 27, 'range minimum'], [5, 84, 'default'], [7, 98, ''], [10, 102, 'range maximum'], [12, 103, ''], [15, 103, '']];
+  chart('c-gap', gap.map(function (g) { return { label: 'Spread ≤ ' + g[0] + '%', tag: g[2], series: [{ v: g[1], text: g[1] + ' of 103', tipLabel: 'Spread limit ' + g[0] + '%', dim: g[0] > 10 }] }; }), 103);
+  table('t-gap', ['Spread limit', 'Eligible underlyings (of 103)'], gap.map(function (g) { return ['Up to ' + g[0] + '%', String(g[1])]; }));
+
+  var oi = [[0, 84, 11], [10, 84, 9], [50, 84, 6], [100, 84, 5], [250, 83, 4], [500, 81, 4], [1000, 75, 3]];
+  chart('c-oi', oi.map(function (o) {
+    var lab = o[0] === 0 ? 'No floor' : 'OI ≥ ' + o[0].toLocaleString();
+    return { label: lab, tag: o[0] === 100 ? 'default' : '', series: [
+      { v: o[1], text: String(o[1]), tipLabel: '15 Jan monthly, floor ' + o[0].toLocaleString() },
+      { v: o[2], text: String(o[2]), tipLabel: '31 Dec weekly, floor ' + o[0].toLocaleString(), s2: true }] };
+  }), 90);
+  table('t-oi', ['Open interest floor', '15 Jan monthly', '31 Dec weekly'], oi.map(function (o) { return [o[0] === 0 ? 'None' : o[0].toLocaleString(), String(o[1]), String(o[2])]; }));
+
+  var strike = [['0 to 5%', 55, 912], ['5 to 10%', 37, 900], ['10 to 15%', 34, 902], ['15 to 20%', 25, 868], ['20 to 30%', 22, 1654]];
+  chart('c-strike', strike.map(function (s) { return { label: s[0], tag: s[0] === '5 to 10%' ? 'default limit' : '', series: [{ v: s[1], text: s[1] + '%', tipLabel: 'Strike ' + s[0] + ' from spot, ' + s[2].toLocaleString() + ' contracts' }] }; }), 100);
+  table('t-strike', ['Distance from spot', 'Pass rate', 'Contracts'], strike.map(function (s) { return [s[0], s[1] + '%', s[2].toLocaleString()]; }));
+
+  // contract checker, default settings
+  var out = document.getElementById('chk-out'), verdict = document.getElementById('chk-verdict');
+  function num(id) { var v = parseFloat(document.getElementById(id).value); return isNaN(v) ? null : v; }
+  function line(state, word, text) { var li = el('li', state); li.appendChild(el('span', 'st', word)); li.appendChild(el('span', '', text)); out.appendChild(li); }
+  function run() {
+    out.textContent = '';
+    var bid = num('f-bid'), ask = num('f-ask'), oi = num('f-oi'), dte = num('f-dte'), dist = num('f-dist'), qty = num('f-qty');
+    if ([bid, ask, oi, dte, dist].some(function (v) { return v === null; })) { verdict.textContent = 'Complete every field to see the result.'; return; }
+    if (!(bid > 0) || !(ask > 0) || bid > ask) {
+      line('fail', '✕ FAIL', 'Invalid quote: a two-sided market is required, and the bid cannot exceed the ask.');
+      verdict.textContent = 'Fails. An invalid quote cannot be overridden.'; return;
+    }
+    var mid = (bid + ask) / 2, gapAbs = ask - bid, gapPct = 100 * gapAbs / mid, fails = 0;
+    function check(ok, text) { if (!ok) fails++; line(ok ? 'pass' : 'fail', ok ? '✓ PASS' : '✕ FAIL', text); }
+    line('pass', '✓ PASS', 'Valid two-sided quote.');
+    check(gapPct <= 5, 'Quoted spread is ' + gapPct.toFixed(1) + '% of mid' + (mid < 1 ? ' ($' + gapAbs.toFixed(2) + ')' : '') + '. Limit 5%.');
+    check(oi >= 100, 'Open interest is ' + oi.toLocaleString() + '. Minimum 100.');
+    check(dte >= 42 && dte <= 90, dte + ' days to expiration. Band 42 to 90.');
+    check(dist <= 10, 'Strike is ' + dist + '% from spot. Limit 10%.');
+    check(mid >= 0.20, 'Premium (mid) is $' + mid.toFixed(2) + '. Minimum $0.20.');
+    if (qty !== null && oi > 0 && qty > 0.10 * oi) line('flag', '! FLAG', 'Order of ' + qty + ' contracts exceeds 10% of open interest.');
+    verdict.textContent = fails === 0
+      ? 'Contract is eligible at the default settings.'
+      : 'Contract fails ' + fails + (fails === 1 ? ' control' : ' controls') + ' at the default settings. The system would not propose it; the user may override the gate and advance it.';
+  }
+  // light / dark switch: sets the same attribute the viewer's own theme setting uses
+  var modeBtn = document.getElementById('mode'), root = document.documentElement;
+  function isDark() { var t = root.getAttribute('data-theme'); return t ? t === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches; }
+  function label() { modeBtn.textContent = isDark() ? 'Switch to light' : 'Switch to dark'; }
+  modeBtn.addEventListener('click', function () { root.setAttribute('data-theme', isDark() ? 'light' : 'dark'); label(); });
+  label();
+
+  document.getElementById('chk').addEventListener('input', run);
+  document.getElementById('chk').addEventListener('submit', function (e) { e.preventDefault(); });
+  run();
+})();
+</script>
+
+<script>
+/* When this page is shown inside the Tradecraft manual (docs/site/manual.html): follow the manual's theme,
+   hide this page's own theme button and link line, and report its height and its sections to the manual. */
+(function () {
+  if (window.parent === window) return;
+  var root = document.documentElement;
+  var st = document.createElement('style');
+  st.textContent = '.mode, .manual-link { display: none !important; } html { overflow: hidden; } .wrap { padding-top: 4px !important; padding-bottom: 12px !important; }';
+  document.head.appendChild(st);
+  function report() {
+    var toc = [].map.call(document.querySelectorAll('h2'), function (h) {
+      return {text: h.textContent.replace(/^\s*\d+\.\s*/, '').trim(), top: Math.round(h.getBoundingClientRect().top + window.scrollY)};
+    });
+    // The height of the content itself, not of the window: a window-sized measure would grow each time the manual resizes the frame.
+    var wrap = document.querySelector('.wrap') || document.body;
+    var height = Math.ceil(wrap.getBoundingClientRect().bottom + window.scrollY) + 16;
+    if (Math.abs(height - last) < 2) return;
+    last = height;
+    parent.postMessage({tradecraft: 'page', height: height, toc: toc}, '*');
+  }
+  var last = 0;
+  window.addEventListener('message', function (e) { var d = e.data || {}; if (d.tradecraft === 'theme') root.setAttribute('data-theme', d.theme); });
+  window.addEventListener('load', report);
+  window.addEventListener('resize', report);
+  if (window.ResizeObserver) new ResizeObserver(report).observe(document.body);
+  report();
+})();
+</script>

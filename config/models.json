@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "updated": "2026-11-18",
+  "purpose": "Which model each agent runs on. Change a tier by editing one line here; no code change is needed. Decision record: docs/decisions/2026-11-18-model-tiers.md.",
+  "agents": {
+    "fundamental_analyst": {"model": "claude-haiku-5-5", "fallback": "claude-sonnet-5-5", "note": "Largest reader of text. Check its findings by hand against the filings for three tickers; move to the fallback if it misreads. Keep every prompt under 100,000 tokens: above that Haiku is billed at five times the rate."},
+    "regime_assessor": {"model": "claude-haiku-5-5"},
+    "technical_analyst": {"model": "claude-haiku-5-5"},
+    "evidence_retriever": {"model": "claude-haiku-5-5"},
+    "thesis": {"model": "claude-opus-5-5"},
+    "critic": {"model": "claude-opus-5-5", "note": "Same model family as the thesis agent for the demo, stated on the challenge screen. A different family remains the aim."}
+  },
+  "embedding": {"provider": "local", "model": "all-MiniLM-L6-v2 (ONNX), chromadb's built-in default", "note": "Chosen 19 November 2026 (pre-approved by the operator). Runs on the Mac with no key; downloaded once (79 MB) from chroma-onnx-models.s3.amazonaws.com into data/embedding-model. The index is built by `python -m tradecraft.research build` into data/research-index. If it cannot be opened, keyword search over the same passages is used and recorded. Claude offers no embedding model."},
+  "not_models": ["data collection", "measured figures", "the validation check on a draft", "both stage 4 checklists", "restating the thesis as a question", "the readiness line", "all of stages 1 and 3"],
+  "prices_usd_per_million_tokens": {
+    "source": "Anthropic first-party list prices as cached in the claude-api reference on 2026-11-03; check the pricing page before relying on them for anything but the spend stops",
+    "claude-opus-5-5":   {"input": 4.00, "output": 20.00, "cache_read": 0.20, "cache_write": 5.00},
+    "claude-sonnet-5-5": {"input": 2.00, "output": 10.00, "cache_read": 0.10, "cache_write": 2.50},
+    "claude-haiku-5-5":  {"input": 0.10, "output": 0.50,  "cache_read": 0.01, "cache_write": 0.125,
+                          "long_prompt_over_tokens": 100000, "long_input": 0.50, "long_output": 2.50,
+                          "note": "cache_read and cache_write for Haiku are assumed at 0.1x and 1.25x of input; not confirmed"}
+  },
+  "rate_limits": {
+    "source": "operator, from the Anthropic Console, 18 November 2026",
+    "note": "Organization limits per model. Far above what one request needs (about 120,000 tokens read and 10,000 written per run), so the three analysts run in parallel and the stage 2 time limit stays at 5 minutes. The harness still retries a rate-limit error twice with an increasing pause.",
+    "claude-opus-5-5":   {"requests_per_min": 4000, "input_tokens_per_min": 2000000, "output_tokens_per_min": 400000},
+    "claude-sonnet-5-5": {"requests_per_min": 4000, "input_tokens_per_min": 2000000, "output_tokens_per_min": 400000},
+    "claude-haiku-5-5":  {"requests_per_min": 4000, "input_tokens_per_min": 2000000, "output_tokens_per_min": 400000}
+  },
+  "budget": {"spend_limit_usd": 50, "expected_cost_per_run_usd": 0.25, "basis": "About 120,000 tokens read and 10,000 written per run; an estimate made on 18 November 2026 from published prices, to be replaced by measured usage."}
+}

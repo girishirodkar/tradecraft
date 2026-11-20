@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tradecraft Manual · Architecture</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Ledger (light) / Night Desk (dark), per docs/site/THEME.md. One reading column; figures in plain panels. */
+:root {
+  --bg: #f5f7fa; --surface: #ffffff; --ink: #17212b; --ink-2: #44515f; --ink-3: #5f6c7b;
+  --line: #d9e0e8; --accent: #1c5cab; --band: #e8f0fa;
+  --series-1: #2a78d6; --series-2: #eb6834; --good: #0a7d0a; --crit: #c23232;
+  --display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+  --text: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161b; --surface: #1b2027; --ink: #eef1f4; --ink-2: #c1c9d2; --ink-3: #9aa5b1;
+    --line: #2f3742; --accent: #86b6ef; --band: #1f2c3d;
+    --series-1: #3987e5; --series-2: #d95926; --good: #3fbf3f; --crit: #e66767;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161b; --surface: #1b2027; --ink: #eef1f4; --ink-2: #c1c9d2; --ink-3: #9aa5b1;
+  --line: #2f3742; --accent: #86b6ef; --band: #1f2c3d;
+  --series-1: #3987e5; --series-2: #d95926; --good: #3fbf3f; --crit: #e66767;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--text); font-size: 16px; line-height: 1.6; }
+.wrap { max-width: 860px; margin: 0 auto; padding-block: 40px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3, h4 { font-family: var(--display); text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(2.25rem, 6vw, 3.25rem); font-weight: 600; letter-spacing: -0.02em; }
+h1 span { color: var(--accent); }
+h2 { font-size: 1.5rem; font-weight: 600; margin-top: 56px; scroll-margin-top: 16px; }
+h3 { font-size: 1.0625rem; font-weight: 600; margin-top: 28px; }
+h4 { font-size: 0.9375rem; font-weight: 600; }
+p { margin: 12px 0 0; max-width: 68ch; }
+a { color: var(--accent); }
+.lede { font-size: 1.125rem; color: var(--ink-2); }
+.meta { font-family: var(--mono); font-size: 0.8125rem; color: var(--ink-3); letter-spacing: 0.02em; }
+.mono, code { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+code { font-size: 0.875em; background: var(--band); border-radius: 3px; padding: 1px 5px; overflow-wrap: anywhere; }
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 14px; }
+.mode { font: inherit; font-size: 0.8125rem; padding: 6px 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); cursor: pointer; }
+.mode:hover { border-color: var(--accent); }
+.mode:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+ul, ol.plain { margin: 12px 0 0; padding-left: 20px; max-width: 68ch; }
+li + li { margin-top: 6px; }
+strong { font-weight: 600; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 20px; margin-top: 20px; min-width: 0; }
+.panel > :first-child { margin-top: 0; }
+.sub { color: var(--ink-3); font-size: 0.875rem; max-width: none; margin-top: 4px; }
+figure { margin: 0; }
+figcaption { color: var(--ink-3); font-size: 0.875rem; margin-top: 12px; max-width: 68ch; }
+.scroll { overflow-x: auto; }
+.scroll svg { display: block; height: auto; min-width: 620px; width: 100%; }
+table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-2); font-size: 0.8125rem; }
+tr:last-child td { border-bottom: 0; }
+td.k { font-weight: 600; white-space: nowrap; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; }
+.two .panel { margin-top: 0; }
+.part { margin-top: 72px; border-top: 2px solid var(--accent); padding-top: 18px; }
+.part .meta { color: var(--accent); }
+.part h2 { margin-top: 6px; font-size: 1.875rem; }
+.lvl { display: inline-block; font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.06em; color: var(--surface); background: var(--accent); border-radius: 4px; padding: 2px 8px; margin-right: 8px; vertical-align: 3px; }
+.who { color: var(--ink-3); font-size: 0.875rem; margin-top: 6px; }
+.tag { display: inline-block; font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.04em; border: 1px solid var(--line); border-radius: 4px; padding: 1px 7px; color: var(--ink-2); white-space: nowrap; }
+.tag.agent { border-color: var(--accent); background: var(--band); color: var(--ink); }
+.more { margin-top: 14px; font-size: 0.9375rem; }
+.more a { font-weight: 600; }
+.toc { margin-top: 24px; display: grid; gap: 14px; }
+.toc b { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.06em; color: var(--ink-3); font-weight: 500; }
+.toc ol { list-style: none; padding: 0; margin: 6px 0 0; max-width: none; display: flex; flex-wrap: wrap; gap: 6px 8px; }
+.toc li { margin: 0; }
+.toc a { display: inline-block; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink-2); font-size: 0.875rem; text-decoration: none; }
+.toc a:hover, .toc a:focus-visible { border-color: var(--accent); color: var(--accent); }
+.io { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 16px; }
+.io div { border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; background: var(--surface); font-size: 0.9375rem; }
+.io b { display: block; font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; color: var(--ink-3); font-weight: 500; margin-bottom: 4px; }
+.note { border-top: 1px solid var(--line); margin-top: 56px; padding-top: 20px; color: var(--ink-3); font-size: 0.875rem; }
+.note p { max-width: 72ch; }
+
+/* diagrams: every colour is a theme token, so they follow the light and dark themes */
+svg text { font-family: var(--text); font-size: 13px; fill: var(--ink); }
+svg .t2 { fill: var(--ink-2); font-size: 11.5px; }
+svg .t3 { fill: var(--ink-3); font-size: 11px; font-family: var(--mono); letter-spacing: 0.04em; }
+svg .hd { font-weight: 600; font-size: 13.5px; }
+svg .bx { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+svg .ag { fill: var(--band); stroke: var(--accent); stroke-width: 1.5; }
+svg .st { fill: var(--bg); stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 4 3; }
+svg .ln { stroke: var(--ink-3); stroke-width: 1.5; fill: none; }
+svg .la { stroke: var(--accent); stroke-width: 1.5; fill: none; }
+svg .ld { stroke: var(--ink-3); stroke-width: 1.5; fill: none; stroke-dasharray: 4 3; }
+svg .ah { fill: var(--ink-3); }
+svg .aha { fill: var(--accent); }
+
+/* The manual is three pages with one header. The tabs move between pages; the pills move within a page. */
+.tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 26px; }
+.tabs a { display: grid; gap: 3px; align-content: start; padding: 12px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); text-decoration: none; min-width: 0; }
+.tabs a b { font-family: var(--display); font-weight: 600; font-size: 1rem; line-height: 1.25; }
+.tabs a i { font-style: normal; font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; color: var(--ink-3); }
+.tabs a small { font-size: 0.8125rem; color: var(--ink-3); line-height: 1.35; }
+.tabs a:hover, .tabs a:focus-visible { border-color: var(--accent); }
+.tabs a[aria-current="page"] { border-color: var(--accent); background: var(--band); }
+.tabs a[aria-current="page"] b, .tabs a[aria-current="page"] i { color: var(--accent); }
+@media (max-width: 640px) { .tabs { grid-template-columns: 1fr; } }
+.part { margin-top: 34px; }
+.toc { margin-top: 20px; display: block; }
+.toc ol { margin-top: 8px; }
+.toc + p, .toc + h2 { margin-top: 30px; }
+.emb iframe { display: block; width: 100%; height: 86vh; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); margin-top: 16px; }
+.pages { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 56px; }
+.pages a { flex: 1 1 220px; display: grid; gap: 2px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); text-decoration: none; color: var(--ink); min-width: 0; }
+.pages a:hover, .pages a:focus-visible { border-color: var(--accent); }
+.pages a small { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; color: var(--ink-3); }
+.pages a.next { text-align: right; }
+.pages a.up { flex: 0 0 auto; align-content: center; color: var(--ink-2); font-size: 0.875rem; }
+h2 { scroll-margin-top: 16px; }
+
+@media print {
+  .mode, .tabs, .toc, .pages { display: none !important; }
+  body { background: #fff; font-size: 11pt; }
+  .wrap { max-width: none; padding: 0; }
+  h2 { break-after: avoid; } .panel, figure, table { break-inside: avoid; }
+  .emb iframe { display: none; } a { color: inherit; text-decoration: none; }
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="top">
+  <div class="top"><div class="meta">TRADECRAFT · PRODUCT MANUAL · AS BUILT, 19 NOVEMBER 2026</div><button type="button" class="mode" id="mode">Switch to dark</button></div>
+  <h1>Trade<span>craft</span> manual</h1>
+  <p class="lede">What Tradecraft does at each of its four stages and why, and how the system is built, from a one-page overview down to the modules. Everything here describes the application as it is built. Where something is designed but not built, the manual says so.</p>
+  <nav class="tabs" aria-label="The three parts of the manual">
+    <a href="manual.html"><i>PART 1</i><b>The logic of each stage</b><small>Why each stage works as it does, and what it will not do</small></a>
+    <a href="manual-architecture.html" aria-current="page"><i>PART 2</i><b>The architecture</b><small>How it is built, at four levels of depth</small></a>
+    <a href="manual-stages.html"><i>PART 3</i><b>Detailed stage manuals</b><small>The four stage manuals in full</small></a>
+  </nav>
+
+  <div class="part"><div class="meta">PART 2 OF 3</div><h2>The architecture</h2></div>
+  <nav class="toc" aria-label="On this page"><b>ON THIS PAGE</b>
+    <ol>
+      <li><a href="#l100">Level 100 · Overview</a></li>
+      <li><a href="#l200">Level 200 · Components</a></li>
+      <li><a href="#l300">Level 300 · Agents, harness, workflow</a></li>
+      <li><a href="#agents">The agents</a></li>
+      <li><a href="#harness">The harness loop</a></li>
+      <li><a href="#workflow">The workflow</a></li>
+      <li><a href="#stores">The stores</a></li>
+      <li><a href="#guardrails">Guardrails</a></li>
+      <li><a href="#l400">Level 400 · The code</a></li>
+      <li><a href="#modules">Module map</a></li>
+      <li><a href="#state">The request's state</a></li>
+      <li><a href="#add-agent">Adding an agent</a></li>
+      <li><a href="#add-check">Adding a check</a></li>
+      <li><a href="#tests">The tests</a></li>
+      <li><a href="#course">Course concepts</a></li>
+      <li><a href="#notbuilt">What is not built</a></li>
+    </ol>
+  </nav>
+
+  <p>Four levels, each complete on its own. A reader can stop after any of them.</p>
+
+  <h2 id="l100"><span class="lvl">100</span>Overview</h2>
+  <p class="who">For anyone. One page.</p>
+  <p>Tradecraft is a program that runs on the user's own computer and is used through a web browser. The user types one underlying; the program takes it through four stages and stops for the user's decision after each.</p>
+  <div class="two">
+    <div class="panel"><h4>What is code</h4><p>The liquidity gate. Every measured figure. Evidence grades. All of contract selection. Twenty-three checks. The readiness line. The checks on what the models write.</p></div>
+    <div class="panel"><h4>What is a language model</h4><p>Six agent roles: an Evidence Retriever, three analysts, a Thesis agent and a Critic. They fetch, read, draft and argue. None of them sets a number or makes a decision.</p></div>
+  </div>
+  <div class="two">
+    <div class="panel"><h4>What it keeps</h4><p>Every decision, by the system or the user, in an append-only record. Every piece of evidence the agents cited. A trace of every model call, tool call and check.</p></div>
+    <div class="panel"><h4>What it will never do</h4><p>Place or change an order: no tool can reach a broker. State a probability for a view. Call a candidate "recommended". Report a check as passed when the data was missing.</p></div>
+  </div>
+
+  <h2 id="l200"><span class="lvl">200</span>Components and the path of a request</h2>
+  <p class="who">For a technical reader.</p>
+  <p>Six parts, all in one Python process, with one SQLite file beside it. The browser page is plain HTML, CSS and JavaScript with no build step.</p>
+
+  <figure class="panel">
+    <div class="scroll">
+      <svg viewBox="0 0 820 430" role="img" aria-label="Component diagram: browser, web app, workflow, steps, harness and tools, stores, and outside data sources and the model API.">
+        <defs>
+          <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+          <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" class="aha"/></marker>
+        </defs>
+        <rect class="bx" x="20" y="16" width="200" height="60" rx="6"/><text x="36" y="40" class="hd">Browser</text><text x="36" y="60" class="t2">One screen per stage</text>
+        <rect class="bx" x="20" y="116" width="200" height="60" rx="6"/><text x="36" y="140" class="hd">Web app</text><text x="36" y="160" class="t2">FastAPI, a small JSON API</text>
+        <rect class="bx" x="20" y="216" width="200" height="76" rx="6"/><text x="36" y="240" class="hd">Workflow</text><text x="36" y="260" class="t2">LangGraph: which step is next,</text><text x="36" y="276" class="t2">pauses, stage stops, retries</text>
+        <path class="ln" d="M120 76V114" marker-end="url(#a2)"/><path class="ln" d="M120 176V214" marker-end="url(#a2)"/>
+        <text x="130" y="100" class="t3">ACTIONS · POLLING</text><text x="130" y="200" class="t3">START · RESUME</text>
+
+        <rect class="bx" x="300" y="216" width="210" height="76" rx="6"/><text x="316" y="240" class="hd">Steps</text><text x="316" y="260" class="t2">One function per node:</text><text x="316" y="276" class="t2">stage1, stage2, stage3, stage4</text>
+        <path class="ln" d="M220 254H298" marker-end="url(#a2)"/>
+
+        <rect class="ag" x="300" y="116" width="210" height="60" rx="6"/><text x="316" y="140" class="hd">Agent harness</text><text x="316" y="160" class="t2">Runs any agent from a configuration</text>
+        <path class="la" d="M405 216V178" marker-end="url(#a3)"/><text x="415" y="202" class="t3">AGENT STEPS</text>
+        <rect class="ag" x="300" y="16" width="210" height="60" rx="6"/><text x="316" y="40" class="hd">Tools</text><text x="316" y="60" class="t2">Allowlisted per agent</text>
+        <path class="la" d="M405 116V78" marker-end="url(#a3)"/>
+
+        <rect class="st" x="590" y="16" width="210" height="60" rx="6"/><text x="606" y="40" class="hd">Data sources</text><text x="606" y="60" class="t2">Cboe, SEC, FMP, FRED, Fed, Yahoo</text>
+        <rect class="st" x="590" y="116" width="210" height="60" rx="6"/><text x="606" y="140" class="hd">Model API</text><text x="606" y="160" class="t2">Claude Opus 5.5, Haiku 5.5</text>
+        <path class="la" d="M510 46H588" marker-end="url(#a3)"/><path class="la" d="M510 146H588" marker-end="url(#a3)"/>
+        <path class="ld" d="M510 240C550 240 560 60 588 56" marker-end="url(#a2)"/><text x="522" y="232" class="t3">CODE STEPS</text>
+
+        <rect class="bx" x="300" y="336" width="500" height="78" rx="6"/><text x="316" y="360" class="hd">Stores</text><text x="316" y="380" class="t2">SQLite: decision records, pending log, evidence, trace, spend, cache</text><text x="316" y="398" class="t2">Local files: research index, daily option snapshot, price archive</text>
+        <path class="ln" d="M405 292V334" marker-end="url(#a2)"/>
+        <path class="ln" d="M120 292V375H298" marker-end="url(#a2)"/><text x="130" y="330" class="t3">RECORDS</text>
+      </svg>
+    </div>
+    <figcaption>Tinted boxes are the only path to a language model. Dashed boxes are outside the process. Code steps (the gate, contracts, the checklists) fetch data directly and never touch the harness.</figcaption>
+  </figure>
+
+  <div class="scroll panel" style="padding:8px 12px">
+    <table>
+      <thead><tr><th>Component</th><th>What it does</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Browser page</td><td>Shows one stage at a time from the workflow's state. Sends the user's action; while agents run, asks again every 1.5 seconds.</td><td><code>tradecraft/web/static/</code></td></tr>
+        <tr><td class="k">Web app</td><td>Six endpoints: home, the symbol list, start a request, the open request, an action, leave. Removes the parts of the record that must never reach a screen.</td><td><code>tradecraft/web/app.py</code></td></tr>
+        <tr><td class="k">Workflow</td><td>One graph for all four stages. Decides which step runs next, stops for the user at each pause, and turns a failure into a stage stop with the actions the design allows.</td><td><code>tradecraft/workflow/graph.py</code></td></tr>
+        <tr><td class="k">Steps</td><td>What each node does: a plain function from the request's state to a result. Steps are supplied from outside, so tests and the replay app swap them without touching the wiring.</td><td><code>tradecraft/steps.py</code></td></tr>
+        <tr><td class="k">Agent harness</td><td>One function runs every agent: offers only its allowlisted tools, runs the loop, enforces the limits, labels outside text as data, validates the answer, traces every step.</td><td><code>tradecraft/harness/</code></td></tr>
+        <tr><td class="k">Tools</td><td>Nine data tools for stage 2 and one search tool for stage 4. What a data tool returns is stored as evidence and handed back with evidence ids.</td><td><code>tradecraft/tools.py</code>, <code>stage4.py</code></td></tr>
+        <tr><td class="k">Stores</td><td>One SQLite file under <code>data/</code>, and the local research index.</td><td><code>tradecraft/storage.py</code>, <code>research.py</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>The path of one request</h3>
+  <ol class="plain">
+    <li>The user picks a symbol. The web app opens a request and the workflow runs the gate, then pauses.</li>
+    <li>The user continues. The workflow starts stage 2 on a background thread: measured figures, the Evidence Retriever, grades, three analysts in parallel, the Thesis agent with its validation check, the range-bound rule. The page shows each agent's status from the trace.</li>
+    <li>The brief is shown and the workflow pauses. If there is a view, the request's pending records are committed to the permanent record at this point.</li>
+    <li>The user accepts. Stage 3 fetches the chain and builds candidates in code, then pauses. Changing the ranking, the cost cap or the expiration re-runs it on the chain already fetched.</li>
+    <li>The user selects a candidate. Stage 4 runs both checklists and the question in code, then the Evidence Retriever, then the Critic with its output check, then the readiness line, and pauses on the challenge.</li>
+    <li>The user proceeds, returns to contracts, or stops. Whichever it is, the decision is recorded.</li>
+  </ol>
+
+  <h2 id="l300"><span class="lvl">300</span>Agents, harness, workflow and stores</h2>
+  <p class="who">For an engineer.</p>
+
+  <h3 id="agents">The agents</h3>
+  <p>Every agent is one <code>AgentConfig</code> on the shared harness: instructions, an output format, a tool allowlist and output checks. The model for each is one line in <code>config/models.json</code>; its limits are one line in <code>config/limits.json</code>.</p>
+  <div class="scroll panel" style="padding:8px 12px">
+    <table>
+      <thead><tr><th>Agent</th><th>Model</th><th>Pattern and tools</th><th>May not</th><th>Limits</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Evidence Retriever<br><span class="sub">stage 2</span></td><td>Haiku 5.5</td><td>Reason, act, observe loop over nine data tools. Falls back once when a source fails, then records the input as unavailable.</td><td>Draw a conclusion. Cite an evidence id that no tool returned.</td><td>12 tool calls, 90 s</td></tr>
+        <tr><td class="k">Fundamental Analyst</td><td>Haiku 5.5</td><td>Loop over three filing tools. Extracts findings; for guidance, extracts the figures only.</td><td>Give a context finding a direction. Name an event that is not on the list. Raise a flag that is not on its list.</td><td>8 tool calls, 90 s</td></tr>
+        <tr><td class="k">Regime Assessor</td><td>Haiku 5.5</td><td>Single pass over sector and market numbers computed in code.</td><td>Give any finding a direction: every finding is context.</td><td>6 tool calls, 90 s</td></tr>
+        <tr><td class="k">Technical Analyst</td><td>Haiku 5.5</td><td>Single pass. Describes price behaviour from given numbers. No tools.</td><td>Report a finding, compute a level, or name a chart pattern.</td><td>No tools, 90 s</td></tr>
+        <tr><td class="k">Thesis agent</td><td>Opus 5.5</td><td>Tree of Thought in one pass: three branches, each tested against the precedence rules and pruned with a reason. No tools.</td><td>State a probability. Use a number that is not in what it cites. See any option price.</td><td>No tools, 180 s</td></tr>
+        <tr><td class="k">Evidence Retriever<br><span class="sub">stage 4</span></td><td>Haiku 5.5</td><td>The same agent, a second configuration, with one tool: <code>search_research</code>. Words both searches for each topic and sorts the passages by side.</td><td>Cite a passage no search returned. Search a topic a third time.</td><td>12 tool calls, 90 s</td></tr>
+        <tr><td class="k">Critic</td><td>Opus 5.5</td><td>Single pass over nine tasks. No tools.</td><td>Give a verdict, a score or advice. Cite grounds that do not exist. Skip a claim.</td><td>No tools, 180 s</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="sub">Each stage has its own time limit of 300 seconds. Spend stops at $1 a request and $10 a day.</p>
+
+  <figure class="panel">
+    <div class="scroll">
+      <svg viewBox="0 0 820 250" role="img" aria-label="Stage 2: figures and the retriever, grades in code, three analysts in parallel, the Thesis agent, the validation check with one return, then the brief.">
+        <defs><marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" class="ah"/></marker></defs>
+        <rect class="bx" x="10" y="95" width="104" height="54" rx="6"/><text x="22" y="118" class="hd">Figures</text><text x="22" y="136" class="t3">CODE</text>
+        <rect class="ag" x="140" y="95" width="116" height="54" rx="6"/><text x="152" y="118" class="hd">Retriever</text><text x="152" y="136" class="t3">AGENT · ReAct</text>
+        <rect class="bx" x="282" y="95" width="90" height="54" rx="6"/><text x="294" y="118" class="hd">Grades</text><text x="294" y="136" class="t3">CODE</text>
+        <rect class="ag" x="410" y="14" width="150" height="48" rx="6"/><text x="422" y="35" class="hd">Fundamental Analyst</text><text x="422" y="51" class="t3">AGENT · ReAct</text>
+        <rect class="ag" x="410" y="98" width="150" height="48" rx="6"/><text x="422" y="119" class="hd">Regime Assessor</text><text x="422" y="135" class="t3">AGENT</text>
+        <rect class="ag" x="410" y="182" width="150" height="48" rx="6"/><text x="422" y="203" class="hd">Technical Analyst</text><text x="422" y="219" class="t3">AGENT</text>
+        <rect class="ag" x="590" y="95" width="132" height="54" rx="6"/><text x="602" y="118" class="hd">Thesis agent</text><text x="602" y="136" class="t3">TREE OF THOUGHT</text>
+        <rect class="bx" x="744" y="95" width="66" height="54" rx="6"/><text x="754" y="118" class="hd">Brief</text><text x="754" y="136" class="t3">PAUSE</text>
+        <path class="ln" d="M114 122H138" marker-end="url(#a4)"/><path class="ln" d="M256 122H280" marker-end="url(#a4)"/>
+        <path class="ln" d="M372 122C392 122 388 38 408 38" marker-end="url(#a4)"/><path class="ln" d="M372 122H408" marker-end="url(#a4)"/><path class="ln" d="M372 122C392 122 388 206 408 206" marker-end="url(#a4)"/>
+        <path class="ln" d="M560 38C578 38 572 112 588 112" marker-end="url(#a4)"/><path class="ln" d="M560 122H588" marker-end="url(#a4)"/><path class="ln" d="M560 206C578 206 572 132 588 132" marker-end="url(#a4)"/>
+        <path class="ln" d="M722 122H742" marker-end="url(#a4)"/>
+        <path class="ld" d="M684 149C684 190 628 190 628 151" marker-end="url(#a4)"/><text x="656" y="206" text-anchor="middle" class="t3">VALIDATION CHECK</text><text x="656" y="221" text-anchor="middle" class="t3">ONE RETURN</text>
+      </svg>
+    </div>
+    <figcaption>Stage 2. The three analysts run in the same step and are merged for the Thesis agent. The validation check runs on the harness as the Thesis agent's output check, so a draft is returned at most once in total.</figcaption>
+  </figure>
+
+  <h3 id="harness">The harness loop</h3>
+  <p><code>run_agent</code> in <code>tradecraft/harness/runner.py</code> does the whole job for every agent.</p>
+  <ol class="plain">
+    <li><strong>Before the first call:</strong> build the system text (the agent's instructions, the rule that outside text is data, the required answer format) and offer only the tools the configuration names. A task larger than the input cap is not started.</li>
+    <li><strong>Each turn:</strong> check for Stop, the agent's time limit, the spend limits and the turn limit; then call the model. The model either asks for tools or gives an answer.</li>
+    <li><strong>A tool request</strong> is refused if the tool is not allowlisted, if the same call was already made, or if the tool-call limit is reached. Otherwise the tool runs, with one retry on an error and never past the agent's deadline. Text from an outside source is wrapped and labelled as data, and instruction-like text inside it is noted in the trace. A source that cannot supply its input becomes an "unavailable input" and the agent carries on.</li>
+    <li><strong>An answer</strong> is parsed into the agent's format and run through its output checks. If it fails, it is returned to the agent once with the reasons. If it fails again the run ends as "failed validation", keeping the rejected answer.</li>
+    <li><strong>Every step is traced:</strong> each model call with its token usage and cost, each tool call and result, each limit reached, each check. Each run records a fingerprint of its configuration, so an output can be traced to the prompt version that produced it.</li>
+  </ol>
+  <p>A run ends in exactly one of: ok, failed validation, timed out, spend limit, model error, refused, cancelled, turn limit, input limit. The step that called it turns anything but "ok" into a stage stop with a plain message. A failure is never turned into a no view.</p>
+
+  <h3 id="workflow">The workflow</h3>
+  <p>One LangGraph <code>StateGraph</code> holds all four stages. LangGraph decides which node runs next; the harness decides what an agent may do inside a node.</p>
+  <ul>
+    <li><strong>Pauses are real stops.</strong> At a pause the graph saves its state and waits for the user's action. There are four stage pauses (gate, thesis, contracts, challenge) and two "stage stopped" pauses for stages 2 and 4.</li>
+    <li><strong>A step never raises.</strong> A failure becomes a stage stop; later nodes of the stage pass through; the stopped pause offers what the design allows. Stage 2: Retry or Stop. Stage 4: Retry, "Continue with the checklists only", "Return to contracts", Stop. A retry re-runs only the nodes whose output is not already in the record, and is allowed once per stage.</li>
+    <li><strong>One-time returns.</strong> The validation check and the Critic's output check run on the harness. The graph's <code>validate</code> and <code>critic_check</code> nodes only report the result, so an answer is never returned a second time.</li>
+    <li><strong>Long stages run in the background.</strong> An action returns at once with <code>running: true</code> and the page polls. Stop sets a cancel signal that every agent checks before its next turn.</li>
+    <li><strong>One open request at a time.</strong> A reload or a second tab shows the open request. If the engine restarts, the request is ended as "interrupted" and is not resumed.</li>
+    <li><strong>Return to contracts</strong> clears stage 4's results, fetches the chain again and runs stage 4 anew for the new selection. The earlier challenge stays in the record.</li>
+  </ul>
+  <p class="sub">The generated diagram of every node and edge is in <code>docs/workflow-diagram.md</code>.</p>
+
+  <h3 id="stores">The stores</h3>
+  <div class="scroll panel" style="padding:8px 12px">
+    <table>
+      <thead><tr><th>Store</th><th>Holds</th><th>Rule</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Decision records</td><td>Every decision at every stage, by the system or the user: the gate's result, an override and its rationale, the drafted thesis, the freeze, each update to the contracts, the selection, the whole challenge (all 23 results, the question, every passage, the Critic's output and its check), and the final decision.</td><td>Append-only. Never edited, never deleted.</td></tr>
+        <tr><td class="k">Pending log</td><td>The same records for a request that has not yet returned a view.</td><td>Committed to the permanent record when stage 2 returns a view or the user freezes a thesis of their own. Discarded if the request ends before that.</td></tr>
+        <tr><td class="k">Evidence</td><td>Everything a data tool returned, item by item, with source, date and an id the agents cite.</td><td>Grades are computed from it in code.</td></tr>
+        <tr><td class="k">Trace</td><td>Every model call, tool call, limit and check, per agent run.</td><td>An operational log, not a decision record. Kept 7 days for requests that never reached the permanent record.</td></tr>
+        <tr><td class="k">Spend</td><td>Token usage and cost of every model call.</td><td>Read before each call to enforce the request and daily limits.</td></tr>
+        <tr><td class="k">Cache</td><td>Responses from data sources.</td><td>Per source, per day. The live option chain is never cached.</td></tr>
+        <tr><td class="k">Research index</td><td>The project's research, cut into about 1,400 passages, each with its source file, section and the report's own evidence-strength label.</td><td>Embedded locally with chromadb's default model. Rebuilt when the app starts if a source file has changed. If it cannot be opened, keyword search over the same passages is used and the challenge record says so.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="guardrails">Guardrails, in one place</h3>
+  <div class="scroll panel" style="padding:8px 12px">
+    <table>
+      <thead><tr><th>Guardrail</th><th>Enforced by</th></tr></thead>
+      <tbody>
+        <tr><td>An agent can call only the tools its configuration names</td><td>Harness (allowlist)</td></tr>
+        <tr><td>No tool places an order or changes a setting</td><td>No such tool exists</td></tr>
+        <tr><td>Text from filings, news and the research corpus is data, not instructions</td><td>Harness (wrapping), and nothing for an injected instruction to call</td></tr>
+        <tr><td>Tool calls, time, output size, input size and spend are bounded</td><td>Harness, from <code>config/limits.json</code></td></tr>
+        <tr><td>Network requests go only to the listed data sources; files are read and written only in listed folders</td><td><code>tradecraft/net.py</code></td></tr>
+        <tr><td>No probability for a view; no trading advice</td><td>Output checks on every stage 2 agent</td></tr>
+        <tr><td>Every claim cites stored evidence; every number appears in what it cites</td><td><code>tradecraft/validation.py</code>, one return</td></tr>
+        <tr><td>No verdict, score or advice from the Critic; every citation exists</td><td><code>stage4.output_check</code> and <code>stage4.no_verdict</code>, one return</td></tr>
+        <tr><td>A rejected Critic answer is stored and never displayed</td><td>Workflow and web app</td></tr>
+        <tr><td>Signals already shown not to work are flagged</td><td><code>config/rejected_signals.json</code>, read by thesis check 1</td></tr>
+        <tr><td>Keys never reach a trace or a record</td><td><code>settings.redact</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="l400"><span class="lvl">400</span>The code</h2>
+  <p class="who">For someone changing it.</p>
+
+  <h3 id="modules">Module map</h3>
+  <div class="scroll panel" style="padding:8px 12px">
+    <table>
+      <thead><tr><th>Module</th><th>Contents</th></tr></thead>
+      <tbody>
+        <tr><td class="k"><code>harness/runner.py</code></td><td><code>AgentConfig</code>, <code>AgentResult</code>, <code>run_agent</code></td></tr>
+        <tr><td class="k"><code>harness/model.py</code></td><td><code>AnthropicModel</code> (the SDK's own retries are off; the harness retries inside the deadline) and <code>ScriptedModel</code> for tests</td></tr>
+        <tr><td class="k"><code>harness/tools.py</code>, <code>guards.py</code>, <code>spend.py</code></td><td>The tool registry; wrapping of outside text and the general output checks; cost from token usage and the spend stops</td></tr>
+        <tr><td class="k"><code>tools.py</code></td><td>The nine data tools, each wrapped so its result is stored as evidence</td></tr>
+        <tr><td class="k"><code>data/</code></td><td>One module per source: <code>chain</code> (Cboe live and the snapshot), <code>edgar</code>, <code>fmp</code>, <code>macro</code>, <code>prices</code>, <code>directory</code>, <code>session</code> (market hours)</td></tr>
+        <tr><td class="k"><code>net.py</code></td><td>Every outside request: host allowlist, rate limits, daily cache, file allowlist</td></tr>
+        <tr><td class="k"><code>gate.py</code>, <code>stage1.py</code></td><td>The liquidity screen and its workflow step</td></tr>
+        <tr><td class="k"><code>figures.py</code>, <code>horizon.py</code>, <code>context.py</code>, <code>evidence.py</code></td><td>Measured figures; the horizon and range-bound rules; numbers handed to the analysts; the evidence store and grades</td></tr>
+        <tr><td class="k"><code>agents.py</code></td><td>The five stage 2 configurations, their output formats and their output checks</td></tr>
+        <tr><td class="k"><code>validation.py</code></td><td>The validation check on a draft, the precedence rules re-computed in code, the verdict for a thesis the user enters</td></tr>
+        <tr><td class="k"><code>stage2.py</code></td><td>Stage 2's workflow steps, guidance comparison in code, the fixed sentences of the brief</td></tr>
+        <tr><td class="k"><code>stage3.py</code></td><td>Eligibility, expirations, candidates, payoff, the history and market-implied figures, the cost cap, ranking, and the workflow step</td></tr>
+        <tr><td class="k"><code>stage4.py</code></td><td>Both checklists, the fresh quotes, the question, retrieval, the Critic and its output check, readiness, and the workflow steps</td></tr>
+        <tr><td class="k"><code>research.py</code></td><td>Passages from the corpus, the chromadb index, keyword search, the start-up check</td></tr>
+        <tr><td class="k"><code>workflow/graph.py</code>, <code>state.py</code></td><td>The graph, its pauses and stage stops; the request's state; <code>StepFailed</code></td></tr>
+        <tr><td class="k"><code>storage.py</code></td><td>The SQLite store</td></tr>
+        <tr><td class="k"><code>web/app.py</code>, <code>web/static/</code></td><td>The API and the page</td></tr>
+        <tr><td class="k"><code>demo.py</code>, <code>dev_replay.py</code>, <code>testfail.py</code>, <code>publish.py</code></td><td>The keyless recorded demo; the development replay; three developer-only fail-once switches; the clean copy for publishing</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="state">The state that flows through the graph</h3>
+  <p><code>RequestState</code> in <code>workflow/state.py</code> is one dictionary per request. Each node returns only the keys it sets.</p>
+  <div class="scroll panel" style="padding:8px 12px">
+    <table>
+      <thead><tr><th>Stage</th><th>Keys</th></tr></thead>
+      <tbody>
+        <tr><td class="k">1</td><td><code>gate_settings</code>, <code>gate</code>, <code>gate_decision</code></td></tr>
+        <tr><td class="k">2</td><td><code>figures</code>, <code>evidence</code>, <code>grades</code>, <code>findings</code> (one entry per analyst, merged), <code>thesis</code>, <code>validation</code>, <code>range_rule</code>, <code>view</code>, <code>committed</code>, <code>thesis_decision</code>, <code>user_thesis</code></td></tr>
+        <tr><td class="k">3</td><td><code>contracts_params</code>, <code>chain_fetch</code>, <code>contracts</code>, <code>selection</code></td></tr>
+        <tr><td class="k">4</td><td><code>checklists</code>, <code>question</code>, <code>passages</code>, <code>critic</code>, <code>critic_check</code>, <code>critic_unavailable</code>, <code>critic_rejected</code> (never sent to a screen), <code>readiness</code>, <code>challenge_decision</code></td></tr>
+        <tr><td class="k">Control</td><td><code>stage_deadline</code>, <code>stage_stop</code>, <code>retries_used</code>, <code>cancelled</code>, <code>pause_error</code>, <code>status</code>, <code>events</code> (which nodes ran, in order)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="add-agent">Adding an agent</h3>
+  <ol class="plain">
+    <li>Write its output format as a Pydantic model and its instructions as a string.</li>
+    <li>Build an <code>AgentConfig</code>: a name, a role, the tools it may call, and its output checks. An output check is a function from the parsed answer to a list of plain sentences; an empty list passes.</li>
+    <li>Add one line for it in <code>config/limits.json</code> (tool calls, seconds, output tokens) and one in <code>config/models.json</code>.</li>
+    <li>Write a step that builds the task text, calls <code>run_agent</code>, and turns a result that is not "ok" into <code>StepFailed</code>. Wrap anything from an outside source with <code>wrap_untrusted</code>.</li>
+    <li>Add a node for the step in <code>workflow/graph.py</code>. Put any check that may return the answer on the agent's configuration, not in the graph, so that it is returned once in total.</li>
+  </ol>
+
+  <h3 id="add-check">Adding a check to stage 4</h3>
+  <ol class="plain">
+    <li>Write a function in <code>stage4.py</code> that takes the <code>Case</code> and returns <code>check(id, result, detail, …)</code> with one of the four results. Return "could not be checked" whenever an input is missing.</li>
+    <li>Add its screen name to <code>CHECK_NAMES</code> and call it from <code>run_checklists</code>.</li>
+    <li>If the Critic must not see it, leave it out in <code>_for_critic</code>.</li>
+    <li>Add a test that strips its data and asserts it does not pass.</li>
+  </ol>
+
+  <h3 id="tests">How the tests stand in for models</h3>
+  <ul>
+    <li><strong>373 tests, no key, no network.</strong> Run them with <code>.venv/bin/python -m pytest -q</code>.</li>
+    <li><strong>Every agent runs on <code>ScriptedModel</code>,</strong> which returns prepared replies in order and records each request it was sent. A test can therefore assert both what the agent was shown and what happened to its answer.</li>
+    <li><strong>The research index is a small fixed set of passages</strong> searched by keyword. The embedding model is never loaded in a test.</li>
+    <li><strong>The workflow is tested on stand-in steps,</strong> so every pause, stage stop, retry and return is exercised without a model. Tests must not run the real stage 2 steps past the gate.</li>
+    <li><strong>A test fails if a developer switch is left on</strong> in <code>config/test_failures.json</code>.</li>
+    <li><strong>Live checks are separate</strong> and off by default: <code>TRADECRAFT_LIVE=1 .venv/bin/python -m pytest -q tests/test_live.py -s</code>.</li>
+  </ul>
+
+  <h2 id="course">Course concepts, and where each occurs</h2>
+  <div class="scroll panel" style="padding:8px 12px">
+    <table>
+      <thead><tr><th>Concept</th><th>Where it occurs</th><th>File</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Tool calling</td><td>Nine data tools in stage 2, one search tool in stage 4, each allowlisted per agent.</td><td><code>tools.py</code>, <code>harness/tools.py</code>, <code>stage4.py</code></td></tr>
+        <tr><td class="k">Reasoning loop with recovery (ReAct)</td><td>The Evidence Retriever and the Fundamental Analyst: reason, call a tool, read the result, decide what to fetch next. A failed tool is retried once; a failed source becomes an unavailable input.</td><td><code>harness/runner.py</code>, <code>agents.py</code></td></tr>
+        <tr><td class="k">Tree of Thought</td><td>The Thesis agent sets out three branches, tests each against the precedence rules, prunes with a reason and selects what remains. Code re-computes the precedence test. Shown on the thesis screen under "How the system reasoned".</td><td><code>agents.py</code>, <code>validation.py</code></td></tr>
+        <tr><td class="k">Retrieval and memory</td><td>A local vector index over the project's research for stage 4; the evidence store; the append-only decision records.</td><td><code>research.py</code>, <code>evidence.py</code>, <code>storage.py</code></td></tr>
+        <tr><td class="k">Multi-agent coordination</td><td>One graph: three analysts in parallel merged for the Thesis agent; the Critic challenging a thesis it did not write and is not told the author of.</td><td><code>workflow/graph.py</code></td></tr>
+        <tr><td class="k">Guardrails</td><td>The table above. Three are tested by name: a draft that states a probability is returned; an instruction inside a filing excerpt is not followed; a tool outside the allowlist is refused.</td><td><code>harness/guards.py</code>, <code>tests/test_guardrails.py</code></td></tr>
+        <tr><td class="k">Safety</td><td>The statement of unintended actions and the steps taken against each.</td><td><code>docs/build-plan.md</code>, section 11</td></tr>
+        <tr><td class="k">Reuse</td><td>One harness for every agent; the Evidence Retriever in two stages; the three analysts built by one function.</td><td><code>harness/runner.py</code>, <code>agents.py</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="sub">Chain of Thought is not listed because the build does not use it as a design pattern. The agents reason with tools and a structured tree, and their answers are checked in code, not trusted for their step-by-step prose.</p>
+
+  <h2 id="notbuilt">What is not built</h2>
+  <ul>
+    <li><strong>Stages 5 and 6:</strong> decision, sizing, the entry record and monitoring are not designed. After "Proceed to decision" the application shows one plain panel.</li>
+    <li><strong>The Monitor.</strong> Nothing watches a thesis's invalidation criteria, so thesis check 8 stays flagged on every request and tells the user where to look.</li>
+    <li><strong>A trace viewer.</strong> Traces are stored and can be read from the database; there is no screen for them.</li>
+    <li><strong>Editing a drafted thesis,</strong> and the Records and Settings pages.</li>
+    <li><strong>The range-bound brief</strong> and iron condors on screen. The rules and the engine exist; the screens were not designed for the demo.</li>
+    <li><strong>A different model family for the Critic.</strong> That is the aim; for the demo both it and the Thesis agent run on Claude, and the challenge screen says so.</li>
+    <li><strong>Data the free sources do not serve:</strong> the time of day of earnings, estimate revision history, quarterly consensus. The screens say "not available" and the affected checks say "could not be checked".</li>
+  </ul>
+
+  <nav class="pages" aria-label="Previous and next part">
+    <a class="prev" href="manual.html"><small>&larr; PART 1</small>The logic of each stage</a>
+    <a class="up" href="#top">Top &uarr;</a>
+    <a class="next" href="manual-stages.html"><small>PART 3 &rarr;</small>Detailed stage manuals</a>
+  </nav>
+
+  <div class="note">
+    <p>This manual describes the application as built on 19 November 2026 and was checked against the code. Rules are cited from the decision records in <code>docs/decisions/</code>, which govern wherever an older page differs. The stage pages linked from Part 1 were written during design; the Challenge page predates the operator's build decisions of 19 November.</p>
+    <p>Tradecraft is a personal research tool and a course capstone. It places no orders and gives no investment advice.</p>
+  </div>
+</div>
+</div>
+<script>
+(function () {
+  var root = document.documentElement, b = document.getElementById('mode');
+  // The theme chosen on one page of the manual carries to the others.
+  var asked = /[?&]theme=(dark|light)/.exec(location.search), kept = null;
+  try { kept = localStorage.getItem('tradecraft-manual-theme'); } catch (e) {}
+  if (asked) root.setAttribute('data-theme', asked[1]); else if (kept === 'dark' || kept === 'light') root.setAttribute('data-theme', kept);
+  function isDark() { var t = root.getAttribute('data-theme'); return t ? t === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches; }
+  function label() { b.textContent = isDark() ? 'Switch to light' : 'Switch to dark'; }
+  // Each embedded stage manual follows the theme, and tells this page how tall it is so that it can be shown in full.
+  var frames = [].slice.call(document.querySelectorAll('.emb iframe'));
+  function sendTheme() { frames.forEach(function (f) { try { f.contentWindow.postMessage({tradecraft: 'theme', theme: isDark() ? 'dark' : 'light'}, '*'); } catch (e) {} }); }
+  b.addEventListener('click', function () {
+    var next = isDark() ? 'light' : 'dark'; root.setAttribute('data-theme', next);
+    try { localStorage.setItem('tradecraft-manual-theme', next); } catch (e) {}
+    label(); sendTheme();
+  });
+  label();
+  window.addEventListener('message', function (e) {
+    var d = e.data || {}; if (d.tradecraft !== 'page') return;
+    frames.forEach(function (f) { if (f.contentWindow === e.source) { f.style.height = d.height + 'px'; sendTheme(); } });
+    // A frame growing to its full height pushes the ones below it down: stay on the section the link asked for.
+    if (location.hash && !moved) { var t = document.getElementById(location.hash.slice(1)); if (t) { root.style.scrollBehavior = 'auto'; t.scrollIntoView(); root.style.scrollBehavior = ''; } }
+  });
+  var moved = false;
+  ['wheel', 'touchmove', 'keydown', 'mousedown'].forEach(function (ev) { window.addEventListener(ev, function () { moved = true; }, {passive: true}); });
+  window.addEventListener('hashchange', function () { moved = false; });
+  frames.forEach(function (f) { f.addEventListener('load', sendTheme); });
+  sendTheme();
+})();
+</script>
+</body>
+</html>

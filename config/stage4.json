@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "updated": "2026-11-19",
+  "purpose": "Settings for stage 4 (the challenge). Decision record: docs/decisions/2026-11-17-stage-4-challenge.md. The thresholds marked provisional are the designer's choices of 17 November 2026.",
+  "thesis_checks": {
+    "price_move_usual_ranges": 0.5,
+    "stale_after_sessions": 1,
+    "base_rate_threshold_pct": 50,
+    "same_day_same_family_counts_once": true,
+    "unavailable_inputs_are_a_flag": false,
+    "monitor_built": false
+  },
+  "contract_checks": {
+    "implied_move_ratio": 1.25,
+    "implied_move_ratio_note": "Provisional. To be replaced by the top fifth of the ratio measured across the snapshot names.",
+    "cost_share_of_cap": 0.8,
+    "order_share_of_open_interest_pct": 10
+  },
+  "critic": {
+    "max_objections": 5,
+    "case_max_words": 90,
+    "loss_paths": [2, 3]
+  },
+  "retrieval": {
+    "max_topics": 6,
+    "passages_per_side": 3,
+    "results_per_search": 6,
+    "passage_chars_for_agents": 700,
+    "relevance_bar": {"chromadb": 0.45, "keyword": 0.35},
+    "relevance_bar_note": "The build's choice, set on test topics on 19 November 2026 (docs/build-log.md). chromadb: cosine similarity. keyword: share of the query's weighted terms found in the passage."
+  }
+}

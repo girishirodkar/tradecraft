@@ -1,0 +1,16 @@
+{
+  "sandbox": {
+    "enabled": true,
+    "network": {
+      "allowedDomains": [
+        "api.tradier.com",
+        "www.sec.gov",
+        "data.sec.gov",
+        "cdn.cboe.com",
+        "pypi.org",
+        "files.pythonhosted.org",
+        "github.com"
+      ]
+    }
+  }
+}

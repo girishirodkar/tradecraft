@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "updated": "2026-11-17",
+  "purpose": "Exercise and settlement style by instrument. Read by the early-assignment check in stage 4 (contract check C8) and by sizing in stage 5. Only instruments that differ from the default need an entry.",
+  "default": {
+    "applies_to": "Single stocks and exchange-traded funds",
+    "exercise": "american",
+    "settlement": "physical",
+    "early_assignment_possible": true,
+    "note": "A short option can be assigned at any time before expiry, most often just before an ex-dividend date when it is in the money."
+  },
+  "instruments": {
+    "SPX": {"exercise": "european", "settlement": "cash", "early_assignment_possible": false, "pays_dividend": false,
+            "note": "Index option. Standard monthly contracts settle on the opening price of the third Friday; weekly and end-of-month contracts settle on the close."},
+    "XSP": {"exercise": "european", "settlement": "cash", "early_assignment_possible": false, "pays_dividend": false,
+            "note": "Mini index option, one tenth of SPX. Uses SPX price history in this system."},
+    "SPY": {"exercise": "american", "settlement": "physical", "early_assignment_possible": true, "pays_dividend": true, "distribution": "quarterly"},
+    "QQQ": {"exercise": "american", "settlement": "physical", "early_assignment_possible": true, "pays_dividend": true, "distribution": "quarterly"},
+    "IWM": {"exercise": "american", "settlement": "physical", "early_assignment_possible": true, "pays_dividend": true, "distribution": "quarterly"},
+    "TLT": {"exercise": "american", "settlement": "physical", "early_assignment_possible": true, "pays_dividend": true, "distribution": "monthly"}
+  },
+  "caveats": [
+    "Distribution frequency is a general description, not a schedule. Ex-dividend dates have no data source yet, so check C8 reports the dividend part as could not be checked.",
+    "Confirm contract specifications with the exchange before relying on them for an instrument not listed here."
+  ]
+}

@@ -1,0 +1,971 @@
+<title>Tradecraft Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Ledger (light) / Night Desk (dark): the same tokens as the stage documentation pages. */
+:root {
+  --bg: #f5f7fa; --surface: #ffffff; --ink: #17212b; --ink-2: #44515f; --ink-3: #5f6c7b;
+  --line: #d9e0e8; --accent: #1c5cab; --band: #e8f0fa; --flag: #b4491c; --flag-bg: #fdeee6; --good: #0a7d0a; --crit: #c23232; --series-1: #2a78d6; --series-2: #eb6834; --warn: #8a5a00;
+  --display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+  --text: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161b; --surface: #1b2027; --ink: #eef1f4; --ink-2: #c1c9d2; --ink-3: #9aa5b1;
+    --line: #2f3742; --accent: #86b6ef; --band: #1f2c3d; --flag: #f0a07c; --flag-bg: #3a2418; --good: #3fbf3f; --crit: #e66767; --series-1: #3987e5; --series-2: #d95926; --warn: #e5b454;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161b; --surface: #1b2027; --ink: #eef1f4; --ink-2: #c1c9d2; --ink-3: #9aa5b1;
+  --line: #2f3742; --accent: #86b6ef; --band: #1f2c3d; --flag: #f0a07c; --flag-bg: #3a2418; --good: #3fbf3f; --crit: #e66767; --series-1: #3987e5; --series-2: #d95926; --warn: #e5b454;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--text); font-size: 15px; line-height: 1.5; }
+h1, h2, h3 { font-family: var(--display); margin: 0; line-height: 1.2; text-wrap: balance; }
+p { margin: 0; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.gut { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.col { max-width: 1120px; margin: 0 auto; }
+
+/* prototype notice */
+.proto { background: var(--band); border-bottom: 1px solid var(--line); font-size: 0.8125rem; color: var(--ink-2); }
+.proto .col { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; padding-block: 6px; }
+.proto b { font-family: var(--mono); font-weight: 500; font-size: 0.6875rem; letter-spacing: 0.06em; color: var(--accent); }
+
+/* app bar */
+.appbar { background: var(--surface); border-bottom: 1px solid var(--line); }
+.appbar .col { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; min-height: 56px; padding-block: 6px; }
+.brand { font-family: var(--display); font-weight: 600; font-size: 1.125rem; letter-spacing: -0.01em; background: none; border: 0; padding: 8px 0; min-height: 44px; }
+.brand span { color: var(--accent); }
+.nav { display: flex; gap: 4px; margin-right: auto; }
+.nav button { background: none; border: 0; border-radius: 4px; padding: 8px 10px; min-height: 44px; color: var(--ink-2); }
+.nav button[aria-current="page"] { color: var(--ink); font-weight: 600; box-shadow: inset 0 -2px 0 var(--accent); border-radius: 0; }
+.nav button:disabled { color: var(--ink-3); cursor: default; }
+.ghost { background: none; border: 1px solid var(--line); border-radius: 4px; padding: 6px 12px; min-height: 44px; font-size: 0.8125rem; color: var(--ink-2); }
+
+/* stage bar */
+.reqbar { background: var(--surface); border-bottom: 1px solid var(--line); }
+.reqbar .col { padding-block: 12px 0; }
+.reqhead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+.reqhead h1 { font-size: 1.375rem; font-weight: 600; }
+.reqhead .sub { color: var(--ink-3); font-size: 0.8125rem; }
+.stages { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 10px; }
+.stg { background: none; border: 0; border-bottom: 3px solid var(--line); padding: 8px 8px 10px; text-align: left; display: flex; gap: 10px; align-items: center; min-height: 52px; min-width: 0; }
+.stg .n { font-family: var(--mono); font-size: 0.8125rem; width: 26px; height: 26px; flex: 0 0 auto; border-radius: 50%; border: 1px solid var(--line); display: inline-grid; place-items: center; color: var(--ink-3); }
+.stg .t { display: grid; min-width: 0; }
+.stg .t b { font-weight: 600; font-size: 0.9375rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stg .t i { font-style: normal; font-size: 0.75rem; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stg:disabled { cursor: default; color: var(--ink-3); }
+.stg.done { border-bottom-color: var(--good); }
+.stg.done .n { border-color: var(--good); color: var(--good); }
+.stg.cur { border-bottom-color: var(--accent); }
+.stg.cur .n { border-color: var(--accent); background: var(--accent); color: var(--surface); }
+.stg.view { background: var(--band); }
+@media (max-width: 700px) { .stg .t i { display: none; } .stg { flex-direction: column; align-items: flex-start; gap: 4px; } .stg .t b { font-size: 0.8125rem; } }
+
+/* main */
+main { padding-block: 24px 64px; }
+.screen { display: none; }
+.screen.on { display: block; animation: rise 0.18s ease-out; }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .screen.on { animation: none; } .ag.run .dot { animation: none !important; } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 18px 20px; min-width: 0; }
+.panel + .panel, .grid2 + .panel, .panel + .grid2, .panel + .actions, .grid2 + .actions { margin-top: 14px; }
+.panel h2 { font-family: var(--display); font-size: 1.0625rem; font-weight: 600; color: var(--ink); letter-spacing: -0.005em; padding-bottom: 8px; border-bottom: 2px solid var(--line); margin-bottom: 12px; }
+.panel h2 .chip { vertical-align: middle; }
+.panel h3.sh { font-family: var(--text); font-size: 0.9375rem; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; align-items: stretch; }
+.grid2 > .panel { margin-top: 0; }
+.sub { color: var(--ink-3); font-size: 0.8125rem; }
+.chip { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; border-radius: 4px; padding: 2px 8px; border: 1px solid var(--line); white-space: nowrap; }
+.chip.ok { border-color: var(--good); color: var(--good); }
+.chip.fl { border-color: var(--flag); color: var(--flag); background: var(--flag-bg); }
+.chip.un { border-style: dashed; border-color: var(--ink-3); color: var(--ink-2); }
+.chip.ac { border-color: var(--accent); color: var(--accent); }
+.chip.dir { font-weight: 500; font-size: 0.75rem; padding: 3px 10px; }
+.chip.bull { border-color: var(--good); color: var(--good); background: color-mix(in srgb, var(--good) 12%, var(--surface)); }
+.chip.bear { border-color: var(--crit); color: var(--crit); background: color-mix(in srgb, var(--crit) 12%, var(--surface)); }
+.chip.rngb { border-color: var(--warn); color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, var(--surface)); }
+.chip.nov { border-color: var(--ink-3); color: var(--ink-2); background: color-mix(in srgb, var(--ink-3) 12%, var(--surface)); }
+.actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 4px; padding: 8px 16px; min-height: 44px; font-size: 0.9375rem; }
+.btn.pri { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 600; }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.row { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: flex-start; border-top: 1px solid var(--line); padding-top: 10px; margin-top: 10px; }
+.row > div { flex: 1 1 240px; min-width: 0; }
+.row small { display: block; color: var(--ink-3); font-size: 0.8125rem; }
+.kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 8px; }
+.kv div { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; }
+.kv span { display: block; font-size: 0.75rem; color: var(--ink-3); }
+.kv b { font-family: var(--mono); font-weight: 500; font-size: 1.125rem; }
+.review { display: none; align-items: center; flex-wrap: wrap; gap: 8px 14px; background: var(--band); border: 1px solid var(--accent); border-radius: 6px; padding: 10px 14px; margin-bottom: 14px; }
+.review.on { display: flex; }
+.review span { flex: 1 1 260px; }
+
+/* home */
+.hero { max-width: 720px; margin: 24px auto 0; text-align: center; }
+.hero h1 { font-size: clamp(1.75rem, 4.5vw, 2.5rem); font-weight: 600; letter-spacing: -0.01em; }
+.hero p { color: var(--ink-2); margin-top: 8px; }
+.ask { display: flex; gap: 10px; margin-top: 22px; }
+.combo { position: relative; flex: 1 1 auto; min-width: 0; text-align: left; }
+.ask input { width: 100%; font: inherit; font-size: 1.125rem; padding: 10px 14px; min-height: 52px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.ask .btn { min-height: 52px; }
+.sugg { position: absolute; z-index: 6; left: 0; right: 0; top: calc(100% + 4px); margin: 0; padding: 4px; list-style: none; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14); max-height: 352px; overflow-y: auto; }
+.sugg[hidden] { display: none; }
+.sugg li { display: grid; grid-template-columns: 4.5em minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 10px; min-height: 44px; border-radius: 4px; cursor: pointer; }
+.sugg li[aria-selected="true"] { background: var(--band); }
+.sugg .sy { font-family: var(--mono); font-weight: 500; }
+.sugg .nm2 { color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sugg .ty { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.04em; color: var(--ink-3); white-space: nowrap; }
+.sugg mark { background: none; color: var(--accent); font-weight: 600; }
+.sugg .none { display: block; cursor: default; color: var(--ink-3); font-size: 0.875rem; }
+.askmsg { min-height: 1.4em; margin-top: 6px; font-size: 0.8125rem; color: var(--flag); text-align: left; }
+.status { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 14px; }
+.recent { max-width: 720px; margin: 36px auto 0; }
+.recent .item { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
+[tabindex="-1"]:focus { outline: none; }
+@media (min-width: 600px) { .recent .row.item { display: grid; grid-template-columns: 4.5em 8.5em minmax(0, 1fr) auto; gap: 14px; align-items: center; } .recent .row.item .chip { justify-self: start; } }
+.recent .item b { font-family: var(--mono); font-weight: 500; width: 4.5em; }
+.recent .item span { flex: 1 1 200px; color: var(--ink-2); }
+
+/* agents */
+.ag { display: flex; gap: 12px; align-items: flex-start; border-top: 1px solid var(--line); padding-top: 10px; margin-top: 10px; }
+.ag .dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--line); margin-top: 5px; flex: 0 0 auto; }
+.ag.run .dot { border-color: var(--accent); border-top-color: transparent; animation: spin 0.8s linear infinite; }
+.ag.fin .dot { border-color: var(--good); background: var(--good); }
+@keyframes spin { to { transform: rotate(360deg); } }
+.ag div { flex: 1 1 auto; min-width: 0; }
+.ag small { display: block; color: var(--ink-3); font-size: 0.8125rem; }
+.ag .st { font-family: var(--mono); font-size: 0.75rem; color: var(--ink-3); white-space: nowrap; }
+.ag.fin .st { color: var(--good); } .ag.run .st { color: var(--accent); }
+.par { margin-left: 24px; border-left: 2px solid var(--line); padding-left: 12px; }
+
+/* controls */
+#ctl { padding: 12px 18px 14px; }
+.ctls { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0 28px; margin-top: 8px; }
+.ctl { display: grid; grid-template-columns: 1fr auto; gap: 0 12px; align-items: baseline; align-content: start; border-top: 1px solid var(--line); padding: 8px 0 6px; min-width: 0; }
+.ctl label { font-weight: 600; font-size: 0.875rem; }
+.ctl input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); height: 24px; margin: 0; }
+.ctl output { font-family: var(--mono); font-size: 0.9375rem; text-align: right; white-space: nowrap; }
+.ctl .rng { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 8px; font-size: 0.6875rem; color: var(--ink-3); }
+.ctl .rng i { font-style: normal; }
+.ctl .dte { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 0.875rem; margin-top: 4px; }
+.ctl select, .ctl input[type=number] { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 3px 6px; min-height: 32px; }
+.ctl input[type=number] { width: 4em; font-family: var(--mono); }
+.ctl .pair { white-space: nowrap; color: var(--ink-2); }
+.ctl.chg output { color: var(--accent); font-weight: 500; }
+.ctl.act { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; justify-content: flex-end; align-content: flex-end; }
+.ctl.act .btn { min-height: 36px; padding: 4px 12px; font-size: 0.875rem; }
+
+.why { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin-top: 12px; }
+.why > div { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; }
+.why h3 { font-family: var(--text); font-size: 0.9375rem; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+.why p { font-size: 0.875rem; }
+.defs { margin: 16px 0 0; font-size: 0.8125rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.defs > div { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; }
+.defs dt { font-weight: 600; font-size: 0.9375rem; margin-bottom: 4px; } .defs dd { margin: 0; color: var(--ink-2); }
+.stat2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px 28px; align-items: start; }
+.plain { margin: 0; padding-left: 18px; font-size: 0.875rem; } .plain li { margin-top: 4px; }
+
+/* stage 4 challenge card, ported from the stage documentation */
+.ready { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 12px; margin-top: 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); padding: 10px 12px; }
+.ready > div { display: grid; gap: 2px; min-width: 0; flex: 1 1 260px; }
+.ready span:not(.chip) { font-size: 0.8125rem; color: var(--ink-2); }
+.chcols { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; margin-top: 16px; }
+.chl { flex: 3 1 420px; min-width: 0; display: grid; gap: 12px; }
+.chr { flex: 2 1 300px; min-width: 0; display: grid; gap: 12px; }
+.collab { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; color: var(--ink-3); }
+.cbox { border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; min-width: 0; }
+.cbox h4 { margin: 0; font-size: 0.9375rem; font-weight: 600; color: var(--ink); }
+.cbox p { margin: 6px 0 0; font-size: 0.9375rem; }
+.cline { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 8px; font-size: 0.9375rem; }
+.cline.obj, .cline.chk2 { display: flex; gap: 10px; align-items: flex-start; }
+.cline.obj .mono { color: var(--accent); }
+.cline small { display: block; font-family: var(--mono); font-size: 0.6875rem; color: var(--ink-3); margin-top: 2px; }
+.cline.chk2 > div { display: grid; min-width: 0; }
+.cline.chk2 span:not(.chip) { font-size: 0.8125rem; color: var(--ink-2); }
+button.more { display: block; width: 100%; text-align: left; background: none; border: 0; border-top: 1px solid var(--line); margin-top: 8px; padding: 8px 0 0; min-height: 40px; color: var(--accent); font-size: 0.875rem; }
+.passed { margin: 4px 0 0; padding: 0; list-style: none; font-size: 0.8125rem; color: var(--ink-2); display: grid; gap: 3px; }
+.passed[hidden] { display: none; }
+.passed li::before { content: "\2713  "; color: var(--good); font-family: var(--mono); }
+.chead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.chead h4 { flex: 1 1 80px; }
+.chead .mono { font-size: 0.6875rem; color: var(--ink-2); }
+.actions.chact { display: grid; gap: 8px; justify-content: stretch; }
+
+[hidden] { display: none !important; }
+.actions + .actions, .panel + .actions[data-scn] { margin-top: 14px; }
+.proto select { font: inherit; font-size: 0.8125rem; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 4px 6px; min-height: 36px; }
+.ev .row > .chip { flex: 0 0 auto; margin-top: 2px; }
+.ev h3.sh { margin-top: 16px; }
+.evstack { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.evstack > .panel { margin-top: 0; }
+.panel h2:has(.tally) { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 12px; }
+.panel h2 .tally { font-family: var(--text); font-size: 0.8125rem; font-weight: 400; color: var(--ink-3); letter-spacing: 0; }
+details.fold > summary { cursor: pointer; font-weight: 600; color: var(--ink); min-height: 24px; }
+details.fold > summary .chip { margin-left: 6px; vertical-align: middle; }
+details.fold[open] > summary { margin-bottom: 8px; }
+.choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0 28px; }
+.opt { display: flex; gap: 12px; align-items: flex-start; border-top: 1px solid var(--line); padding: 10px 0; cursor: pointer; }
+.opt:first-of-type { border-top: 0; }
+.opt input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--accent); flex: 0 0 auto; }
+.opt span.t { flex: 1 1 auto; min-width: 0; }
+.opt small { display: block; color: var(--ink-3); font-size: 0.8125rem; }
+.urow { display: flex; flex-wrap: wrap; gap: 10px 28px; align-items: center; margin-top: 10px; }
+.urow select { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; min-height: 40px; }
+
+/* tables */
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+thead th { font-size: 0.75rem; color: var(--ink-3); font-weight: 500; white-space: nowrap; }
+td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.sel td { background: var(--band); }
+/* stage 3 output card, ported from the stage documentation */
+.cm-head { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 12px; }
+.cm-tk { font-size: 1.375rem; font-weight: 500; }
+.explorer .mock-tag, .panel > .mock-tag { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; color: var(--ink-3); }
+.ctrl-row { display: flex; flex-wrap: wrap; gap: 14px 24px; margin-top: 14px; align-items: flex-end; }
+.ctrl { min-width: 0; }
+.ctrl-l { display: block; font-size: 0.75rem; color: var(--ink-3); margin-bottom: 5px; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--bg); }
+.seg button { font: inherit; font-size: 0.875rem; padding: 8px 12px; min-height: 40px; border: 0; border-right: 1px solid var(--line); background: none; color: var(--ink-2); cursor: pointer; white-space: nowrap; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: inset 0 -2px 0 var(--accent); }
+.seg button:hover { color: var(--ink); }
+.seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.viz { position: relative; width: 100%; }
+.viz svg { display: block; width: 100%; height: auto; overflow: visible; }
+.viz text { font-family: var(--text); fill: var(--ink-2); }
+.viz .mono-t { font-family: var(--mono); }
+.viz .ax { stroke: var(--line); stroke-width: 1; }
+.viz .zero { stroke: var(--ink-3); stroke-width: 1; }
+.viz .bandr { fill: var(--band); }
+.viz .pline { fill: none; stroke: var(--series-1); stroke-width: 2; stroke-linejoin: round; }
+.viz .gainf { fill: var(--good); opacity: 0.13; }
+.viz .lossf { fill: var(--crit); opacity: 0.13; }
+.viz .spot { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; }
+.viz .dot { fill: var(--series-1); stroke: var(--surface); stroke-width: 2; }
+.viz .cross { stroke: var(--ink-3); stroke-width: 1; }
+.viz .chipb { fill: var(--series-1); }
+.viz .chips { fill: var(--surface); stroke: var(--series-1); stroke-width: 1.5; }
+.viz .chipb-t { fill: #fff; font-weight: 600; }
+.viz .chips-t { fill: var(--ink); font-weight: 600; }
+.viz .lead { stroke: var(--ink-3); stroke-width: 1; }
+.viz .strong-t { fill: var(--ink); font-weight: 600; }
+.viz .e-dot { fill: var(--series-1); stroke: var(--surface); stroke-width: 2; }
+.viz .e-ring { fill: var(--surface); stroke: var(--ink-3); stroke-width: 1.5; }
+.viz .e-pick { fill: none; stroke: var(--accent); stroke-width: 2; }
+.viz .mkfill { fill: var(--ink); }
+.explorer { position: relative; }
+.keyline { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.8125rem; color: var(--ink-3); margin-top: 8px; max-width: none; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 18px; }
+.tile { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; min-width: 0; }
+.tile span { display: block; font-size: 0.75rem; color: var(--ink-3); }
+.tile b { display: block; font-family: var(--mono); font-weight: 500; font-size: 1.125rem; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.tile small { display: block; font-size: 0.75rem; color: var(--ink-3); margin-top: 1px; }
+.exps { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-top: 8px; }
+.exp { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; min-width: 0; }
+.exp.on { border: 2px solid var(--accent); padding: 9px 11px; }
+.exp > div { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.exp > div span { font-size: 0.8125rem; color: var(--ink-2); }
+.exp p { margin: 2px 0 0; font-size: 0.8125rem; color: var(--ink-2); }
+.exp small { display: block; margin-top: 4px; font-size: 0.75rem; color: var(--accent); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips span { border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; font-size: 0.8125rem; color: var(--ink-3); min-height: 0; }
+.chips b { font-family: var(--mono); font-weight: 400; color: var(--ink); }
+.orows { border: 1px solid var(--line); border-radius: 6px; margin-top: 18px; overflow: hidden; }
+.orow, .ohead { display: grid; grid-template-columns: 1.4em minmax(0, 2fr) repeat(7, minmax(0, 1fr)) 76px; gap: 2px 10px; align-items: center; padding: 10px 12px; }
+.ohead { font-size: 0.75rem; color: var(--ink-3); border-bottom: 1px solid var(--line); align-items: end; }
+.ohead .hl { color: var(--accent); font-weight: 600; }
+.ocand + .ocand { border-top: 1px solid var(--line); }
+.ocand.open > .orow { background: var(--band); }
+.orow { font-size: 0.875rem; }
+.orow .v { font-family: var(--mono); font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
+.orow .nm { font-weight: 600; line-height: 1.3; }
+.orow .why1 { grid-column: 2 / -1; font-size: 0.75rem; color: var(--ink-3); }
+.ocand.rec .why1 { color: var(--accent); }
+.orow button { font: inherit; font-size: 0.8125rem; min-height: 40px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); cursor: pointer; }
+.orow button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ocand.open .orow button { border-color: var(--accent); color: var(--accent); }
+.odet { display: flex; flex-wrap: wrap; gap: 20px 28px; padding: 16px 16px 20px; border-top: 1px solid var(--line); }
+.odet > div { min-width: 0; }
+.odet .oc { flex: 3 1 340px; }
+.odet .os { flex: 2 1 240px; }
+.odet h4 { margin: 0 0 6px; font-size: 0.8125rem; color: var(--ink-2); }
+.odet .os h4:not(:first-child) { margin-top: 16px; }
+.odet table { font-size: 0.8125rem; }
+.odet td.n { color: var(--ink); width: auto; }
+.odet .okv { display: flex; justify-content: space-between; gap: 12px; font-size: 0.8125rem; padding: 2px 0; }
+.odet .okv span:last-child { color: var(--ink-3); }
+.odet .ex3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; font-size: 0.75rem; color: var(--ink-3); }
+.odet .ex3 b { display: block; font-family: var(--mono); font-weight: 400; font-size: 0.875rem; color: var(--ink); }
+.odet .oth { border: 1px dashed var(--line); border-radius: 6px; padding: 8px 10px; font-size: 0.8125rem; color: var(--ink-2); margin-top: 16px; }
+.odet .tiles { margin-top: 10px; }
+@media (max-width: 760px) {
+  .ohead { display: none; }
+  .orow { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 12px; align-items: start; }
+  .orow .rk { display: none; }
+  .orow .nm, .orow .why1 { grid-column: 1 / -1; }
+  .orow .nm::before { content: attr(data-rank) ". "; font-family: var(--mono); font-weight: 400; }
+  .orow .v::before { content: attr(data-l); display: block; font-family: var(--text); font-size: 0.6875rem; color: var(--ink-3); }
+  .orow button { grid-column: 1 / -1; }
+}
+.mxl { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 16px; }
+.mxl label { font-size: 0.875rem; font-weight: 600; }
+.mxl label small { font-weight: 400; color: var(--ink-3); margin-left: 4px; }
+.mxl-in { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); padding-left: 10px; }
+.mxl-in:focus-within { border-color: var(--accent); outline: 2px solid var(--accent); outline-offset: 1px; }
+.mxl-in i { font-style: normal; font-family: var(--mono); color: var(--ink-3); }
+.mxl-in input { font: inherit; font-family: var(--mono); font-size: 0.9375rem; width: 11.5em; min-height: 40px; padding: 6px 10px 6px 6px; border: 0; background: none; color: var(--ink); outline: none; }
+.viz .lvl { stroke: var(--series-2); stroke-width: 1.5; stroke-dasharray: 2 3; }
+.viz .lvl-t { fill: var(--ink-2); font-family: var(--mono); }
+.outp h4.viz-h { font-family: var(--text); font-size: 0.9375rem; font-weight: 600; color: var(--ink); margin: 20px 0 6px; }
+.outp .odet h4 { font-size: 0.875rem; color: var(--ink); }
+.outp .sub { margin-top: 6px; }
+.seg button:disabled, .mxl input:disabled { opacity: 0.55; cursor: default; }
+.pick { width: 20px; height: 20px; accent-color: var(--accent); }
+.bars { display: grid; gap: 6px; margin-top: 6px; }
+.bars div { display: grid; grid-template-columns: 7.5em 1fr 3em; gap: 8px; align-items: center; font-size: 0.8125rem; }
+.bars i { display: block; height: 10px; border-radius: 3px; background: var(--accent); }
+.bars i.out { background: var(--line); }
+.bars span:last-child { font-family: var(--mono); text-align: right; }
+</style>
+
+<div class="proto gut"><div class="col"><b>CLICKABLE PROTOTYPE</b><span>Illustrative figures for a fictional company. The buttons move between screens; nothing is fetched or saved.</span><label style="margin-left:auto;display:flex;gap:6px;align-items:center">Thesis outcome <select id="scn"><option value="view">A view with a lead finding</option><option value="weak">A view on the earnings result alone</option><option value="noview">No view</option></select></label><button type="button" class="ghost" id="restart" style="min-height:36px">Restart</button></div></div>
+
+<header class="appbar gut"><div class="col">
+  <button type="button" class="brand" id="brand" aria-label="Tradecraft home">Trade<span>craft</span></button>
+  <nav class="nav" aria-label="Main">
+    <button type="button" id="navHome">Home</button>
+    <button type="button" disabled title="Not part of this prototype">Records</button>
+    <button type="button" disabled title="Not part of this prototype">Settings</button>
+  </nav>
+  <button type="button" class="ghost" id="mode">Dark</button>
+</div></header>
+
+<div class="reqbar gut" id="reqbar" hidden><div class="col">
+  <div class="reqhead"><h1 class="mono" id="reqT">EXMP</h1><span class="sub" id="reqSub">Request opened 11:38 · market open · quotes delayed 15 minutes</span></div>
+  <div class="stages" role="group" aria-label="Stages of this request" id="stages"></div>
+</div></div>
+
+<main class="gut"><div class="col">
+
+  <!-- HOME -->
+  <section class="screen" data-s="home">
+    <div class="hero">
+      <h1>Which underlying do you want to research?</h1>
+      <p>One ticker per request. Tradecraft screens the option chain for liquidity, builds a directional thesis, proposes defined-risk strategies and then stress-tests the trade.</p>
+      <form class="ask" id="ask"><div class="combo"><label class="sub" for="tk" style="position:absolute;left:-9999px">Symbol or company name</label><input id="tk" type="text" placeholder="Symbol or company name" maxlength="40" autocomplete="off" autocapitalize="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sugg"><ul class="sugg" id="sugg" role="listbox" aria-label="Matching symbols" hidden></ul></div><button class="btn pri" type="submit">Run analysis</button></form>
+      <div class="askmsg" id="askMsg" role="status"></div>
+      <div class="status"><span class="chip ok">MARKET OPEN</span><span class="chip">QUOTES DELAYED 15 MIN</span><span class="chip">SNAPSHOT 11:00 TODAY</span></div>
+    </div>
+    <div class="recent">
+      <div class="panel">
+        <h2>Recent analyses</h2>
+        <div class="row item" style="border-top:0;margin-top:0;padding-top:0"><b>TGTX</b><span class="chip dir bull" style="flex:0 0 auto">BULLISH</span><span>Bull put spread · stopped at risk review</span><span class="sub">Today 09:52</span></div>
+        <div class="row item"><b>WMTX</b><span class="chip dir nov" style="flex:0 0 auto">NO VIEW</span><span>Stopped, nothing recorded</span><span class="sub">Yesterday</span></div>
+        <div class="row item"><b>SPYX</b><span class="chip dir rngb" style="flex:0 0 auto">RANGE-BOUND</span><span>Iron condor · proceeded to decision</span><span class="sub">16 November</span></div>
+        <div class="row item"><b>HDXX</b><span class="chip dir bear" style="flex:0 0 auto">BEARISH</span><span>Bear put spread · stopped at contracts</span><span class="sub">14 November</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STAGE 1 -->
+  <section class="screen" data-s="s1">
+    <div class="review" data-review><span><strong>You are reviewing a completed stage.</strong> It is read-only.</span><button type="button" class="btn" data-back>Back to the current stage</button></div>
+    <div class="panel">
+      <div style="display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center"><span class="chip ok" id="gChip">PASS</span><strong style="font-size:1.0625rem" id="gHead">212 contracts pass the liquidity screen</strong><span class="sub">Live option chain, 11:38 ET, 15-minute delayed quotes</span></div>
+      <p class="sub" style="margin-top:6px">Premiums are withheld at this stage so that pricing cannot anchor the thesis.</p>
+    </div>
+    <div class="panel"><h2>Screen criteria <span class="chip" style="margin-left:6px" id="sChip">ALL AT DEFAULT</span></h2>
+      <div class="kv"><div><span>Max bid-ask spread</span><b id="vGap">5%</b><span>Default 5%</span></div><div><span>Min open interest</span><b id="vOi">100</b><span>Default 100</span></div><div><span>Days to expiration (DTE)</span><b id="vDte">42 to 90</b><span>Default 42 to 90</span></div><div><span>Max strike distance</span><b id="vK">10%</b><span>from spot · default 10%</span></div><div><span>Min premium (mid)</span><b id="vPx">$0.20</b><span>Default $0.20</span></div></div>
+      <p class="sub" style="margin-top:8px">A contract passes when it meets all five criteria. "Adjust criteria" changes them for this request.</p>
+    </div>
+    <div class="panel" id="ctl" hidden>
+      <div style="display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline"><strong id="ctlHead" tabindex="-1">Adjust screen criteria</strong><span class="sub">Applies to this request only. Saved defaults live in Settings. DTE range 7 to 180.</span></div>
+      <div class="ctls">
+        <div class="ctl"><label for="cGap">Max bid-ask spread</label><output id="oGap" for="cGap">5%</output><input type="range" id="cGap" min="2" max="10" step="0.5" value="5"><span class="rng"><i>2%</i><i>default 5%</i><i>10%</i></span></div>
+        <div class="ctl"><label for="cOi">Min open interest</label><output id="oOi" for="cOi">100</output><input type="range" id="cOi" min="0" max="6" step="1" value="3"><span class="rng"><i>10</i><i>default 100</i><i>1,000</i></span></div>
+        <div class="ctl"><label for="cD1">Days to expiration (DTE)</label><output id="oDte">42 to 90</output><div class="dte"><select id="cPre" aria-label="DTE preset"><option value="7-21">Short-dated, 7 to 21</option><option value="22-41">Front month, 22 to 41</option><option value="42-90" selected>Default, 42 to 90</option><option value="91-180">Long-dated, 91 to 180</option><option value="7-180">All, 7 to 180</option><option value="c">Custom</option></select><span class="pair"><input type="number" id="cD1" min="7" max="180" value="42" aria-label="Minimum DTE"> to <input type="number" id="cD2" min="7" max="180" value="90" aria-label="Maximum DTE"></span></div></div>
+        <div class="ctl"><label for="cK">Max strike distance from spot</label><output id="oK" for="cK">10%</output><input type="range" id="cK" min="5" max="30" step="1" value="10"><span class="rng"><i>5%</i><i>default 10%</i><i>30%</i></span></div>
+        <div class="ctl"><label for="cPx">Min premium (mid)</label><output id="oPx" for="cPx">$0.20</output><input type="range" id="cPx" min="0.05" max="1" step="0.05" value="0.2"><span class="rng"><i>$0.05</i><i>default $0.20</i><i>$1.00</i></span></div>
+        <div class="ctl act"><button type="button" class="btn" id="ctlReset">Reset</button><button type="button" class="btn" id="ctlCancel">Cancel</button><button type="button" class="btn pri" id="ctlApply">Apply and re-screen</button></div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="panel"><h2>Liquidity by expiration</h2>
+        <div class="bars"><div><span>7 to 21 DTE</span><i class="out" style="width:22%"></i><span>31</span></div><div><span>22 to 41 DTE</span><i class="out" style="width:48%"></i><span>68</span></div><div><span>42 to 90 DTE</span><i style="width:100%"></i><span>212</span></div><div><span>91 to 180 DTE</span><i class="out" style="width:36%"></i><span>51</span></div></div>
+        <p class="sub" style="margin-top:8px">Each bar is the number of contracts in that DTE bucket that pass the other four criteria. A longer bar means a deeper market: more strikes you can enter and exit close to mid.</p>
+        <p class="sub" style="margin-top:4px">The highlighted bucket is your DTE setting, 42 to 90. The other buckets are shown for context.</p>
+      </div>
+      <div class="panel"><h2>Bid-ask spread</h2>
+        <div class="kv"><div><span>Median</span><b>3.1%</b></div><div><span>Tightest</span><b>0.9%</b></div><div><span>Widest</span><b>5.0%</b></div></div>
+        <p class="sub" style="margin-top:8px">The spread is the ask minus the bid, shown as a percentage of the mid price, across the contracts that pass. It is the transaction cost of a round trip.</p><p class="sub" style="margin-top:4px"><strong>Tight</strong> (under about 2%): an actively quoted contract; fills land near mid and slippage is small.</p><p class="sub" style="margin-top:4px"><strong>Wide</strong> (above 5%): a thin market. A $2.00 option with a 10% spread gives up about $20 per contract on a round trip, before the underlying moves at all.</p>
+      </div>
+    </div>
+    <div class="panel"><h2>Contracts screened out, by reason</h2>
+      <div class="kv"><div><span>Spread too wide</span><b>146</b></div><div><span>Open interest below minimum</span><b>318</b></div><div><span>Outside DTE range</span><b>150</b></div><div><span>Strike too far from spot</span><b>402</b></div></div>
+    </div>
+    <div class="actions"><button type="button" class="btn" id="adj">Adjust criteria</button><button type="button" class="btn" disabled title="Not part of this prototype">View option chain</button><button type="button" class="btn pri" data-go="s2w">Continue to thesis</button></div>
+  </section>
+
+  <!-- STAGE 2: working -->
+  <section class="screen" data-s="s2w">
+    <div class="panel">
+      <div style="display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline"><strong style="font-size:1.0625rem">Building a thesis on EXMP</strong><span class="sub" id="agNote">This usually takes about a minute. Shortened here.</span></div>
+      <div id="agents"></div>
+    </div>
+    <div class="actions"><button type="button" class="btn" id="agSkip">Skip the wait</button></div>
+  </section>
+
+  <!-- STAGE 2: brief -->
+  <section class="screen" data-s="s2">
+    <div class="review" data-review><span><strong>You are reviewing a completed stage.</strong> The thesis was frozen at 11:41 and cannot be changed.</span><button type="button" class="btn" data-back>Back to the current stage</button></div>
+    <div class="panel" data-scn="view">
+      <div style="display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center"><span class="chip dir bull">BULLISH</span><strong style="font-size:1.0625rem">Directional thesis, 30-day horizon</strong><span class="chip un">NO DEMONSTRATED PREDICTIVE EDGE</span></div>
+      <p style="margin-top:8px">EXMP is likely to trade higher over the next 30 days because management raised full-year guidance on 3 November, in a quarter that also beat consensus on earnings and revenue.</p>
+      <div class="why">
+        <div><h3>The catalyst</h3><p>Management raised full-year EPS guidance to $4.10–$4.30 from $3.90–$4.10. A guidance raise is a statement by the company itself, filed with the regulator, and it is compared with the company's own earlier figure.</p></div>
+        <div><h3>The confirmation</h3><p>The quarter came in above consensus: EPS $1.12 against $1.04 expected, revenue $2.31B against $2.25B. The direction of this finding is set by the two numbers, not by the model.</p></div>
+        <div><h3>What tempers it</h3><p>Both findings come from the same report, so this is one catalyst, not two. The stock is already up 4.1% since. Free cash flow fell year over year; with no estimate to compare it with, that is context, not evidence of direction.</p></div>
+      </div>
+      <p class="sub" style="margin-top:10px">Why the "no demonstrated predictive edge" label: this is a researched view with its evidence shown. The system has not yet shown that its views beat the base rate, and it says so on every thesis.</p>
+    </div>
+    <div class="panel" data-scn="weak">
+      <div style="display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center"><span class="chip dir bull">BULLISH</span><strong style="font-size:1.0625rem">Directional thesis, 30-day horizon</strong><span class="chip fl">WEAKLY SUPPORTED</span><span class="chip un">NO DEMONSTRATED PREDICTIVE EDGE</span></div>
+      <p style="margin-top:8px">EXMP reported earnings and revenue above consensus on 3 November. Nothing else carries a direction: guidance was unchanged and no new event has been filed since.</p>
+      <p style="margin-top:8px"><strong>This view rests on the earnings result alone, reported 15 days ago.</strong></p>
+      <div class="why">
+        <div><h3>The basis</h3><p>EPS $1.12 against $1.04 expected; revenue $2.31B against $2.25B. The direction is set by the two numbers, not by the model.</p></div>
+        <div><h3>What is missing</h3><p>No change in guidance and no defined event. A view on the earnings result alone is the thinnest the system will state.</p></div>
+        <div><h3>What tempers it</h3><p>The report is 15 days old and the stock is up 4.1% since, so the market has had time to react. Most large companies beat consensus in most quarters. Free cash flow fell year over year, which is context with no direction.</p></div>
+      </div>
+      <p class="sub" style="margin-top:10px">Why the "no demonstrated predictive edge" label: this is a researched view with its evidence shown. The system has not yet shown that its views beat the base rate, and it says so on every thesis.</p>
+    </div>
+    <div class="panel" data-scn="noview">
+      <div style="display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center"><span class="chip dir nov">NO VIEW</span><strong style="font-size:1.0625rem">The evidence that carries a direction points both ways</strong></div>
+      <p style="margin-top:8px">EXMP beat consensus on 3 November, and its chief financial officer left on 12 November with no permanent successor named. The system does not choose between two solid findings that disagree.</p>
+      <p class="sub" style="margin-top:8px">A no view is a result, not a failure. The other reason for it is that nothing found carries a direction at all; the screen says which applies.</p>
+      <h3 class="sh" style="margin-top:14px">What you can do</h3>
+      <div class="choices">
+        <div class="row"><span class="mono" style="color:var(--accent)">1</span><div><strong>Stop.</strong> The request ends and nothing is recorded.</div></div>
+        <div class="row"><span class="mono" style="color:var(--accent)">2</span><div><strong>Take a view yourself.</strong> Choose the direction, mark what you are relying on from the evidence on this screen, and say what would prove you wrong. The system tells you how much of it carries a direction, records the thesis as yours and carries on to contracts and the challenge.</div></div>
+      </div>
+      <p class="sub" style="margin-top:10px">The agents are not asked again for a different answer.</p>
+    </div>
+    <div class="grid2">
+      <div class="evstack">
+      <div class="panel ev"><h2>Evidence that carries a direction <span class="tally" data-scn="view">2 bullish · 0 bearish</span><span class="tally" data-scn="weak">1 bullish · 0 bearish</span><span class="tally" data-scn="noview">1 bullish · 1 bearish</span></h2>
+        <p class="sub">A finding carries a direction only when the evidence states the comparison: a result against estimates, a change in guidance, or a defined new event.</p>
+        <div class="row" data-scn="view" style="border-top:0"><span class="chip dir bull">BULLISH</span><div>Full-year EPS guidance raised to $4.10–$4.30 from $3.90–$4.10<small>Guidance change · against the company's earlier guidance · 8-K, 3 November · strong</small></div></div>
+        <div class="row" data-scn="view"><span class="chip dir bull">BULLISH</span><div>EPS $1.12 against $1.04 expected; revenue $2.31B against $2.25B<small>Results against estimates · direction set in code from the two numbers · data provider, 3 November · moderate</small></div></div>
+        <div class="row" data-scn="weak noview" style="border-top:0"><span class="chip dir bull">BULLISH</span><div>EPS $1.12 against $1.04 expected; revenue $2.31B against $2.25B<small>Results against estimates · direction set in code from the two numbers · data provider, 3 November · moderate</small></div></div>
+        <div class="row" data-scn="noview"><span class="chip dir bear">BEARISH</span><div>Chief financial officer left; no permanent successor named<small>New event · 8-K item 5.02 · 12 November · strong</small></div></div>
+        <div class="row" data-scn="view weak"><span class="chip un">NONE</span><div>Nothing carrying a direction points lower<small>Sector and macro evidence: nothing found for or against</small></div></div>
+      </div>
+      <details class="panel ev fold" open><summary>Context, with no direction <span class="chip un">3</span></summary>
+        <p class="sub">Facts with nothing to compare them against. They are shown and may be quoted, and cannot start, support or cancel a view.</p>
+        <div class="row"><span class="chip un">CONTEXT</span><div>Free cash flow $0.4B, down from $0.6B a year earlier<small>No estimate to compare with · earnings release, 3 November</small></div></div>
+        <div class="row"><span class="chip un">CONTEXT</span><div>Fourth-quarter revenue outlook of $2.4B<small>No quarterly consensus available · earnings release, 3 November</small></div></div>
+        <div class="row"><span class="chip un">CONTEXT</span><div>Buyback authorization raised by $1B<small>Direction cannot be read from the event alone · 8-K, 3 November</small></div></div>
+      </details>
+      <details class="panel ev fold"><summary>Sector and macro backdrop <span class="chip un">2</span></summary>
+        <p class="sub">What the sector and the market have done. Description only: it cannot start, support or cancel a view.</p>
+        <div class="row"><span class="chip un">CONTEXT</span><div>Over one month the sector fund fell 4.2% and SPY fell 5.1%<small>Price behaviour is description only · computed in code from daily closes</small></div></div>
+        <div class="row"><span class="chip un">CONTEXT</span><div>The VIX stood at 24.6, against a one-year median of 17.2<small>Price behaviour is description only · computed in code from daily closes</small></div></div>
+      </details>
+      </div>
+      <div class="panel" data-scn="view weak"><h2>Invalidation criteria</h2>
+        <p>The thesis no longer holds if either of these happens:</p>
+        <div class="row" data-scn="view"><span class="mono" style="color:var(--accent)">1</span><div>Guidance is cut<small>Reverses the catalyst</small></div></div>
+        <div class="row" data-scn="view"><span class="mono" style="color:var(--accent)">2</span><div>The next earnings result misses consensus<small>Reverses the confirmation</small></div></div>
+        <div class="row" data-scn="weak"><span class="mono" style="color:var(--accent)">1</span><div>The next earnings result misses consensus<small>Reverses the basis</small></div></div>
+        <div class="row" data-scn="weak"><span class="mono" style="color:var(--accent)">2</span><div>Guidance is cut<small>A new finding against the view</small></div></div>
+      </div>
+    </div>
+    <div class="panel"><h2>Historical statistics and horizon</h2>
+      <div class="stat2">
+        <div class="scroll"><table><thead><tr><th>Horizon</th><th>Base rate, higher close</th><th>Typical realized move</th></tr></thead><tbody>
+          <tr><td>14 days</td><td class="n">55%</td><td class="n">±3.4%</td></tr>
+          <tr class="sel"><td>30 days · recommended</td><td class="n">58%</td><td class="n">±5.0%</td></tr>
+          <tr><td>60 days</td><td class="n">60%</td><td class="n">±7.1%</td></tr>
+        </tbody></table></div>
+        <div><h3 class="sh">Why a 30-day horizon</h3>
+          <ul class="plain">
+            <li><strong>It fits the evidence.</strong> A change in guidance is absorbed by the market over several weeks, not days.</li>
+            <li><strong>14 days is too short</strong> for that to play out.</li>
+            <li><strong>60 days adds exposure without adding evidence,</strong> and would run close to the next earnings report, due in about 75 days.</li>
+            <li><strong>One known event falls inside it:</strong> an FOMC decision on day 22.</li>
+          </ul>
+        </div>
+      </div>
+      <dl class="defs">
+        <div><dt>Base rate, higher close</dt><dd>How often EXMP has finished a period of that length above where it started, whatever the news. Over 30 days it has done so 58% of the time. This is the benchmark: the thesis is only useful if it does better than this.</dd></div>
+        <div><dt>Typical realized move</dt><dd>The size of a normal move over that horizon, measured from past prices. Over 30 days EXMP has typically ended within about 5% of where it started, up or down. Use it to judge how far a strike is from spot.</dd></div>
+        <div><dt>Current volatility</dt><dd>EXMP has been moving about as much as it normally does, so the figures above are a fair guide to the next 30 days. In a high-volatility period they would understate the swings.</dd></div>
+      </dl>
+    </div>
+    <div class="actions" data-scn="view weak"><button type="button" class="btn" data-go="home">Reject and stop</button><button type="button" class="btn" disabled title="Not part of this prototype">Edit</button><button type="button" class="btn pri" data-go="s3">Accept and freeze the thesis</button></div>
+    <div class="actions" data-scn="noview"><button type="button" class="btn" data-go="home">Stop</button><button type="button" class="btn pri" data-go="s2u">Take a view yourself</button></div>
+  </section>
+
+  <!-- STAGE 2: the user's own view after a no view -->
+  <section class="screen" data-s="s2u">
+    <div class="panel">
+      <div style="display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center"><strong style="font-size:1.0625rem">Take a view yourself</strong><span class="chip un">RECORDED AS YOUR THESIS</span></div>
+      <p class="sub" style="margin-top:6px">The system returned no view. Nothing from the option market is shown yet.</p>
+      <div class="urow"><span class="ctrl-l" id="lblDir">Direction</span><div class="seg" role="group" aria-labelledby="lblDir" id="uDir"><button type="button" data-d="bull" aria-pressed="true">Bullish</button><button type="button" data-d="bear" aria-pressed="false">Bearish</button></div>
+        <label>Horizon <select id="uHor"><option>14 days</option><option selected>30 days · recommended</option><option>60 days</option></select></label></div>
+    </div>
+    <div class="grid2">
+      <div class="panel"><h2>What are you relying on?</h2>
+        <p class="sub">Choose from the evidence the system found. At least one.</p>
+        <label class="opt"><input type="checkbox" data-k="a" data-b="bull"><span class="t">EPS $1.12 against $1.04 expected; revenue above consensus<small><span class="chip dir bull">BULLISH</span> carries a direction</small></span></label>
+        <label class="opt"><input type="checkbox" data-k="a" data-b="bear"><span class="t">Chief financial officer left; no permanent successor named<small><span class="chip dir bear">BEARISH</span> carries a direction</small></span></label>
+        <label class="opt"><input type="checkbox" data-k="c"><span class="t">Free cash flow down from a year earlier<small><span class="chip un">CONTEXT</span> no direction</small></span></label>
+        <label class="opt"><input type="checkbox" data-k="c"><span class="t">Fourth-quarter revenue outlook of $2.4B<small><span class="chip un">CONTEXT</span> no direction</small></span></label>
+        <label class="opt"><input type="checkbox" data-k="c"><span class="t">Buyback authorization raised by $1B<small><span class="chip un">CONTEXT</span> no direction</small></span></label>
+      </div>
+      <div>
+        <div class="panel"><h2>What would prove you wrong?</h2>
+          <p class="sub">At least one. Each is a condition the system can name; none is a price level.</p>
+          <label class="opt"><input type="checkbox" data-inv><span class="t">The next earnings result goes against the view</span></label>
+          <label class="opt"><input type="checkbox" data-inv><span class="t">Guidance is changed against the view</span></label>
+          <label class="opt"><input type="checkbox" data-inv><span class="t">A permanent chief financial officer is named<small>For a bearish view resting on the departure</small></span></label>
+        </div>
+        <div class="panel"><h2>How your thesis stands</h2>
+          <div style="display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center"><span class="chip" id="uChip">NOT STARTED</span><strong id="uVerdict">Choose what you are relying on.</strong></div>
+          <p class="sub" id="uWhy" style="margin-top:6px"></p>
+          <p class="sub" style="margin-top:6px">This does not block you. It is recorded with the thesis and shown again at the challenge.</p>
+        </div>
+      </div>
+    </div>
+    <div class="actions"><button type="button" class="btn" data-go="s2">Back to the evidence</button><button type="button" class="btn" data-go="home">Stop</button><button type="button" class="btn pri" id="uFreeze" disabled>Freeze my thesis</button></div>
+    <p class="sub" style="margin-top:8px;text-align:right">In this prototype the later screens show the bullish example whichever direction you choose.</p>
+  </section>
+
+  <!-- STAGE 3 -->
+  <section class="screen" data-s="s3">
+    <div class="review" data-review><span><strong>You are reviewing a completed stage.</strong> It is read-only. To select a different strategy, use "Return to contracts" on the challenge.</span><button type="button" class="btn" data-back>Back to the current stage</button></div>
+    <div class="panel outp" id="outp">
+      <div class="cm-head"><span class="cm-tk mono">EXMP</span><span class="chip dir bull">BULLISH</span><span class="sub" style="margin:0">Directional thesis, 30-day horizon · spot $100.00 · quotes 11:42 ET, 15-minute delayed</span></div>
+      <p class="sub">Implied move ±6.2% to the 18 December expiration. The typical realized move over that period is ±5%.</p>
+
+      <h4 class="viz-h">Expiration</h4>
+      <div class="exps">
+        <div class="exp on"><div><b>18 December</b><span class="mono">32 DTE</span></div><p>Matches the 30-day horizon · 2 days beyond it</p><small>From the thesis · selected</small></div>
+        <div class="exp"><div><b>15 January</b><span class="mono">60 DTE</span></div><p>Matches the 60-day horizon · on the horizon date</p><small>Switch to this expiration</small></div>
+        <div class="exp"><div><b>19 February</b><span class="mono">95 DTE</span></div><p>Matches the 90-day horizon · 5 days beyond it</p><small>Switch to this expiration</small></div>
+      </div>
+      <p class="sub">Next earnings report: 24 February, after this expiration. Next ex-dividend date: none declared.</p>
+
+      <div class="ctrl-row">
+        <div class="ctrl"><span class="ctrl-l" id="lblPri">Rank by</span><div class="seg" role="group" aria-labelledby="lblPri" id="segPri"></div></div>
+        <div class="ctrl"><span class="ctrl-l">Filters</span><div style="display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center"><div class="chips"><span>Liquidity <b>stage 1 criteria</b></span></div><div class="ctl" style="flex:0 1 240px;border-top:0;padding:0"><label for="cCap">Cost cap</label><output id="oCap" for="cCap">5% of max loss</output><input type="range" id="cCap" min="2" max="10" step="0.5" value="5"><span class="rng"><i>2%</i><i>default 5%</i><i>10%</i></span></div><div class="chips"><span>Events <b>shown, not filtered</b></span></div></div></div>
+      </div>
+
+      <div class="mxl"><label for="mxl">Max loss for this trade <small>optional</small></label><span class="mxl-in"><i>$</i><input id="mxl" type="text" inputmode="numeric" autocomplete="off" placeholder="one contract each" aria-describedby="mxlNote"></span><span class="sub" id="mxlNote" style="margin:0"></span></div>
+      <div class="orows" id="orows"></div>
+      <p class="sub"><strong id="filtHead">Filtered out: none.</strong> <span id="filtList">A candidate removed by a filter is listed here with the reason.</span> The top-ranked candidate is the best fit on the chosen ranking, not a recommendation to trade.</p>
+      <p class="sub">"Profitable if thesis holds" and "POP: historical" are counted before slippage. "POP: implied" is approximate.</p>
+    </div>
+    <div class="actions"><button type="button" class="btn" data-go="home">Stop</button><button type="button" class="btn pri" data-go="s4w" id="toS4">Continue to the challenge</button></div>
+  </section>
+
+  <!-- STAGE 4: working (operator decision, 19 November 2026: the stage 2 panel, three rows) -->
+  <section class="screen" data-s="s4w">
+    <div class="panel">
+      <div style="display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline"><strong style="font-size:1.0625rem">Challenging the thesis and the strategy on EXMP</strong><span class="sub">This usually takes about a minute. Shortened here.</span></div>
+      <div>
+        <div class="ag fin"><span class="dot" aria-hidden="true"></span><div><b>Evidence Retriever</b><small>Searching the project's research, both ways</small></div><span class="st">DONE</span></div>
+        <div class="ag run"><span class="dot" aria-hidden="true"></span><div><b>Critic</b><small>Bull case, bear case, how the trade loses, objections</small></div><span class="st">WORKING</span></div>
+        <div class="ag"><span class="dot" aria-hidden="true"></span><div><b>Output check</b><small>Fixed rules, in code</small></div><span class="st">WAITING</span></div>
+      </div>
+    </div>
+    <div class="actions"><button type="button" class="btn" data-go="home">Stop</button><button type="button" class="btn" data-go="s4">Skip the wait</button></div>
+  </section>
+
+  <!-- STAGE 4 -->
+  <section class="screen" data-s="s4">
+    <div class="review" data-review><span><strong>You are reviewing a completed stage.</strong> It is read-only.</span><button type="button" class="btn" data-back>Back to the current stage</button></div>
+    <div class="panel" id="chs">
+      <div class="cm-head"><span class="cm-tk mono">EXMP</span><span class="chip dir bull">BULLISH</span><span class="sub" style="margin:0" id="chFor"></span></div>
+      <div class="ready"><span class="chip ok">READY</span><div><b id="chReady">No blocking conditions. 6 items for your judgement.</b><span>The thesis is from this session and the contract's price has not moved by more than its slippage.</span></div></div>
+      <p class="sub" style="margin-top:8px">The critic runs on the same model family as the agent that drafted the thesis. Treat its agreement with caution.</p>
+
+      <div class="chcols">
+        <div class="chl">
+          <span class="collab">THE CRITIC · JUDGEMENT</span>
+          <div class="cbox"><h4>Bull case</h4><p>The guidance raise is a recent, company-specific catalyst from a primary source. The quarter also beat consensus on earnings and revenue. Nothing found in sector or macro evidence contradicts the thesis.</p></div>
+          <div class="cbox"><h4>Bear case</h4><p>Both supports trace to a single catalyst, the latest earnings report. The stock is up 4.1% since, about 0.8 of a typical realized move. An FOMC decision falls on day 22, inside the holding period.</p></div>
+          <div class="cbox"><h4>How this trade loses</h4>
+            <div class="cline" id="chLose"></div>
+            <div class="cline"><b>The FOMC decision on day 22.</b> A market-wide move, whatever the company does.</div>
+            <div class="cline"><b>Guidance is cut.</b> Nothing would alert you. The invalidation criterion is not monitored.</div>
+          </div>
+          <div class="cbox"><h4>Objections, most serious first</h4>
+            <div class="cline obj"><span class="mono">1</span><div><b>The two supporting findings are a single catalyst.</b> The beat and the guidance raise come from the same report.<small>THESIS CHECK 2 · CLAIMS 1, 2</small></div></div>
+            <div class="cline obj"><span class="mono">2</span><div><b>The catalyst may already be priced in.</b> Up 4.1% since the report, 0.8 of a typical realized move.<small>PRICED-IN TEST · CLAIM 1</small></div></div>
+            <div class="cline obj"><span class="mono">3</span><div id="chObj"></div></div>
+          </div>
+        </div>
+        <div class="chr">
+          <span class="collab">THE CHECKS · FIXED RULES</span>
+          <div class="cbox"><div class="chead"><h4>Thesis</h4><span class="mono">3 flagged · 1 not checked · 8 passed</span></div>
+            <div class="cline chk2"><span class="chip fl">FLAG</span><div><b>Concentrated evidence</b><span>Two findings, one evidence family.</span></div></div>
+            <div class="cline chk2"><span class="chip fl">FLAG</span><div><b>Event risk inside the holding period</b><span>FOMC decision, day 22.</span></div></div>
+            <div class="cline chk2"><span class="chip fl">FLAG</span><div><b>Invalidation not monitored</b><span>Monitor the company's filings yourself.</span></div></div>
+            <div class="cline chk2"><span class="chip un">N/C</span><div><b>Earnings date</b><span>No data source.</span></div></div>
+            <button type="button" class="more" aria-expanded="false" data-n="8">8 passed ▾</button>
+            <ul class="passed" hidden><li>Rejected signal</li><li>Strength of evidence</li><li>Contested evidence</li><li>Against the base rate</li><li>Origin and edits</li><li>Earlier overrides and gaps</li><li>Price moved since the freeze</li><li>Volatility regime</li></ul>
+          </div>
+          <div class="cbox"><div class="chead"><h4>Contract</h4><span class="mono" id="chCnt"></span></div>
+            <div id="chCon"></div>
+            <button type="button" class="more" aria-expanded="false" data-n="9">9 passed ▾</button>
+            <ul class="passed" hidden id="chPass"></ul>
+          </div>
+          <div class="actions chact"><button type="button" class="btn pri" data-go="end">Proceed to decision</button><button type="button" class="btn" id="backS3">Return to contracts</button><button type="button" class="btn" data-go="home">Stop</button></div>
+        </div>
+      </div>
+      <button type="button" class="more" aria-expanded="false" data-label="More detail: each claim's standing, the priced-in reading, what is missing, the passages cited" style="margin-top:14px">More detail: each claim's standing, the priced-in reading, what is missing, the passages cited ▾</button>
+      <div hidden><div style="display:grid;gap:12px;margin-top:8px">
+        <div class="cbox"><h4>Each claim's standing</h4>
+          <div class="cline chk2"><span class="chip">HOLDS</span><div><b>Claim 1. Full-year EPS guidance was raised at the latest report.</b><span>Stated in the filing, with both figures.</span></div></div>
+          <div class="cline chk2"><span class="chip">NARROWER</span><div><b>Claim 2. EPS and revenue were above consensus.</b><span>Holds as a fact about the quarter; it is the same report as claim 1, not a second catalyst.</span></div></div>
+        </div>
+        <div class="cbox"><h4>The priced-in reading</h4>
+          <div class="cline"><b>Claim 1.</b> Up 4.1% since 3 November, 0.8 of a typical realized move for 30 days. Most of one typical move has already happened.<small>FIGURE SET BY CODE · READING BY THE CRITIC</small></div>
+        </div>
+        <div class="cbox"><h4>What is missing</h4>
+          <div class="cline"><b>Estimate revision history.</b> It would show whether estimates followed the raise.<small>RECORDED AS UNAVAILABLE IN THE THESIS STAGE</small></div>
+        </div>
+        <div class="cbox"><h4>Research passages cited</h4>
+          <div class="cline"><b>P1 · for.</b> Post-earnings drift was large historically.<small>RESEARCH-08-EQUITY-DIRECTION · POST-EARNINGS ANNOUNCEMENT DRIFT · EVIDENCE STRENGTH: STRONG (FOR THE HISTORICAL EFFECT)</small></div>
+          <div class="cline"><b>P2 · against.</b> Rule-based index premium selling earned no excess return after May 2012.<small>FACTOR-SPEC · SECTION 0B · UNGRADED</small></div>
+        </div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- END -->
+  <section class="screen" data-s="end">
+    <div class="panel" style="max-width:720px;margin:0 auto;text-align:center">
+      <span class="chip">END OF THE PROTOTYPE</span>
+      <h1 style="font-size:1.5rem;margin-top:12px">Stage 5, decision and record, comes next</h1>
+      <p style="margin-top:8px;color:var(--ink-2)">It is not designed yet. All four stages above stay available from the stage bar, each one read-only.</p>
+      <div class="actions" style="justify-content:center;margin-top:16px"><button type="button" class="btn pri" data-go="home">Back to home</button></div>
+    </div>
+  </section>
+
+</div></main>
+
+<script>
+(function () {
+  var root = document.documentElement, modeBtn = document.getElementById('mode');
+  function isDark() { var t = root.getAttribute('data-theme'); return t ? t === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches; }
+  function lab() { modeBtn.textContent = isDark() ? 'Light' : 'Dark'; }
+  modeBtn.addEventListener('click', function () { root.setAttribute('data-theme', isDark() ? 'light' : 'dark'); lab(); }); lab();
+
+  var STAGES = [['s1', 'Liquidity gate', 'Option chain screen'], ['s2', 'Thesis', 'Directional view'], ['s3', 'Contracts', 'Strategy selection'], ['s4', 'Challenge', 'Risk review']];
+  var CANDS = [
+    {id: 'pcs', nm: 'Bull put spread (credit), 95 / 100', v: ['$330', '$170', '$98.30', '100%', '$7 · 2%'], flag: 'Short-premium strategy<small>Net credit $170 vs. max loss $330.</small>'},
+    {id: 'cds', nm: 'Bull call spread (debit), 100 / 105', v: ['$170', '$330', '$101.70', '71%', '$7 · 4%'], flag: 'Can lose with the thesis correct<small>Needs spot above the $101.70 breakeven at expiration. Profitable in 71% of historical periods with a higher close.</small>'},
+    {id: 'lc', nm: 'Long call, 100', v: ['$240', 'Unlimited', '$102.40', '63%', '$5 · 2%'], flag: 'Can lose with the thesis correct<small>Needs spot above the $102.40 breakeven at expiration. Profitable in 63% of historical periods with a higher close.</small>'}];
+  // cur: index of the stage in progress (0-3), 4 when all are complete, -1 on the home screen
+  var st = {screen: 'home', cur: -1, pick: 'pcs', ticker: 'EXMP', timers: []};
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function $(q) { return document.querySelector(q); }
+  function idxOf(s) { return s === 's2w' || s === 's2u' ? 1 : s === 's4w' ? 3 : ['s1', 's2', 's3', 's4'].indexOf(s); }
+
+  function renderStages() {
+    var host = $('#stages'); host.textContent = '';
+    STAGES.forEach(function (S, i) {
+      var b = document.createElement('button'); b.type = 'button';
+      var done = i < st.cur, cur = i === st.cur, viewing = idxOf(st.screen) === i;
+      b.className = 'stg' + (done ? ' done' : '') + (cur ? ' cur' : '') + (viewing ? ' view' : '');
+      b.disabled = !(done || cur);
+      b.setAttribute('aria-current', viewing ? 'step' : 'false');
+      var sub = done ? (i === 1 ? 'Frozen 11:41' : 'Complete') : cur ? 'In progress' : S[2];
+      b.innerHTML = '<span class="n">' + (done ? '✓' : i + 1) + '</span><span class="t"><b></b><i></i></span>';
+      b.querySelector('b').textContent = S[1]; b.querySelector('i').textContent = sub;
+      b.setAttribute('aria-label', 'Stage ' + (i + 1) + ', ' + S[1] + ', ' + sub.toLowerCase());
+      b.addEventListener('click', function () { show(S[0]); });
+      host.appendChild(b);
+    });
+  }
+  var NS = 'http://www.w3.org/2000/svg';
+  var C3 = [
+    {id: 'pcs', nm: 'Bull put spread (credit), 95 / 100', need: 'Needs spot to hold above the $98.30 breakeven.', loss: 330, gain: 170, be: '$98.30', right: 100, base: 62, impl: 60, cost: 7, nl: 2,
+      legs: [['Sell 100 put', 2.35, 2.45], ['Buy 95 put', 0.68, 0.72]], net: 'Net credit $170 at mid', gk: ['+0.31', '+$4', '−$6'],
+      oth: 'Bull call spread (debit), 95 / 100, has the same payoff. Est. slippage $16 per contract, 5% of max loss. Not kept: it costs more to trade.', pts: [[88, -3.3], [95, -3.3], [100, 1.7], [112, 1.7]], bex: 98.3,
+      lv: 'The breakeven, $98.30, is above the 60-day low, $97.00, and below the 60-day high, $104.00.', g1: 170, why: {match: 'profitable in every historical period in which the thesis held'}},
+    {id: 'cds', nm: 'Bull call spread (debit), 100 / 105', need: 'Needs spot above the $101.70 breakeven.', loss: 170, gain: 330, be: '$101.70', right: 71, base: 41, impl: 38, cost: 7, nl: 2,
+      legs: [['Buy 100 call', 2.35, 2.45], ['Sell 105 call', 0.68, 0.72]], net: 'Net debit $170 at mid', gk: ['+0.29', '−$3', '+$5'],
+      oth: 'Bull put spread (credit), 100 / 105, has the same payoff. Est. slippage $19 per contract, 11% of max loss. Not kept: it costs more to trade.', pts: [[88, -1.7], [100, -1.7], [105, 3.3], [112, 3.3]], bex: 101.7, lv: 'The breakeven, $101.70, is above the 60-day low, $97.00, and below the 60-day high, $104.00.', g1: 330, why: {}},
+    {id: 'lc', nm: 'Long call, 100', need: 'Single leg. Needs spot above the $102.40 breakeven.', loss: 240, gain: Infinity, be: '$102.40', right: 63, base: 36, impl: 33, cost: 5, nl: 1,
+      legs: [['Buy 100 call', 2.35, 2.45]], net: 'Net debit $240 at mid', gk: ['+0.52', '−$5', '+$11'],
+      oth: 'A single leg has one construction.', pts: [[88, -2.4], [100, -2.4], [112, 9.6]], bex: 102.4,
+      lv: 'The breakeven, $102.40, is above the 60-day low, $97.00, and below the 60-day high, $104.00.', g1: 260, more: ' Profit keeps growing beyond that.', why: {cost: 'lowest slippage as a share of max loss'}}
+  ];
+  var PRI = [['match', 'Fit to thesis', 3], ['payoff', 'Reward-to-risk', -9], ['cost', 'Lowest slippage', 5]];
+  var HEAD = ['', 'Strategy', 'Max loss', 'Max profit', 'Breakeven', 'Profitable if thesis holds', 'POP: historical / implied', 'Est. slippage', 'Contracts', ''];
+  var o3 = {p: 0, open: 'pcs', cap: null, cc: 5};
+  function resetS3() { o3 = {p: 0, open: 'pcs', cap: null, cc: 5}; $('#cCap').value = 5; $('#mxl').value = ''; $('#mxlNote').textContent = 'Every candidate is shown for one contract.'; }
+  function qty(c) { return o3.cap == null ? 1 : Math.floor(o3.cap / c.loss); }
+  function usd(x) { return '$' + Math.round(x).toLocaleString('en-US'); }
+  function key(c, p) { return p === 'match' ? -c.right : p === 'payoff' ? -(c.g1 / c.loss) : c.cost / c.loss; }
+  function h(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+  function sv(n, a, txt) { var e = document.createElementNS(NS, n); for (var k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; return e; }
+  function chart(c, m) {
+    var g = sv('svg', {viewBox: '0 0 520 220', role: 'img', 'aria-label': 'Profit or loss at expiration for ' + c.nm + ', breaking even at ' + c.be});
+    var X = function (p) { return 44 + (p - 88) / 24 * 466; }, Y = function (v) { return 100 - v / 4 * 80; };
+    var cid = 'oc-' + c.id, cp = sv('clipPath', {id: cid}); cp.appendChild(sv('rect', {x: 44, y: 20, width: 466, height: 160})); g.appendChild(cp);
+    g.appendChild(sv('rect', {class: 'bandr', x: X(95), y: 20, width: X(105) - X(95), height: 160}));
+    [-4, -2, 0, 2, 4].forEach(function (v) {
+      g.appendChild(sv('line', {class: v ? 'ax' : 'zero', x1: 44, x2: 510, y1: Y(v), y2: Y(v)}));
+      g.appendChild(sv('text', {class: 'mono-t', x: 38, y: Y(v) + 4, 'text-anchor': 'end', 'font-size': 10}, (v > 0 ? '+' : v < 0 ? '−' : '') + usd(Math.abs(v * 100 * m))));
+    });
+    [90, 95, 100, 105, 110].forEach(function (k) { g.appendChild(sv('text', {class: 'mono-t', x: X(k), y: 196, 'text-anchor': 'middle', 'font-size': 10}, '$' + k)); });
+    var pts = c.pts, lo = pts.filter(function (p) { return p[0] < c.bex; }), hi = pts.filter(function (p) { return p[0] > c.bex; });
+    function area(arr, first) { var q = first ? arr.concat([[c.bex, 0]]) : [[c.bex, 0]].concat(arr); return 'M' + X(q[0][0]) + ' ' + Y(0) + q.map(function (p) { return ' L' + X(p[0]) + ' ' + Y(p[1]); }).join('') + ' L' + X(q[q.length - 1][0]) + ' ' + Y(0) + ' Z'; }
+    g.appendChild(sv('path', {class: 'lossf', d: area(lo, true), 'clip-path': 'url(#' + cid + ')'}));
+    g.appendChild(sv('path', {class: 'gainf', d: area(hi, false), 'clip-path': 'url(#' + cid + ')'}));
+    [[97, '60-day low $97', 'end', -4], [104, '60-day high $104', 'start', 4]].forEach(function (L) { g.appendChild(sv('line', {class: 'lvl', x1: X(L[0]), x2: X(L[0]), y1: 20, y2: 180})); g.appendChild(sv('text', {class: 'lvl-t', x: X(L[0]) + L[3], y: 31, 'text-anchor': L[2], 'font-size': 10}, L[1])); });
+    g.appendChild(sv('line', {class: 'spot', x1: X(100), x2: X(100), y1: 20, y2: 180}));
+    g.appendChild(sv('text', {x: X(100), y: 13, 'text-anchor': 'middle', 'font-size': 11}, 'Spot'));
+    g.appendChild(sv('polyline', {class: 'pline', 'clip-path': 'url(#' + cid + ')', points: pts.map(function (p) { return X(p[0]) + ',' + Y(p[1]); }).join(' ')}));
+    g.appendChild(sv('circle', {class: 'dot', cx: X(c.bex), cy: Y(0), r: 5}));
+    g.appendChild(sv('text', {x: X(c.bex) + 9, y: Y(0) + 15, 'font-size': 11}, 'Breakeven ' + c.be));
+    g.appendChild(sv('text', {class: 'strong-t', x: 48, y: Y(-c.loss / 100) + 15, 'font-size': 12}, 'Max loss −' + usd(c.loss * m)));
+    g.appendChild(sv('text', {class: 'strong-t', x: 506, y: c.gain === Infinity ? 64 : Y(c.gain / 100) - 7, 'text-anchor': 'end', 'font-size': 12}, c.gain === Infinity ? 'Profit continues above the chart' : 'Max profit +' + usd(c.gain * m)));
+    g.appendChild(sv('text', {x: 277, y: 214, 'text-anchor': 'middle', 'font-size': 11}, 'Underlying price at expiration · shaded band is the typical realized move'));
+    return g;
+  }
+  function detail(c) {
+    var d = h('div', 'odet'), a = h('div', 'oc'), b = h('div', 'os');
+    var q = qty(c), m = Math.max(q, 1);
+    a.appendChild(h('h4', '', 'P&L at expiration, ' + (m === 1 ? 'for one contract' : 'for ' + m + ' contracts')));
+    var v = h('div', 'viz'); v.appendChild(chart(c, m)); a.appendChild(v);
+    a.appendChild(h('p', 'keyline', '60-day high and low of the daily close · context only, they place no strike'));
+    var t = h('div', 'tiles');
+    [['Profitable if thesis holds, before slippage', c.right + '%'], ['POP, historical base rate, before slippage', c.base + '%'], ['POP, market-implied, approximate', c.impl + '%']].forEach(function (x) { var e = h('div', 'tile'); e.appendChild(h('span', '', x[0])); e.appendChild(h('b', '', x[1])); t.appendChild(e); });
+    a.appendChild(t);
+    b.appendChild(h('h4', '', 'Legs and quotes'));
+    var tb = h('table'); tb.innerHTML = '<thead><tr><th>Leg</th><th>Bid</th><th>Ask</th><th>Mid</th></tr></thead>';
+    var body = h('tbody');
+    c.legs.forEach(function (l) { var tr = h('tr'); tr.appendChild(h('td', '', l[0])); [l[1], l[2], (l[1] + l[2]) / 2].forEach(function (x) { tr.appendChild(h('td', 'n', x.toFixed(2))); }); body.appendChild(tr); });
+    tb.appendChild(body); b.appendChild(tb);
+    b.appendChild(h('p', 'sub', c.net.replace(/\$(\d+)/, function (x, n) { return usd(n * m); }) + (m === 1 ? ', one contract' : ', ' + m + ' contracts') + ' · est. slippage ' + usd(c.cost * m) + ', ' + Math.round(c.cost / c.loss * 100) + '% of max loss'));
+    b.appendChild(h('h4', '', 'Greeks, per contract'));
+    var ex = h('div', 'ex3'); [['Delta', 0], ['Theta, per day', 1], ['Vega, per vol point', 2]].forEach(function (x) { var e = h('div', '', x[0]); e.appendChild(h('b', '', c.gk[x[1]])); ex.appendChild(e); }); b.appendChild(ex);
+    b.appendChild(h('h4', '', 'Checks'));
+    [['Earnings before expiration', 'No'], [c.nl > 1 ? 'Ex-dividend before expiration, short leg' : 'Ex-dividend before expiration', c.nl > 1 ? 'None declared' : 'No short leg'], ['Order size vs. open interest', 'Within 10%'], ['Contracts', String(qty(c))]].forEach(function (x) { var k = h('div', 'okv'); k.appendChild(h('span', '', x[0])); k.appendChild(h('span', '', x[1])); b.appendChild(k); });
+    b.appendChild(h('h4', '', 'Support and resistance'));
+    b.appendChild(h('p', 'sub', c.lv + ' Context only.'));
+    var o = h('div', 'oth'); o.appendChild(h('strong', '', 'Equivalent construction. ')); o.appendChild(document.createTextNode(c.oth)); b.appendChild(o);
+    d.appendChild(a); d.appendChild(b); return d;
+  }
+  function renderCands() {
+    var host = $('#orows'), p = PRI[o3.p], ro = st.cur > 2;
+    var over = function (c) { return c.cost / c.loss * 100 > o3.cc; }, out = C3.filter(over);
+    var order = C3.filter(function (c) { return !over(c); }).sort(function (x, y) { return key(x, p[0]) - key(y, p[0]) || x.cost - y.cost || x.nl - y.nl; });
+    $('#oCap').textContent = o3.cc + '% of max loss'; $('#cCap').disabled = ro;
+    $('#filtHead').textContent = 'Filtered out: ' + (out.length || 'none') + '.';
+    $('#filtList').textContent = out.length ? out.map(function (c) { return c.nm + ': est. slippage is ' + (Math.round(c.cost / c.loss * 1000) / 10) + '% of max loss, above the ' + o3.cc + '% cost cap.'; }).join(' ') : 'A candidate removed by a filter is listed here with the reason.';
+    $('#toS4').disabled = !order.length;
+    if (order.length && (o3.open === '__top' || (o3.open && !order.some(function (c) { return c.id === o3.open; })))) o3.open = order[0].id;
+    if (!ro && order.length) st.pick = o3.open || order[0].id;
+    host.textContent = '';
+    var hd = h('div', 'ohead'); HEAD.forEach(function (t, i) { hd.appendChild(h('span', i === p[2] + 2 ? 'hl' : '', t + (i === p[2] + 2 ? ' ▾' : ''))); }); host.appendChild(hd);
+    order.forEach(function (c, i) {
+      var box = h('div', 'ocand' + (i === 0 ? ' rec' : '') + (o3.open === c.id ? ' open' : '')), r = h('div', 'orow');
+      var q = qty(c), m = Math.max(q, 1);
+      r.appendChild(h('span', 'v rk', String(i + 1)));
+      var nm = h('span', 'nm', c.nm); nm.setAttribute('data-rank', i + 1); r.appendChild(nm);
+      [['Max loss', usd(c.loss * m)], ['Max profit', c.gain === Infinity ? 'Unlimited' : usd(c.gain * m)], ['Breakeven', c.be], ['Profitable if thesis holds', c.right + '%'], ['POP: historical / implied', c.base + '% / ' + c.impl + '%'], ['Est. slippage', usd(c.cost * m) + ' · ' + Math.round(c.cost / c.loss * 100) + '%'], ['Contracts', String(q)]].forEach(function (x) { var e = h('span', 'v', x[1]); e.setAttribute('data-l', x[0]); r.appendChild(e); });
+      var bt = h('button', '', o3.open === c.id ? 'Hide ▴' : 'Detail ▾'); bt.type = 'button'; bt.setAttribute('aria-expanded', o3.open === c.id ? 'true' : 'false'); bt.setAttribute('aria-label', (o3.open === c.id ? 'Hide detail of ' : 'Show detail of ') + c.nm);
+      bt.addEventListener('click', function () { o3.open = o3.open === c.id ? null : c.id; renderCands(); });
+      r.appendChild(bt);
+      r.appendChild(h('span', 'why1', q === 0 ? 'No contracts fit: one contract risks ' + usd(c.loss) + ', above the figure entered. Figures shown are for one contract.' : p[0] === 'payoff' ? (i === 0 ? 'Best fit: returns ' : 'Returns ') + '$' + (c.g1 / c.loss).toFixed(2) + ' per $1 at risk if spot rises one typical move, to $105.' + (c.more || '') : i === 0 ? 'Best fit: ' + (c.why[p[0]] || 'ranked first on the chosen ranking') + '.' : c.need));
+      box.appendChild(r); if (o3.open === c.id) box.appendChild(detail(c)); host.appendChild(box);
+    });
+    var seg = $('#segPri'); seg.textContent = '';
+    PRI.forEach(function (x, i) { var b = h('button', '', x[1]); b.type = 'button'; b.disabled = ro; b.setAttribute('aria-pressed', i === o3.p ? 'true' : 'false'); b.addEventListener('click', function () { o3.p = i; o3.open = '__top'; renderCands(); }); seg.appendChild(b); });
+    $('#mxl').disabled = ro;
+    var pk = CANDS.filter(function (c) { return c.id === st.pick; })[0], pn = C3.filter(function (c) { return c.id === st.pick; })[0].nm;
+    $('#toS4').textContent = 'Continue to the challenge with the ' + pn.split(/[,(]/)[0].trim().toLowerCase();
+    var cc = C3.filter(function (c) { return c.id === st.pick; })[0], m = Math.max(qty(cc), 1), CH = {
+      pcs: {lose: ['A close below the $98.30 breakeven.', ' That has happened in 38% of past 32-day periods.'], obj: ['This strategy is short premium.', " The project's tests found no excess return from rule-based premium selling after 2012.", 'CONTRACT CHECK 7 · RESEARCH PASSAGE'],
+        rows: [['fl', 'FLAG', 'Short-premium strategy', 'Net credit ' + usd(170 * m) + ' vs. max loss ' + usd(330 * m) + '.'], ['un', 'N/C', 'Early assignment', 'No ex-dividend date.']], cnt: '1 flagged · 1 not checked · 9 passed', items: 6,
+        pass: ['Can lose with the thesis correct', 'Volatility regime vs. strategy', 'Expiration mismatch', 'POP gap, historical vs. implied', 'Implied move above typical move', 'Slippage high', 'Order size', 'Top-ranked candidate passed over', 'Price moved since selection']},
+      cds: {lose: ['A close below the $101.70 breakeven.', ' That has happened in 59% of past 32-day periods.'], obj: ['The trade can lose with the thesis correct.', ' A higher close that stays below $101.70 still loses: 29% of the periods that closed higher.', 'CONTRACT CHECK 1 · CLAIM 1'],
+        rows: [['fl', 'FLAG', 'Can lose with the thesis correct', 'Needs spot above $101.70. Profitable in 71% of periods with a higher close.'], ['un', 'N/C', 'Early assignment', 'No ex-dividend date.']], cnt: '1 flagged · 1 not checked · 9 passed', items: 6,
+        pass: ['Volatility regime vs. strategy', 'Expiration mismatch', 'POP gap, historical vs. implied', 'Implied move above typical move', 'Slippage high', 'Short-premium strategy', 'Order size', 'Top-ranked candidate passed over', 'Price moved since selection']},
+      lc: {lose: ['A close below the $102.40 breakeven.', ' That has happened in 64% of past 32-day periods.'], obj: ['The trade can lose with the thesis correct.', ' A higher close that stays below $102.40 still loses: 37% of the periods that closed higher. Time decay is about $5 a day.', 'CONTRACT CHECK 1 · CLAIM 1'],
+        rows: [['fl', 'FLAG', 'Can lose with the thesis correct', 'Needs spot above $102.40. Profitable in 63% of periods with a higher close.'], ['', 'N/A', 'Early assignment', 'No short leg.']], cnt: '1 flagged · 1 not applicable · 9 passed', items: 5,
+        pass: ['Volatility regime vs. strategy', 'Expiration mismatch', 'POP gap, historical vs. implied', 'Implied move above typical move', 'Slippage high', 'Short-premium strategy', 'Order size', 'Top-ranked candidate passed over', 'Price moved since selection']}
+    }[st.pick];
+    $('#chFor').textContent = '30-day horizon · ' + pn.charAt(0).toLowerCase() + pn.slice(1) + ', exp. 18 December · ' + m + (m === 1 ? ' contract' : ' contracts');
+    $('#chReady').textContent = 'No blocking conditions. ' + CH.items + ' items for your judgement.';
+    var L = $('#chLose'); L.textContent = ''; L.appendChild(h('b', '', CH.lose[0])); L.appendChild(document.createTextNode(CH.lose[1]));
+    var O = $('#chObj'); O.textContent = ''; O.appendChild(h('b', '', CH.obj[0])); O.appendChild(document.createTextNode(CH.obj[1])); O.appendChild(h('small', '', CH.obj[2]));
+    $('#chCnt').textContent = CH.cnt;
+    var K = $('#chCon'); K.textContent = '';
+    CH.rows.forEach(function (r) { var d = h('div', 'cline chk2'); d.appendChild(h('span', 'chip ' + r[0], r[1])); var x = h('div'); x.appendChild(h('b', '', r[2])); x.appendChild(h('span', '', r[3])); d.appendChild(x); K.appendChild(d); });
+    var P = $('#chPass'); P.textContent = ''; CH.pass.forEach(function (t) { P.appendChild(h('li', '', t)); });
+  }
+  var AG = [['Evidence Retriever', 'Fetching filings, earnings materials and the calendar', 0], ['Fundamental Analyst', 'Reading filings and estimates', 1], ['Regime Assessor', 'Sector, macro and market conditions', 1], ['Technical Analyst', 'Describing price behaviour', 1], ['Thesis agent', 'Combining the findings by precedence', 2], ['Validation check', 'Fixed rules, in code', 3]];
+  function renderAgents(phase) {
+    var host = $('#agents'); host.textContent = '';
+    AG.forEach(function (a) {
+      var s = a[2] < phase ? 'fin' : a[2] === phase ? 'run' : '';
+      var d = document.createElement('div'); d.className = 'ag ' + s + (a[2] === 1 ? ' par' : '');
+      d.innerHTML = '<span class="dot" aria-hidden="true"></span><div><b></b><small></small></div><span class="st"></span>';
+      d.querySelector('b').textContent = a[0]; d.querySelector('small').textContent = a[1];
+      d.querySelector('.st').textContent = s === 'fin' ? 'DONE' : s === 'run' ? 'WORKING' : 'WAITING';
+      host.appendChild(d);
+    });
+  }
+  function clearTimers() { st.timers.forEach(clearTimeout); st.timers = []; }
+  function runAgents() {
+    clearTimers(); renderAgents(0);
+    if (reduce) { renderAgents(4); st.timers.push(setTimeout(function () { show('s2'); }, 400)); return; }
+    [1, 2, 3, 4].forEach(function (ph, k) { st.timers.push(setTimeout(function () { renderAgents(ph); }, 900 * (k + 1))); });
+    st.timers.push(setTimeout(function () { show('s2'); }, 900 * 5));
+  }
+
+  function show(s) {
+    if (s !== 's2w') clearTimers();
+    // moving forward advances the stage in progress
+    if (s === 'home') { st.cur = -1; }
+    else if (s === 'end') { st.cur = 4; }
+    else { var i = idxOf(s); if (i > st.cur) st.cur = i; }
+    st.screen = s;
+    applyScn();
+    $('#ctl').hidden = true;
+    document.querySelectorAll('.screen').forEach(function (e) { e.classList.toggle('on', e.getAttribute('data-s') === s); });
+    $('#reqbar').hidden = s === 'home';
+    $('#navHome').setAttribute('aria-current', s === 'home' ? 'page' : 'false');
+    var vi = idxOf(s), reviewing = vi > -1 && vi < st.cur;
+    var scr = $('.screen.on');
+    scr.querySelectorAll('[data-review]').forEach(function (e) { e.classList.toggle('on', reviewing); });
+    scr.querySelectorAll('.actions .btn').forEach(function (b) { if (!b.hasAttribute('title')) b.disabled = reviewing; });
+    renderStages(); renderCands();
+    if (s === 's2w') runAgents();
+    window.scrollTo(0, 0);
+    var h = scr.querySelector('strong, h1'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({preventScroll: true}); }
+  }
+  function current() { return st.cur >= 4 ? 'end' : STAGES[st.cur][0]; }
+
+  document.querySelectorAll('[data-go]').forEach(function (b) { b.addEventListener('click', function () { show(b.getAttribute('data-go')); }); });
+  document.querySelectorAll('[data-back]').forEach(function (b) { b.addEventListener('click', function () { show(current()); }); });
+  $('#backS3').addEventListener('click', function () { st.cur = 2; show('s3'); });
+  document.querySelectorAll('button.more').forEach(function (b) { b.addEventListener('click', function () { var u = b.nextElementSibling, o = u.hidden; u.hidden = !o; b.setAttribute('aria-expanded', o ? 'true' : 'false'); b.textContent = (b.getAttribute('data-label') || b.getAttribute('data-n') + ' passed') + ' ' + (o ? '\u25b4' : '\u25be'); }); });
+  $('#agSkip').addEventListener('click', function () { show('s2'); });
+  $('#ask').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var pickd = chosen || matches($('#tk').value)[0];
+    if (!pickd) { $('#askMsg').textContent = $('#tk').value.trim() ? 'No listed symbol matches. Choose one from the list.' : 'Type a symbol or a company name.'; $('#tk').focus(); return; }
+    closeSugg(); st.ticker = pickd[0]; $('#tk').value = ''; chosen = null; $('#askMsg').textContent = '';
+    $('#reqT').textContent = st.ticker; st.pick = 'pcs'; resetS3(); st.cur = 0; setCtl(DEF); applyCtl(); show('s1');
+  });
+  function home() { show('home'); }
+  $('#brand').addEventListener('click', home); $('#navHome').addEventListener('click', home); $('#restart').addEventListener('click', home);
+
+  // gate controls (illustrative: the count is a made-up formula, not a real chain)
+  var OI = [10, 25, 50, 100, 250, 500, 1000];
+  var DEF = {gap: 5, oi: 3, d1: 42, d2: 90, k: 10, px: 0.2};
+  st.set = JSON.parse(JSON.stringify(DEF));
+  function clampD(v) { v = Math.round(Number(v)); return isNaN(v) ? 7 : Math.max(7, Math.min(180, v)); }
+  function readCtl() { var a = clampD($('#cD1').value), b = clampD($('#cD2').value); return {gap: +$('#cGap').value, oi: +$('#cOi').value, d1: Math.min(a, b), d2: Math.max(a, b), k: +$('#cK').value, px: +$('#cPx').value}; }
+  function setCtl(s) { $('#cGap').value = s.gap; $('#cOi').value = s.oi; $('#cD1').value = s.d1; $('#cD2').value = s.d2; $('#cK').value = s.k; $('#cPx').value = s.px; syncCtl(); }
+  function fmt(s) { return {gap: s.gap + '%', oi: OI[s.oi].toLocaleString('en-US'), dte: s.d1 + ' to ' + s.d2, k: s.k + '%', px: '$' + s.px.toFixed(2)}; }
+  function syncCtl() {
+    var s = readCtl(), f = fmt(s), d = fmt(DEF);
+    [['oGap', 'gap'], ['oOi', 'oi'], ['oDte', 'dte'], ['oK', 'k'], ['oPx', 'px']].forEach(function (p) { var o = $('#' + p[0]); o.textContent = f[p[1]]; o.closest('.ctl').classList.toggle('chg', f[p[1]] !== d[p[1]]); });
+    var key = s.d1 + '-' + s.d2, sel = $('#cPre'); sel.value = [].some.call(sel.options, function (o) { return o.value === key; }) ? key : 'c';
+  }
+  function count(s) {
+    var n = 0; for (var day = s.d1; day <= s.d2; day++) n += day <= 21 ? 31 / 15 : day <= 41 ? 68 / 20 : day <= 90 ? 212 / 49 : 51 / 90;
+    return Math.round(n * Math.pow(s.gap / 5, 0.9) * Math.pow(100 / OI[s.oi], 0.15) * Math.pow(s.k / 10, 0.6) * Math.pow(0.2 / s.px, 0.1));
+  }
+  function applyCtl() {
+    st.set = readCtl(); setCtl(st.set);
+    var f = fmt(st.set), d = fmt(DEF), ch = 0;
+    [['vGap', 'gap'], ['vOi', 'oi'], ['vDte', 'dte'], ['vK', 'k'], ['vPx', 'px']].forEach(function (p) { var b = $('#' + p[0]); b.textContent = f[p[1]]; var c = f[p[1]] !== d[p[1]]; b.style.color = c ? 'var(--accent)' : ''; if (c) ch++; });
+    var chip = $('#sChip'); chip.textContent = ch ? ch + ' CHANGED FROM DEFAULT' : 'ALL AT DEFAULT'; chip.className = 'chip' + (ch ? ' ac' : '');
+    var n = count(st.set), ok = n >= 2, g = $('#gChip'); g.textContent = ok ? 'PASS' : 'FAIL'; g.className = 'chip ' + (ok ? 'ok' : 'fl');
+    $('#gHead').textContent = n.toLocaleString('en-US') + (n === 1 ? ' contract passes' : ' contracts pass') + ' the liquidity screen';
+  }
+  ['cGap', 'cOi', 'cD1', 'cD2', 'cK', 'cPx'].forEach(function (id) { $('#' + id).addEventListener('input', syncCtl); });
+  $('#cPre').addEventListener('change', function () { var v = this.value.split('-'); if (v.length === 2) { $('#cD1').value = v[0]; $('#cD2').value = v[1]; } syncCtl(); });
+  $('#adj').addEventListener('click', function () { var c = $('#ctl'); c.hidden = !c.hidden; if (!c.hidden) { setCtl(st.set); c.scrollIntoView({block: 'nearest'}); $('#ctlHead').focus({preventScroll: true}); } });
+  $('#ctlCancel').addEventListener('click', function () { setCtl(st.set); $('#ctl').hidden = true; });
+  $('#ctlReset').addEventListener('click', function () { setCtl(DEF); });
+  $('#ctlApply').addEventListener('click', function () { applyCtl(); $('#ctl').hidden = true; window.scrollTo(0, 0); });
+  $('#mxl').addEventListener('input', function () {
+    var v = parseFloat(this.value.replace(/[^0-9.]/g, ''));
+    o3.cap = isFinite(v) && v > 0 ? v : null;
+    $('#mxlNote').textContent = o3.cap == null ? 'Every candidate is shown for one contract.' : 'Contracts, max loss, max profit and slippage are resized to fit ' + usd(o3.cap) + '.';
+    renderCands();
+  });
+  // symbol search (illustrative list of fictional companies; the product loads every listed symbol)
+  var SYMS = [['EXMP', 'Example Motors Corp', 'STOCK'], ['EXMR', 'Exmoor Renewables Inc', 'STOCK'], ['EXPD', 'Expedient Logistics Co', 'STOCK'], ['EXTL', 'Extol Semiconductor Ltd', 'STOCK'], ['TGTX', 'Targetex Retail Group', 'STOCK'], ['WMTX', 'Wallmont Stores Inc', 'STOCK'], ['HDXX', 'Homedex Building Supply', 'STOCK'], ['MOTR', 'Motorline Example Holdings', 'STOCK'], ['NRTH', 'Northgate Example Bank', 'STOCK'], ['PXMP', 'Pacific Exmouth Mining plc', 'STOCK'], ['SPYX', 'Broad Market 500 Trust', 'ETF'], ['QQXX', 'Technology 100 Trust', 'ETF'], ['TLTX', 'Long Treasury Bond Fund', 'ETF'], ['SPXX', 'Broad Market 500 Index', 'INDEX']];
+  var chosen = null, act = -1, cur = [];
+  function matches(q) {
+    q = (q || '').trim().toLowerCase(); if (!q) return [];
+    var a = [], b = [], c = [];
+    SYMS.forEach(function (x) { var sy = x[0].toLowerCase(), nm = x[1].toLowerCase(); if (sy.indexOf(q) === 0) a.push(x); else if (nm.indexOf(q) === 0 || nm.indexOf(' ' + q) > -1) b.push(x); else if (sy.indexOf(q) > -1 || nm.indexOf(q) > -1) c.push(x); });
+    return a.concat(b, c).slice(0, 8);
+  }
+  function hl(el, text, q) { var i = text.toLowerCase().indexOf(q.toLowerCase()); if (i < 0) { el.textContent = text; return; } el.appendChild(document.createTextNode(text.slice(0, i))); el.appendChild(h('mark', '', text.slice(i, i + q.length))); el.appendChild(document.createTextNode(text.slice(i + q.length))); }
+  function closeSugg() { $('#sugg').hidden = true; $('#tk').setAttribute('aria-expanded', 'false'); $('#tk').removeAttribute('aria-activedescendant'); act = -1; }
+  function setAct(i) { act = i; [].forEach.call($('#sugg').children, function (li, k) { li.setAttribute('aria-selected', k === i ? 'true' : 'false'); if (k === i) { $('#tk').setAttribute('aria-activedescendant', li.id); li.scrollIntoView({block: 'nearest'}); } }); }
+  function choose(x) { chosen = x; $('#tk').value = x[0] + '  ' + x[1]; closeSugg(); $('#askMsg').textContent = ''; }
+  function renderSugg() {
+    var q = $('#tk').value.trim(), u = $('#sugg'); u.textContent = ''; chosen = null; $('#askMsg').textContent = '';
+    if (!q) { closeSugg(); return; }
+    cur = matches(q);
+    if (!cur.length) { u.appendChild(h('li', 'none', 'No listed symbol matches "' + q + '"')); }
+    cur.forEach(function (x, i) { var li = h('li'); li.id = 'sg' + i; li.setAttribute('role', 'option'); var a = h('span', 'sy'), b = h('span', 'nm2'); hl(a, x[0], q); hl(b, x[1], q); li.appendChild(a); li.appendChild(b); li.appendChild(h('span', 'ty', x[2])); li.addEventListener('mousedown', function (e) { e.preventDefault(); choose(x); }); u.appendChild(li); });
+    u.hidden = false; $('#tk').setAttribute('aria-expanded', 'true'); setAct(cur.length ? 0 : -1);
+  }
+  $('#tk').addEventListener('input', renderSugg);
+  $('#tk').addEventListener('focus', function () { if ($('#tk').value.trim() && !chosen) renderSugg(); });
+  $('#tk').addEventListener('blur', closeSugg);
+  $('#tk').addEventListener('keydown', function (e) {
+    var open = !$('#sugg').hidden;
+    if (e.key === 'ArrowDown' && open && cur.length) { e.preventDefault(); setAct((act + 1) % cur.length); }
+    else if (e.key === 'ArrowUp' && open && cur.length) { e.preventDefault(); setAct((act - 1 + cur.length) % cur.length); }
+    else if (e.key === 'Enter' && open && cur[act]) { e.preventDefault(); choose(cur[act]); }
+    else if (e.key === 'Escape' && open) { e.preventDefault(); closeSugg(); }
+  });
+  // thesis outcome (prototype switch) and the user's own view
+  function applyScn() { var v = $('#scn').value; document.querySelectorAll('[data-scn]').forEach(function (e) { e.hidden = e.getAttribute('data-scn').split(' ').indexOf(v) < 0; }); }
+  $('#scn').addEventListener('change', function () { if (st.screen === 's2u') show('s2'); else applyScn(); });
+  var uDir = 'bull';
+  function uEval() {
+    var sup = 0, opp = 0, ctx = 0, inv = document.querySelectorAll('[data-s="s2u"] [data-inv]:checked').length;
+    document.querySelectorAll('[data-s="s2u"] [data-k]').forEach(function (i) { if (i.getAttribute('data-k') === 'c') { if (i.checked) ctx++; } else if (i.getAttribute('data-b') === uDir) { if (i.checked) sup++; } else opp++; });
+    var any = sup + ctx > 0 || document.querySelector('[data-s="s2u"] [data-k="a"]:checked');
+    var chip = $('#uChip'), v = $('#uVerdict'), w = $('#uWhy');
+    if (!any) { chip.textContent = 'NOT STARTED'; chip.className = 'chip'; v.textContent = 'Choose what you are relying on.'; w.textContent = ''; }
+    else if (sup === 0) { chip.textContent = 'NOT SUPPORTED'; chip.className = 'chip fl'; v.textContent = 'Nothing you chose carries a direction that matches your view.'; w.textContent = (ctx ? ctx + ' context item' + (ctx > 1 ? 's' : '') + ' chosen; context has no direction. ' : '') + (opp ? 'One finding that carries a direction points the other way.' : ''); }
+    else if (opp || ctx) { chip.textContent = 'PARTLY SUPPORTED'; chip.className = 'chip ac'; v.textContent = 'One finding with a direction supports your view.'; w.textContent = (opp ? 'One finding with a direction points the other way; it stands against the thesis whether or not you chose it. ' : '') + (ctx ? ctx + ' of your choices ' + (ctx > 1 ? 'are' : 'is') + ' context and adds no support.' : ''); }
+    else { chip.textContent = 'WELL SUPPORTED'; chip.className = 'chip ok'; v.textContent = 'Everything you chose carries a direction that matches your view.'; w.textContent = ''; }
+    $('#uFreeze').disabled = !(any && inv > 0);
+  }
+  document.querySelectorAll('#uDir button').forEach(function (b) { b.addEventListener('click', function () { uDir = b.getAttribute('data-d'); document.querySelectorAll('#uDir button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); uEval(); }); });
+  document.querySelectorAll('[data-s="s2u"] input').forEach(function (i) { i.addEventListener('change', uEval); });
+  $('#uFreeze').addEventListener('click', function () { show('s3'); });
+  $('#cCap').addEventListener('input', function () { o3.cc = +this.value; if (o3.open) o3.open = '__top'; renderCands(); });
+  resetS3();
+  show('home');
+})();
+</script>
