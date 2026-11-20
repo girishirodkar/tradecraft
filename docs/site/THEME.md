@@ -43,6 +43,7 @@ Panels have a 1px border and a 6px radius. Reading column is 860px at most.
 - `challenge.html` — stage 4 of on-demand mode: the challenge. Eight parts: outline, the six steps, the twelve checks on the thesis, the eleven checks on the contract, the question and the evidence, the critic, the challenge screen with its readiness line, and the decision record. Written 17 November 2026.
 - `liquidity-gate.html` — stage 1 of on-demand mode. The reference implementation
   of this theme: copy its `<style>` block when starting a new page.
+- `capstone-report.html` — the final capstone report, added 20 November 2026: one self-contained file with its images embedded, written outside this repository and copied in unchanged. It is linked from the README and served by GitHub Pages. Do not edit it here; replace the whole file if the report changes.
 
 ## Language
 

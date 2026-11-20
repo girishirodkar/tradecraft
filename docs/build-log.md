@@ -2,6 +2,10 @@
 
 A running record of what is built, what is next and what was decided, session by session. The design documents hold the rules; this file says where the build stands. Newest session first.
 
+## 20 November 2026, about 12:45 PT: the fresh-clone test of the published repositories passes
+
+Both public repositories were cloned from GitHub into an empty scratch folder (main at `d586a4f`, the demo data into `data/demo-bundle`) and the README's steps followed with no key and no `.env`: `uv sync`, then the tests (**375 passed, 4 skipped,** as the README says for a fresh clone), then the keyless demo on port 8324. Driven through its interface: **MSFT bullish and AMZN bearish each ran all four stages** (gate pass on the bundled snapshot, three candidates, challenge reached with the Critic's output and a readiness of Ready, then "Proceed"); **NVDA returned no view (conflict)** with "Take a view yourself" offered. The page shows RECORDED DEMO. No error in the server's log. Not done: entering a thesis for NVDA; looking at each screen (the states were read through the interface, and Home was seen once). The scratch clone was deleted.
+
 ## 20 November 2026, about 12:25 PT: the rolling job is hourly and slowed; BRK.B fixed (operator decisions)
 
 The operator chose the slower, hourly rolling refresh (07:00, 08:00, 09:00, 10:00, 12:00 Pacific, about 65 Tradier requests a minute) and kept the 7 min 21 s take as the demo video. **BRK.B was the one name with no rows** in both morning runs: Tradier writes it BRK/B and lists its expirations only with `includeAllRoots`. Fixed in `chain_census.py` and in `chain.live_tradier`, which now also asks for all roots. Tested on real data: BRK.B 1,524 rows through the job and 1,524 contracts through the application; SPX through the application 25,866 contracts over 38 expirations. **The 11:00 archive file of 20 November has no BRK.B rows and cannot be refilled.** 376 tests pass. The operator installs the new schedule with `ops/reinstall.sh`. Not yet seen: a full run at the slower pace (estimated at about 45 minutes).
