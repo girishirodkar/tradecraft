@@ -93,12 +93,14 @@ def _headers_for(host: str) -> dict:
 
 
 def get(url: str, params: dict | None = None, *, source: str, store: Store | None = None,
-        secret_param: tuple[str, str] | None = None, use_cache: bool = True,
-        retries: int = 2) -> bytes:
+        secret_param: tuple[str, str] | None = None, bearer: str | None = None,
+        use_cache: bool = True, retries: int = 2) -> bytes:
     """GET a URL through the allowlist, the rate limiter and the daily cache.
 
     `secret_param` = (query name, secret name), e.g. ("apikey", "FMP_API_KEY"):
     added to the request only, never to the cache key or any message.
+    `bearer` = the name of a secret sent as "Authorization: Bearer ..." to the
+    first host only, never to a host a redirect leads to.
     """
     host = check_host(url)
     params = dict(params or {})
@@ -114,11 +116,17 @@ def get(url: str, params: dict | None = None, *, source: str, store: Store | Non
         if not val:
             raise FetchFailed(f"{secret_param[1]} is not set in .env")
         send[secret_param[0]] = val
+    auth = {}
+    if bearer:
+        val = settings.secret(bearer)
+        if not val:
+            raise FetchFailed(f"{bearer} is not set in .env")
+        auth = {"Authorization": f"Bearer {val}", "Accept": "application/json"}
     last = ""
     for attempt in range(1 + retries):
         _limiter.wait(host)
         try:
-            r = _http().get(url, params=send, headers=_headers_for(host))
+            r = _http().get(url, params=send, headers={**_headers_for(host), **auth})
             for _ in range(3):             # follow a redirect only to a host on the allowlist
                 if r.status_code not in (301, 302, 303, 307, 308) or "location" not in r.headers:
                     break
@@ -135,7 +143,9 @@ def get(url: str, params: dict | None = None, *, source: str, store: Store | Non
             if use_cache:
                 store.cache_put(key, source, body)
             return body
-        last = f"HTTP {r.status_code}: {settings.redact(r.text[:200])}"
+        body = r.text[:200].strip()
+        # A web page in place of data (a block page, say) is not shown: it is markup, not a reason.
+        last = f"HTTP {r.status_code}" if body.startswith("<") else f"HTTP {r.status_code}: {settings.redact(body)}"
         if r.status_code in (429,) or r.status_code >= 500:
             time.sleep(0.5 * (2 ** attempt))
             continue

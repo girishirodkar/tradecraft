@@ -161,7 +161,7 @@ h2 { scroll-margin-top: 16px; }
 
   <h2 id="what">What it is</h2>
   <p>Tradecraft is a personal options research tool for one user with a US retail account, and the capstone for an agentic-AI course. The user names one US-listed underlying. Tradecraft screens its option chain for liquidity, drafts a researched thesis with a team of agents, proposes defined-risk option strategies by fixed rules, and then challenges both the thesis and the chosen strategy before the user decides.</p>
-  <p>It is a research tool, not a trading system and not a signal. It has no connection to a broker. What it gives the user is a view with its evidence shown, a small set of strategies with their costs stated, and an honest account of what could go wrong.</p>
+  <p>It is a research tool, not a trading system and not a signal. It cannot place an order. What it gives the user is a view with its evidence shown, a small set of strategies with their costs stated, and an honest account of what could go wrong.</p>
   <p class="sub" style="margin-top:20px">The elevator pitch, 1 minute 22 seconds.</p>
   <video class="pitch" controls preload="metadata" poster="../media/tradecraft-pitch-poster.jpg" src="../media/tradecraft-pitch.mp4"></video>
   <p class="sub">Narrated. If the player does not load, open <a href="../media/tradecraft-pitch.mp4">the video file</a>.</p>
@@ -198,11 +198,11 @@ h2 { scroll-margin-top: 16px; }
 
   <h2 id="not">What it will not do</h2>
   <ul>
-    <li><strong>It places no orders.</strong> No tool in the system can reach a broker. The user places any trade themselves, elsewhere.</li>
+    <li><strong>It places no orders.</strong> It reads market data and nothing else, and no agent has a tool that reaches a broker. Its second source of option quotes, Tradier, is a broker's market-data service: the code asks it for prices and option chains only. The user places any trade themselves, elsewhere.</li>
     <li><strong>It gives no investment advice.</strong> The first-ranked strategy is called the "best fit", never "recommended". The Critic gives no verdict, and its answer is refused if it contains one.</li>
     <li><strong>It states no probability for a view.</strong> The historical base rate is shown beside the view and is not moved by it. Every system thesis is labelled "no demonstrated predictive edge".</li>
     <li><strong>It does not present a guess as a fact.</strong> No agent sets a figure, every claim cites stored evidence, and a check never reports "passed" for want of data.</li>
-    <li><strong>It does not hide a failure.</strong> A source that cannot be reached is shown as "not available" or "could not be checked", and a stage that fails stops with a Retry; it is never shown as a no view.</li>
+    <li><strong>It does not hide a failure.</strong> An input that cannot be fetched is shown as "not available" or "could not be checked". Option quotes have three sources in order (Cboe, Tradier, the latest snapshot); the change is automatic and the screen names the one that answered. A stage that fails stops with a Retry; it is never shown as a no view.</li>
   </ul>
 
   <h2 id="why">Why it is built this way</h2>

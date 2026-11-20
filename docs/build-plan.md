@@ -55,7 +55,7 @@ One function runs any agent from a configuration: instructions, model, allowed t
 | Guardrail hooks | Checks before a call (inputs) and after it (outputs), listed in section 5 |
 | Untrusted content | Text fetched from filings, data providers or the corpus is wrapped and labelled as data; instructions inside it are never followed |
 | Run limits | The table below. Every value is a setting in configuration |
-| Recovery | A failed source falls back (live chain to snapshot; missing input to "not available"); a failed agent stops the stage with a plain message |
+| Recovery | A failed source falls back (option quotes: Cboe, then Tradier, then the snapshot, by operator decision of 20 November 2026; missing input to "not available"); a failed agent stops the stage with a plain message |
 | Trace | Every model call, tool call, validation result and guardrail result, stored and viewable. Each run also records a fingerprint of the agent's configuration (instructions, output format, checks, tools, model), so every output can be traced to the prompt version that produced it |
 
 **Run limits (starting values, not measurements; adjust after the first real runs).**
@@ -74,7 +74,7 @@ One function runs any agent from a configuration: instructions, model, allowed t
 | Tool errors | One retry, then the fallback or "not available" | Recorded as an unavailable input |
 | Repeated identical tool call | Refused the second time | The agent is told it already has that result |
 | Spend | $1 a request and $10 a day, counted from token usage; the $50 account limit sits behind both | The request stops before the next model call |
-| Outside services | At most 5 requests a second to the SEC; the free data key's daily cap is looked up and recorded on day one | Requests wait; nothing is dropped silently |
+| Outside services | At most 5 requests a second to the SEC; the free data key's daily cap is looked up and recorded on day one. Tradier, added 20 November 2026: 100 requests a minute | Requests wait; nothing is dropped silently |
 | Cache | Filings, price history and provider responses are cached per symbol per day | A repeated run does not refetch |
 | Reach of tools | Network: the data sources' domains only. Files: the application's data folder only | Refused and traced |
 | Concurrency | **One open request at a time** (running or waiting at a pause; clarified 18 November 2026). Stop on screen cancels the running agents. Leaving, reloading, a second tab and an engine restart are specified in `docs/product-shell.md`, section 2 | A second request is refused and the open one is shown |
@@ -195,7 +195,7 @@ The brief asks for a "statement of potential unintended actions the system may e
 
 | Unintended action | Steps taken |
 |---|---|
-| Placing or changing an order | No tool can reach a broker. The system outputs candidates; the user places orders |
+| Placing or changing an order | No tool can place an order, and no agent has a tool that reaches a broker. The system outputs candidates; the user places orders. **Amended 20 November 2026:** the option-chain code (not an agent) now reads market data from Tradier, which is a broker, with the operator's token. It calls three market-data addresses (price, expirations, chain) and nothing else; no order or account address appears in the code. This rests on what the code calls: the network allowlist is by host, so it does not by itself separate Tradier's market data from its order addresses |
 | Following instructions hidden in a filing or a web page | Retrieved text is labelled as data; tools are allowlisted, so an injected instruction has nothing to call. Tested |
 | Running in a loop and spending without limit | Tool-call, time and spend limits per agent, stage, request and day; repeated calls refused |
 | Presenting a guess as a fact or a figure | No agent sets a figure; every claim cites stored evidence; validation rejects a draft that does not. Tested |
@@ -204,7 +204,7 @@ The brief asks for a "statement of potential unintended actions the system may e
 | Using a signal already shown not to work | The rejected-signal list, checked in code |
 | Acting on stale prices or a stale thesis | The readiness line; "could not be checked" is never shown as passed |
 | Overloading a data source or breaking its terms | Rate limits, caching, a declared contact for the SEC |
-| Leaking a key or personal detail | Secrets only in `.env`, never printed, logged or committed |
+| Leaking a key or personal detail | Secrets only in `.env`, never printed, logged or committed. The Tradier token (added 20 November 2026) belongs to a brokerage account: it is sent as a request header to Tradier's market-data address only, never to a host a redirect leads to, and no tool can reach an order or account address |
 | Reaching beyond its job on the computer | Network and file allowlists; no shell tool; no agent can change a setting or the daily snapshot job |
 | Failing silently | Every step traced; every limit reached and every unavailable input is shown and recorded |
 

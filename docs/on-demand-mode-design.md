@@ -90,6 +90,7 @@ The question is the same either way: does this name carry at least two contracts
 
 - **"Market open" means regular hours on a trading day.** Quotes after the close are unusable (spec §0a: 35 names blocked on moneyness post-close against 4 intraday). The session check must know NYSE holidays and early closes; the census tool's `us_session()` does not, so the calendar is a build item for this step.
 - **The live quote is 15 minutes delayed** on the free feed. That is fine for a screen and is stated on screen.
+- **Where the live chain comes from (operator decision, 20 November 2026): Cboe, then Tradier, then the latest snapshot.** If Cboe does not answer, the chain is fetched from Tradier (real-time, on the operator's token) and the result is still live. If neither answers, the latest snapshot is used and the result is provisional, as in the market-closed row. The change is automatic, the screen names the source, and the same order applies wherever a later stage fetches the chain. Detail: `docs/decisions/2026-11-18-data-sources.md`.
 - **A fail stops the request by default**, live or snapshot, with the reason (spread too wide, open interest too low, too few contracts). **The user can overrule it** — see below.
 - **Snapshot history never overrides a live result.** A name that passed for a month and fails live today fails. History is context: it tells the user whether today's result is typical.
 - **One ticker per request** (17 November 2026). Lists are out of scope for now.
@@ -117,7 +118,7 @@ Where this section and the older sentence "the gate is not overridable" disagree
 
 The gate does not present the list of passing contracts. A liquid ticker passes hundreds and there is no thesis yet to choose among them. It presents one screen:
 
-- **Verdict line:** ticker, pass or fail, the number of contracts qualifying at the current settings, the source (live, 15 minutes delayed, or snapshot with its date) and the time.
+- **Verdict line:** ticker, pass or fail, the number of contracts qualifying at the current settings, the source (live from Cboe, 15 minutes delayed; live from Tradier, real-time; or snapshot with its date) and the time.
 - **Where the liquidity is:** qualifying-contract counts by expiry range and by calls and puts, with the user's current expiry setting marked and the ranges outside it shown for context.
 - **Typical cost:** median, lowest and highest bid-ask gap of the passing contracts.
 - **Why the rest failed:** counts by control.

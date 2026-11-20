@@ -179,7 +179,7 @@ h2 { scroll-margin-top: 16px; }
   </div>
   <div class="two">
     <div class="panel"><h4>What it keeps</h4><p>Every decision, by the system or the user, in an append-only record. Every piece of evidence the agents cited. A trace of every model call, tool call and check.</p></div>
-    <div class="panel"><h4>What it will never do</h4><p>Place or change an order: no tool can reach a broker. State a probability for a view. Call a candidate "recommended". Report a check as passed when the data was missing.</p></div>
+    <div class="panel"><h4>What it will never do</h4><p>Place or change an order: the system reads market data only, and no agent has a tool that reaches a broker. State a probability for a view. Call a candidate "recommended". Report a check as passed when the data was missing.</p></div>
   </div>
 
   <h2 id="l200"><span class="lvl">200</span>Components and the path of a request</h2>
@@ -207,7 +207,7 @@ h2 { scroll-margin-top: 16px; }
         <rect class="ag" x="300" y="16" width="210" height="60" rx="6"/><text x="316" y="40" class="hd">Tools</text><text x="316" y="60" class="t2">Allowlisted per agent</text>
         <path class="la" d="M405 116V78" marker-end="url(#a3)"/>
 
-        <rect class="st" x="590" y="16" width="210" height="60" rx="6"/><text x="606" y="40" class="hd">Data sources</text><text x="606" y="60" class="t2">Cboe, SEC, FMP, FRED, Fed, Yahoo</text>
+        <rect class="st" x="590" y="16" width="210" height="60" rx="6"/><text x="606" y="40" class="hd">Data sources</text><text x="606" y="60" class="t2" textLength="182" lengthAdjust="spacingAndGlyphs">Cboe, Tradier, SEC, FMP, FRED, Fed, Yahoo</text>
         <rect class="st" x="590" y="116" width="210" height="60" rx="6"/><text x="606" y="140" class="hd">Model API</text><text x="606" y="160" class="t2">Claude Opus 5.5, Haiku 5.5</text>
         <path class="la" d="M510 46H588" marker-end="url(#a3)"/><path class="la" d="M510 146H588" marker-end="url(#a3)"/>
         <path class="ld" d="M510 240C550 240 560 60 588 56" marker-end="url(#a2)"/><text x="522" y="232" class="t3">CODE STEPS</text>
@@ -321,7 +321,7 @@ h2 { scroll-margin-top: 16px; }
         <tr><td class="k">Evidence</td><td>Everything a data tool returned, item by item, with source, date and an id the agents cite.</td><td>Grades are computed from it in code.</td></tr>
         <tr><td class="k">Trace</td><td>Every model call, tool call, limit and check, per agent run.</td><td>An operational log, not a decision record. Kept 7 days for requests that never reached the permanent record.</td></tr>
         <tr><td class="k">Spend</td><td>Token usage and cost of every model call.</td><td>Read before each call to enforce the request and daily limits.</td></tr>
-        <tr><td class="k">Cache</td><td>Responses from data sources.</td><td>Per source, per day. The live option chain is never cached.</td></tr>
+        <tr><td class="k">Cache</td><td>Responses from data sources.</td><td>Per source, per day. The live option chain (Cboe or Tradier) is never cached.</td></tr>
         <tr><td class="k">Research index</td><td>The project's research, cut into about 1,400 passages, each with its source file, section and the report's own evidence-strength label.</td><td>Embedded locally with chromadb's default model. Rebuilt when the app starts if a source file has changed. If it cannot be opened, keyword search over the same passages is used and the challenge record says so.</td></tr>
       </tbody>
     </table>
@@ -334,6 +334,7 @@ h2 { scroll-margin-top: 16px; }
       <tbody>
         <tr><td>An agent can call only the tools its configuration names</td><td>Harness (allowlist)</td></tr>
         <tr><td>No tool places an order or changes a setting</td><td>No such tool exists</td></tr>
+        <tr><td>Tradier, a broker's service, is asked for market data only</td><td><code>tradecraft/data/chain.py</code> calls three market-data addresses (price, expirations, chain) and no other; no agent has a tool that reaches it. The host allowlist alone does not separate market data from orders</td></tr>
         <tr><td>Text from filings, news and the research corpus is data, not instructions</td><td>Harness (wrapping), and nothing for an injected instruction to call</td></tr>
         <tr><td>Tool calls, time, output size, input size and spend are bounded</td><td>Harness, from <code>config/limits.json</code></td></tr>
         <tr><td>Network requests go only to the listed data sources; files are read and written only in listed folders</td><td><code>tradecraft/net.py</code></td></tr>
@@ -359,8 +360,8 @@ h2 { scroll-margin-top: 16px; }
         <tr><td class="k"><code>harness/model.py</code></td><td><code>AnthropicModel</code> (the SDK's own retries are off; the harness retries inside the deadline) and <code>ScriptedModel</code> for tests</td></tr>
         <tr><td class="k"><code>harness/tools.py</code>, <code>guards.py</code>, <code>spend.py</code></td><td>The tool registry; wrapping of outside text and the general output checks; cost from token usage and the spend stops</td></tr>
         <tr><td class="k"><code>tools.py</code></td><td>The nine data tools, each wrapped so its result is stored as evidence</td></tr>
-        <tr><td class="k"><code>data/</code></td><td>One module per source: <code>chain</code> (Cboe live and the snapshot), <code>edgar</code>, <code>fmp</code>, <code>macro</code>, <code>prices</code>, <code>directory</code>, <code>session</code> (market hours)</td></tr>
-        <tr><td class="k"><code>net.py</code></td><td>Every outside request: host allowlist, rate limits, daily cache, file allowlist</td></tr>
+        <tr><td class="k"><code>data/</code></td><td>One module per source: <code>chain</code> (option quotes: Cboe, then Tradier, then the snapshot), <code>edgar</code>, <code>fmp</code>, <code>macro</code>, <code>prices</code>, <code>directory</code>, <code>session</code> (market hours)</td></tr>
+        <tr><td class="k"><code>net.py</code></td><td>Every outside request: host allowlist, rate limits, daily cache, file allowlist. Keys and the Tradier token are added here and redacted from every message</td></tr>
         <tr><td class="k"><code>gate.py</code>, <code>stage1.py</code></td><td>The liquidity screen and its workflow step</td></tr>
         <tr><td class="k"><code>figures.py</code>, <code>horizon.py</code>, <code>context.py</code>, <code>evidence.py</code></td><td>Measured figures; the horizon and range-bound rules; numbers handed to the analysts; the evidence store and grades</td></tr>
         <tr><td class="k"><code>agents.py</code></td><td>The five stage 2 configurations, their output formats and their output checks</td></tr>
@@ -411,7 +412,7 @@ h2 { scroll-margin-top: 16px; }
 
   <h3 id="tests">How the tests stand in for models</h3>
   <ul>
-    <li><strong>373 tests, no key, no network.</strong> Run them with <code>.venv/bin/python -m pytest -q</code>.</li>
+    <li><strong>376 tests, no key, no network.</strong> Run them with <code>.venv/bin/python -m pytest -q</code>.</li>
     <li><strong>Every agent runs on <code>ScriptedModel</code>,</strong> which returns prepared replies in order and records each request it was sent. A test can therefore assert both what the agent was shown and what happened to its answer.</li>
     <li><strong>The research index is a small fixed set of passages</strong> searched by keyword. The embedding model is never loaded in a test.</li>
     <li><strong>The workflow is tested on stand-in steps,</strong> so every pause, stage stop, retry and return is exercised without a model. Tests must not run the real stage 2 steps past the gate.</li>

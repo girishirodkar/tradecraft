@@ -40,15 +40,17 @@
       "data.sec.gov":              {"per_second": 5},
       "efts.sec.gov":              {"per_second": 5},
       "financialmodelingprep.com": {"per_minute": 700},
-      "api.stlouisfed.org":        {"per_minute": 100}
+      "api.stlouisfed.org":        {"per_minute": 100},
+      "api.tradier.com":           {"per_minute": 100}
     },
-    "rate_limit_note": "FMP's premium limit is 750 a minute; 700 leaves headroom. SEC asks for at most 10 a second; the build plan sets 5. FRED allows 120 a minute; 100 leaves headroom.",
+    "rate_limit_note": "FMP's premium limit is 750 a minute; 700 leaves headroom. SEC asks for at most 10 a second; the build plan sets 5. FRED allows 120 a minute; 100 leaves headroom. Tradier allows 120 a minute on market data; 100 leaves headroom (added 20 November 2026).",
     "cache": "per source, per request, per calendar day (America/Los_Angeles)"
   },
   "reach": {
     "network_domains": [
       "cdn.cboe.com",
       "cdn-api.cboe.com",
+      "api.tradier.com",
       "financialmodelingprep.com",
       "www.sec.gov",
       "data.sec.gov",

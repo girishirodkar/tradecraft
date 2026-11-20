@@ -4,7 +4,7 @@
   "purpose": "Where each kind of data comes from, and which symbols the free Financial Modeling Prep key serves. Measured on 18 November 2026 with scripts/analysis/probe_fmp.py and probe_fmp_coverage.py. Decision record: docs/decisions/2026-11-18-data-sources.md.",
   "sources": {
     "price_history": {"provider": "Yahoo chart endpoint, cached in label_out/prices", "status": "working", "cost": "free"},
-    "option_chains": {"provider": "Cboe delayed quotes", "status": "working", "cost": "free", "note": "15 minutes delayed"},
+    "option_chains": {"provider": "Cboe delayed quotes", "status": "working", "cost": "free", "note": "15 minutes delayed. Order of preference from 20 November 2026 (operator decision): Cboe, then Tradier (TRADIER_TOKEN, real-time), then the daily snapshot. Cboe refused every request on the morning of 20 November (HTTP 403)."},
     "filings": {"provider": "SEC EDGAR", "status": "working (18 November 2026)", "cost": "free", "note": "SEC_USER_AGENT is in .env, set by the operator. Read by section, never whole: tradecraft/data/edgar.py"},
     "macro_and_fed_calendar": {"provider": "FRED release calendar and the Federal Reserve's FOMC schedule", "status": "working (18 November 2026)", "cost": "free", "key": "FRED_API_KEY in .env, added by the operator",
       "releases": [{"release_id": 10, "name": "Consumer Price Index"}, {"release_id": 50, "name": "Employment Situation"}, {"release_id": 53, "name": "Gross Domestic Product"}, {"release_id": 54, "name": "Personal Income and Outlays"}],

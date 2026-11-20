@@ -2,7 +2,7 @@
 
 A personal options research tool, and the capstone for an agentic-AI course. You name one US-listed underlying; Tradecraft screens its option chain for liquidity, drafts a researched thesis with a team of agents, proposes defined-risk option strategies by fixed rules, and then challenges both the thesis and the strategy before you decide.
 
-**Tradecraft places no orders and gives no investment advice.** It has no connection to a broker. It states no probability for a view, labels every system thesis "no demonstrated predictive edge", and calls its first-ranked strategy the "best fit", never a recommendation. The research behind it (`docs/factor-spec.md`) concludes that predicting direction is close to worthless at retail scale and that trading costs dominate; the tool is built around cost, execution and honest evidence, not around a signal.
+**Tradecraft places no orders and gives no investment advice.** It cannot place an order. It states no probability for a view, labels every system thesis "no demonstrated predictive edge", and calls its first-ranked strategy the "best fit", never a recommendation. The research behind it (`docs/factor-spec.md`) concludes that predicting direction is close to worthless at retail scale and that trading costs dominate; the tool is built around cost, execution and honest evidence, not around a signal.
 
 - **The manual:** read it at **[https://girishirodkar.github.io/tradecraft/site/manual.html](https://girishirodkar.github.io/tradecraft/site/manual.html)**. Four pages with one header: what Tradecraft is, the logic of each stage, the architecture at four levels of depth, and the four detailed stage manuals in full. Clicking `docs/site/manual.html` on GitHub shows its source code, not the page; use the link above, or clone the repository and open that file in a browser.
 - **Elevator pitch video (1 min 22 s, narrated):** watch it at **[https://girishirodkar.github.io/tradecraft/media/tradecraft-pitch.mp4](https://girishirodkar.github.io/tradecraft/media/tradecraft-pitch.mp4)**. The file is [`docs/media/tradecraft-pitch.mp4`](docs/media/tradecraft-pitch.mp4).
@@ -41,17 +41,17 @@ In the demo, stages 1 and 3 and stage 4's checks run for real on a bundled optio
 .venv/bin/python -m pytest -q
 ```
 
-373 tests. They need no key and no network: every agent runs on a scripted model. In a fresh clone four are skipped: three live checks, and one that reads the unpublished price archive.
+376 tests. They need no key and no network: every agent runs on a scripted model. In a fresh clone four are skipped: three live checks, and one that reads the unpublished price archive.
 
 ## Run it live
 
-A live run calls Claude and three data providers, costs about $0.20, and needs market hours for live quotes.
+A live run calls Claude and the data providers, costs about $0.20, and needs market hours for live quotes.
 
-1. Copy `.env.example` to `.env` and fill in `ANTHROPIC_API_KEY`, `FMP_API_KEY` (the paid plan), `FRED_API_KEY` and `SEC_USER_AGENT`.
+1. Copy `.env.example` to `.env` and fill in `ANTHROPIC_API_KEY`, `FMP_API_KEY` (the paid plan), `FRED_API_KEY` and `SEC_USER_AGENT`. `TRADIER_TOKEN` is optional: it is the second source of option quotes, used when Cboe does not answer.
 2. Build the research index once (it downloads a 79 MB local embedding model): `.venv/bin/python -m tradecraft.research build`
 3. Start the app: `.venv/bin/python -m uvicorn tradecraft.web.app:app --host 127.0.0.1 --port 8321`
 
-Without the project's daily option snapshot and price archive, which are not published, a run outside market hours stops at the liquidity gate.
+Option quotes come from Cboe, then Tradier, then the daily snapshot, automatically; the screen names the source. Without the project's daily option snapshot and price archive, which are not published, a run outside market hours stops at the liquidity gate.
 
 ## The four stages
 
@@ -80,7 +80,7 @@ Stages 5 and 6 (decision, sizing, monitoring) are not designed and not built.
 
 | Unintended action | What prevents it |
 |---|---|
-| Placing an order | No tool can reach a broker |
+| Placing an order | No tool can place an order, and no agent has a tool that reaches a broker. The option-chain code reads market data from Tradier (a broker's service) when Cboe fails: prices and chains only |
 | Following instructions hidden in a filing or a research passage | Fetched text is wrapped and labelled as data; tools are allowlisted, so an injected instruction has nothing to call |
 | Spending without limit | Tool-call, time and spend limits per agent, stage, request and day |
 | Presenting a guess as a fact | No agent sets a figure; every claim cites stored evidence; a draft that does not is returned once, then rejected |
@@ -102,7 +102,7 @@ The full table is in `docs/build-plan.md`, section 11.
 | `tradecraft/web/` | The local web app (FastAPI and plain HTML, CSS and JavaScript) |
 | `tradecraft/demo.py`, `dev_replay.py` | The recorded demo and the development replay |
 | `config/` | Run limits, model per agent, rejected signals, stage settings |
-| `tests/` | 373 tests |
+| `tests/` | 376 tests |
 | `docs/site/manual.html` | **The product manual:** what Tradecraft is, why each stage works as it does, and the architecture from a one-page overview down to the modules |
 | `docs/` | The design: `on-demand-mode-design.md`, `product-shell.md`, `decisions/`, `build-plan.md`, `build-log.md`, the approved mock-up `site/tradecraft-prototype.html` (open it in a browser), and the research in `research/` and `factor-spec.md` |
 | `scripts/`, `vrp_out/` | The liquidity census (`docs/liquidity-census.md`), the daily snapshot scripts and four frozen, pre-registered tests with their append-only trial log |
@@ -112,6 +112,7 @@ The full table is in `docs/build-plan.md`, section 11.
 
 - **The Critic runs on the same model family as the Thesis agent** (both Claude). The screen says so. A different family is the aim.
 - **No demonstrated predictive edge.** Three pre-registered tests of index option writing and one of a volatility adjustment failed and are recorded in `vrp_out/TRIALS.log`. Nothing here has been shown to predict direction.
+- **Cboe refused the option chain on 20 November 2026** (HTTP 403, cause not known). Tradier was added that day as the second source; the daily snapshot job still uses Cboe alone.
 - **Data gaps are shown, not hidden:** no time of day for earnings, no estimate revision history, annual consensus only. Affected checks read "not available" or "could not be checked".
 - **Index instruments return no view by rule,** so SPY needs a thesis the user enters.
 - **Not built:** editing a drafted thesis, the range-bound brief, the Records and Settings pages, a trace viewer, stages 5 and 6.
@@ -125,4 +126,4 @@ The full table is in `docs/build-plan.md`, section 11.
 
 ## Models and data sources
 
-Claude Opus 5.5 (Thesis agent, Critic) and Claude Haiku 5.5 (the other agents), set in `config/models.json`. A local open-source embedding model (all-MiniLM-L6-v2) for the research index. Option quotes from Cboe's delayed feed; filings from SEC EDGAR; earnings, estimates, news and dividends from Financial Modeling Prep; calendars from the Federal Reserve and FRED; prices from Yahoo.
+Claude Opus 5.5 (Thesis agent, Critic) and Claude Haiku 5.5 (the other agents), set in `config/models.json`. A local open-source embedding model (all-MiniLM-L6-v2) for the research index. Option quotes from Cboe's delayed feed, then Tradier if Cboe does not answer, then the daily snapshot; filings from SEC EDGAR; earnings, estimates, news and dividends from Financial Modeling Prep; calendars from the Federal Reserve and FRED; prices from Yahoo.

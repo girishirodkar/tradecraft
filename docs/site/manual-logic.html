@@ -162,7 +162,7 @@ h2 { scroll-margin-top: 16px; }
   <p><span class="tag">CODE ONLY</span></p>
   <p>The gate answers one question before any research is done: are there contracts on this underlying that can actually be traded? It excludes; it never scores. A wide quoted spread is a cost the user pays on the way in and again on the way out, so a name whose contracts fail is not worth a thesis.</p>
   <div class="io">
-    <div><b>IN</b>The option chain: live delayed quotes in market hours, the daily snapshot otherwise.</div>
+    <div><b>IN</b>The option chain: live quotes in market hours (Cboe, or Tradier if Cboe does not answer), the daily snapshot otherwise.</div>
     <div><b>OUT</b>PASS or FAIL, the count of eligible contracts, and every contract screened out, by reason.</div>
     <div><b>THE USER DECIDES</b>Continue, adjust the criteria, override a fail, or stop.</div>
   </div>
@@ -171,7 +171,8 @@ h2 { scroll-margin-top: 16px; }
     <li><strong>Five criteria, all adjustable for the request:</strong> maximum bid-ask spread (default 5% of the premium), minimum open interest (100), days to expiration (42 to 90), maximum distance from spot (10%), minimum premium ($0.20).</li>
     <li><strong>At least two contracts must clear the screen</strong> for a pass.</li>
     <li><strong>The user may override a fail,</strong> but only with a written rationale, and the override is written to the decision record. An invalid quote cannot be overridden. The system itself never proposes a contract that fails.</li>
-    <li><strong>Outside market hours the result is provisional:</strong> it is computed on the latest daily snapshot and marked as such on every later screen.</li>
+    <li><strong>Three sources of option quotes, in order:</strong> Cboe (15 minutes delayed), then Tradier (real-time), then the latest daily snapshot. The change is automatic and the screen names the source that answered. Stages 3 and 4 follow the same order.</li>
+    <li><strong>On the snapshot the result is provisional:</strong> outside market hours, or when neither live source answers, it is computed on the latest daily snapshot and marked as such on every later screen.</li>
   </ul>
   <h3>What it does not do</h3>
   <p>It shows no premiums, so that pricing cannot anchor the thesis that follows. It does not rank underlyings or contracts.</p>
@@ -201,13 +202,14 @@ h2 { scroll-margin-top: 16px; }
   <p><span class="tag">CODE ONLY</span></p>
   <p>With the thesis frozen, the system opens the option chain and builds strategies that express the view with defined risk. This stage uses no model. Choosing a contract is arithmetic on quotes and history, and a model would add variance without adding information.</p>
   <div class="io">
-    <div><b>IN</b>The frozen thesis (view and horizon), the option chain, price history, the stage 1 criteria in force.</div>
+    <div><b>IN</b>The frozen thesis (view and horizon), the option chain (Cboe, then Tradier, then the snapshot), price history, the stage 1 criteria in force.</div>
     <div><b>OUT</b>Up to three candidates on the same measures, filtered and ranked; the first is the "best fit".</div>
     <div><b>THE USER DECIDES</b>The ranking priority, the cost cap, the expiration, an optional maximum loss, and which candidate to take forward.</div>
   </div>
   <h3>The rules that matter</h3>
   <ul>
     <li><strong>Defined risk only.</strong> For a directional view: two spread shapes and one bought option. Strikes are placed by the typical realized move for the days to expiration, never by chart levels.</li>
+    <li><strong>No failure screen while any source answers.</strong> If Cboe does not answer the chain comes from Tradier; if neither does, the stage is built on the latest snapshot and every figure is marked provisional. A failure is shown only when all three fail.</li>
     <li><strong>Every leg is an eligible contract.</strong> A single option must pass the bid-ask criterion; the legs of a spread are judged together, through the cost cap.</li>
     <li><strong>A cost cap the user controls:</strong> estimated slippage as a share of maximum loss, 5% by default, adjustable from 2% to 10%. A candidate over the cap is filtered out and shown with the reason.</li>
     <li><strong>Ranking is on the user's priority alone:</strong> fit to thesis, reward-to-risk, or lowest slippage. Nothing is ranked on gross richness.</li>
@@ -221,7 +223,7 @@ h2 { scroll-margin-top: 16px; }
   <p><span class="tag">23 CHECKS IN CODE</span> <span class="tag agent">2 AGENTS</span></p>
   <p>Before the user decides, the system challenges both the thesis and the chosen contract. Rules come first. The Critic is confined to what rules cannot do, argues both sides at the same length, and gives no verdict.</p>
   <div class="io">
-    <div><b>IN</b>The frozen thesis with its evidence, the selected candidate and the ones not selected, fresh quotes, the project's own research.</div>
+    <div><b>IN</b>The frozen thesis with its evidence, the selected candidate and the ones not selected, fresh quotes (Cboe, then Tradier), the project's own research.</div>
     <div><b>OUT</b>One screen: the Critic's judgement on the left, the fixed-rule checks on the right, and a readiness line.</div>
     <div><b>THE USER DECIDES</b>Proceed, return to contracts, or stop. Nothing blocks.</div>
   </div>

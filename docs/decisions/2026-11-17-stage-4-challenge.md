@@ -95,7 +95,7 @@ Choices the build made beside the rulings (19 November 2026). **Accepted in full
 | Check 7 | "Could not be checked" only when no analyst finished and the record holds no finding |
 | Check 8 | Each condition's type maps to "could be monitored", "in part" or "cannot be monitored". The row names the first place to watch |
 | Check 10 | "Max loss raised" is read from stage 3's recorded updates: a later figure above an earlier one |
-| Check 11 | The current price is the spot of stage 4's own fetch (15 minutes delayed), against the reference close of the thesis. Market closed: could not be checked. The thesis's age is counted in trading sessions from the freeze |
+| Check 11 | The current price is the spot of stage 4's own fetch (15 minutes delayed from Cboe, or real-time from Tradier when Cboe does not answer: operator decision, 20 November 2026), against the reference close of the thesis. Market closed: could not be checked. The thesis's age is counted in trading sessions from the freeze |
 | Check 12 | The state is measured again from the price history when stage 4 starts; if that fails, the state at the freeze is used and the record says so |
 | C1 | The move needed is measured from spot to the breakeven on the view's side |
 | C8 | An ex-dividend date equal to today counts as before the expiration (stage 3's test). Seen on MSFT on 19 November, its ex-dividend day |
@@ -117,3 +117,12 @@ Choices the build made beside the rulings (19 November 2026). **Accepted in full
 1. **The Critic's cost.** One live run on MSFT: Evidence Retriever $0.005 (3 model calls, 4 searches, 11 seconds), Critic $0.226 (2 calls, 47 seconds; about 12,600 tokens read and 3,000 written per call). The Critic's first answer was returned once for a 92-word case against the 90-word limit, which doubled its cost. The build's estimate had been $0.10 to $0.15 for the stage. On the one full run through the real app (AMZN) the Critic passed on its first answer: $0.104, and $0.20 for all four stages.
 2. **Active volatility is flagged on most names today** (MSFT 1.39, NVDA 1.34 times the one-year level), so thesis check 12 and contract check C2 fire together on every credit spread.
 3. **The replay's saved Critic text quotes the figures of its own run** (for example a credit of $977.50), while the checks beside it are computed on today's quotes. A replay artefact, not a fault.
+
+## The source of stage 4's fresh quotes (operator decision, 20 November 2026)
+
+Stage 4's own fetch of the option chain, used by C11 and thesis check 11, follows the order the operator set for every stage: **Cboe, then Tradier.** It does not go on to the snapshot: a snapshot is not a fresh quote, so when neither live source answers both checks read "could not be checked", as before. Two consequences, neither handled specially:
+
+- **After a stage 3 that ran on the snapshot,** both checks read "could not be checked" (unchanged: the selection was not made on live quotes).
+- **Stage 3 and stage 4 may use different live sources** in one request, if Cboe fails or recovers in between. C11 then compares a mid from one feed with a mid from the other.
+
+Not seen on screen since the change. Detail: `docs/decisions/2026-11-17-stage-3-contract-selection.md`, last section.

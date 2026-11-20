@@ -2,6 +2,32 @@
 
 A running record of what is built, what is next and what was decided, session by session. The design documents hold the rules; this file says where the build stands. Newest session first.
 
+## 20 November 2026, about 09:45 PT: the four demo symbols checked on live data (operator request)
+
+Stage 2 was run once, live, on each of the recorder's four symbols, with the market open and quotes from Tradier. **All four give the outcome the demo expects:** AMZN bearish (weakly supported), MSFT bullish (weakly supported), NVDA no view (conflict), SPY no view (nothing carries a direction). Each passed the gate on live quotes (19, 28, 10 and 179 contracts). No replacement symbol was looked for. Cost $0.33 in total (AMZN $0.09, MSFT $0.14, NVDA $0.06, SPY $0.04). Outputs in `data/runs-2026-11-20/` (git-ignored). Stages 3 and 4 were not run.
+
+## 20 November 2026, morning: option quotes from Cboe, then Tradier, then the snapshot (operator decision)
+
+After the rehearsal below failed on Cboe's block, the operator first had a "Use the latest snapshot" question built for stage 3 (commit `5f1dbf0`), then obtained a Tradier token and replaced it: **Cboe, then Tradier, then the snapshot, automatically, with the source shown and no error screen.** Built the same morning. `chain.live` tries Cboe then Tradier; stage 3 falls back to the snapshot by itself; stages 1 and 3 name the source. The decision, the as-built table (for the operator to correct) and what was seen are at the end of `docs/decisions/2026-11-17-stage-3-contract-selection.md`; product-shell 6.3, `config/data_sources.json`, `config/limits.json` and `.env.example` are amended. 376 tests pass.
+
+**Seen with the market open and Cboe refusing:** AMZN, SPY and MSFT from Tradier in 1.1 to 1.6 seconds; MSFT through stages 1 to 3 on the replay app with no error screen. **Not seen:** the real app; stage 4; the snapshot leg on screen. **SPY passed 169 contracts on Tradier against 429 on the snapshot of 19 November: not looked into.** FMP was checked for option quotes at the operator's request and serves none on this key. The pitch video has a thumbnail and the manual a new part 1 (both pushed by the operator). **The demo recorder still deletes its previous output when it starts.**
+
+## 20 November 2026, 07:30 PT: the live rehearsal of the demo recorder failed; Cboe refuses the option chain
+
+**What ran.** The scheduled rehearsal ran `data/video/demo/make_demo_motion.py live` once, at 07:30 PT with the market open. All three developer switches were false before and after; `config/test_failures.json` is unchanged; there was no `data/replay_mode.txt`.
+
+**Result: no video.** AMZN, then MSFT, then TGT each stopped at stage 3 with "The live option chain could not be retrieved: Cboe delayed quotes: cboe.chain: HTTP 403". The recorder assembled nothing. Cost $0.26 (29 model calls: stage 2 for the three symbols).
+
+**Cause: the data source, not the recorder.** `https://cdn.cboe.com/api/global/delayed_quotes/options/[SYMBOL].json` now answers 307 to `cdn-api.cboe.com`, which answers 403 with Cloudflare's "Sorry, you have been blocked" page. Seen with curl from this machine, outside the sandbox, for AMZN and SPY, three times between 07:38 and 07:39 PT. Whether the block is on this machine's address or on all automated clients is not known. Stage 1 recovers from this by falling back to the daily snapshot; stage 3 by design has no fallback while the market is open (`stage3.contracts_step` returns `source_failed`), so no request can pass stage 3 during market hours while the block lasts.
+
+**Nothing was changed.** The recorder scripts are untouched: the fault is not in them. No second run was made, since it would fail the same way. Application code, `config/` and tests were not touched. No way round Cloudflare's block was tried.
+
+**A loss to record.** The recorder deletes `out-live-motion/` when it starts, so the output of the live run of 19 November (18 passages, 4 min 59 s, after hours) is gone; it had not been copied elsewhere. The only demo video now on disk is the dry run in `out-dry-motion/` (keyless demo app, 4 min 47 s).
+
+**Also affected.** The daily snapshot job uses the same Cboe address and will probably fail today; a session not logged cannot be reconstructed. The 10:00 PT take will fail in the same way unless Cboe answers again by then.
+
+**For the operator to decide.** (1) Whether the 10:00 take goes ahead (it costs about $0.26 if it fails the same way). (2) If Cboe stays blocked: record after the close on the snapshot (screens show PROVISIONAL, as on 19 November), or have stage 3 changed to use another source or the snapshot during market hours (an application change), or use the dry-run video. **Not checked:** anything past stage 2 on live quotes; the Critic-failure and SPY passages; the audio.
+
 ## 20 November 2026 (early): both repositories published by the operator
 
 The operator created a GitHub account and two public repositories and pushed each as a single commit under the account's no-reply address: `github.com/girishirodkar/tradecraft` (the clean copy from `python -m tradecraft.publish`, 146 files) and `github.com/girishirodkar/tradecraft-demo-data` (the demo bundle, 17 files). The author and committer of both commits were checked before the push. `tradecraft.publish` now refreshes the copy in place and keeps its `.git` folder, so later changes are committed and pushed from `data/publish/tradecraft/`. The README and `docs/recorded-demo.md` now carry the real clone addresses, the demo-data link and the manual's GitHub Pages address. GitHub Pages was then switched on by the operator (branch `main`, folder `/docs`) and the manual checked live at `https://girishirodkar.github.io/tradecraft/site/manual.html`: all three parts and the stage tabs load in Chrome, with the stage manuals at full height and holding steady. **Still to do:** add the demo video link; push `docs/.nojekyll` and later changes from `data/publish/tradecraft/`.

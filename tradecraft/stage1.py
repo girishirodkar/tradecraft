@@ -1,7 +1,8 @@
 """Stage 1 as a workflow step: fetch the chain, apply the gate, say where it came from.
 
-Market open: the live chain (15 minutes delayed). If it cannot be fetched the
-step falls back to the latest daily snapshot and marks the result provisional.
+Market open: the live chain, from Cboe or, if Cboe fails, Tradier. If neither can
+be fetched the step falls back to the latest daily snapshot and marks the result
+provisional.
 Market closed: the latest daily snapshot, provisional; a symbol the snapshot
 does not hold is "not checked" (docs/product-shell.md 6.1, item 9).
 """
@@ -31,5 +32,6 @@ def gate_step(state, ctx) -> dict:
     result = gate.screen(data, state.get("gate_settings"))
     result.update({"symbol": symbol, "market": market, "source": data["source"], "as_of": data["as_of"],
                    "provisional": data["source"] == "snapshot", "live_failed": fell_back,
-                   "snapshot_file": data.get("file"), "contracts_in_chain": len(data["contracts"])})
+                   "provider": data.get("provider"), "delay": data.get("delay"),
+                   "provider_fell_back": data.get("fell_back"), "snapshot_file": data.get("file"), "contracts_in_chain": len(data["contracts"])})
     return result

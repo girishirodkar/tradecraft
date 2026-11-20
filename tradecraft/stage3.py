@@ -731,15 +731,27 @@ def contracts_step(state, ctx) -> dict:
                     "failed_source": "Cboe delayed quotes (live option chain)", "test_failure": True,
                     "message": "The live option chain could not be retrieved: a test failure, made by the "
                                "developer switch option_chain_fail_once."}
+        # Order of preference (operator decision, 20 November 2026): Cboe, Tradier (both inside
+        # chain_data.live), then the latest daily snapshot. No source failure is shown while one
+        # of the three answers; the screen names the source that did.
+        live_failed = None
         try:
-            data = chain_data.live(symbol, ctx.store) if market["open"] else chain_data.snapshot(symbol)
+            if market["open"]:
+                try:
+                    data = chain_data.live(symbol, ctx.store)
+                except chain_data.ChainUnavailable as e:
+                    live_failed = str(e)
+                    data = chain_data.snapshot(symbol)
+            else:
+                data = chain_data.snapshot(symbol)
         except chain_data.ChainUnavailable as e:
             if market["open"]:
                 return {"outcome": "source_failed", "symbol": symbol, "market": market, "candidates": [],
-                        "failed_source": "Cboe delayed quotes (live option chain)",
-                        "message": f"The live option chain could not be retrieved: {e}."}
+                        "failed_source": "the live option chain (Cboe, then Tradier) and the daily snapshot",
+                        "message": f"No option data could be retrieved. Live: {live_failed}. Snapshot: {e}."}
             return {"outcome": "market_closed", "symbol": symbol, "market": market, "candidates": [],
                     "message": "Contracts cannot be chosen until the market opens."}
+        data["live_failed"] = live_failed
         _CHAINS.clear()
         _CHAINS[ctx.request_id] = (fetch_no, data)
     if thesis["view"] not in VIEWS or not thesis["horizon_days"]:
@@ -753,5 +765,7 @@ def contracts_step(state, ctx) -> dict:
     gate_settings = (state.get("gate") or {}).get("settings") or state.get("gate_settings")
     out = select(data, thesis, closes, gate_settings, state.get("contracts_params"), events_for(state, ctx))
     out["market"] = market
+    out["live_failed"] = data.get("live_failed")          # why the snapshot was used although the market is open
+    out["provider"], out["delay"], out["provider_fell_back"] = data.get("provider"), data.get("delay"), data.get("fell_back")
     out["gate_overridden"] = (state.get("gate_decision") or {}).get("action") == "override"
     return out

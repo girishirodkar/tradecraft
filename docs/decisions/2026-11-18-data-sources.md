@@ -2,7 +2,27 @@
 
 **Date:** 18 November 2026
 **Decided by:** the operator, after two probes
-**Status:** in force for the demo, **as amended the same evening (below).** Settings in `config/data_sources.json`.
+**Status:** in force for the demo, **as amended the same evening and on 20 November 2026 (both below).** Settings in `config/data_sources.json`.
+
+## Amendment, 20 November 2026: Tradier is the second source of option quotes; the order is Cboe, Tradier, snapshot
+
+**Decided by the operator** on the morning of 20 November, after Cboe's delayed-quote address refused every request (HTTP 403, a block page; cause not known) and no request could pass stage 3 in market hours.
+
+1. **Order of preference for the option chain: Cboe, then Tradier, then the latest daily snapshot.** The change of source is automatic and the screen names the source that answered. The user sees a failure screen only when all three fail.
+2. **Tradier** is reached with `TRADIER_TOKEN` in `.env`, added by the operator the same morning (a production token on a brokerage account; quotes are real-time). It is the first source in the project that is tied to a personal brokerage account. Tradecraft only reads market data from it; no tool can reach an order or an account address.
+3. **Financial Modeling Prep serves no option quotes on the premium key** (checked the same morning: six current addresses not found).
+4. **Unchanged:** the daily snapshot job and the liquidity census stay on Cboe alone, so the archive stays on one feed. If Cboe stays blocked the archive stops growing; whether the job should also fall back is for the operator to decide.
+
+| | Cboe | Tradier | Daily snapshot |
+|---|---|---|---|
+| Role | First | Second, when Cboe fails | Last; also the only source when the market is closed |
+| Delay | 15 minutes | Real-time | The 11:30 PT capture of the last session the job ran |
+| Key | None | `TRADIER_TOKEN` | None |
+| Requests for one chain | One | One for the price, one for the expirations, one per expiration up to 190 days out | None (a file on disk) |
+| Greeks and implied volatility | The feed's | Tradier's (mid IV), updated about hourly | The feed's, as captured |
+| Result marked | Live | Live, source named | PROVISIONAL |
+
+Measured on 20 November with Cboe refusing: AMZN, SPY and MSFT from Tradier in 1.1 to 1.6 seconds each, every contract with Greeks. Contracts passing the default gate, Tradier against the snapshot of 19 November: AMZN 17 (18), MSFT 29 (33), **SPY 169 (429), a difference not yet looked into.** Rules, wording and the build's own choices: `docs/decisions/2026-11-17-stage-3-contract-selection.md`, last section. Settings: `config/data_sources.json`, `config/limits.json` (allowlist and 100 requests a minute).
 
 ## Amendment, 18 November 2026 (evening): FMP premium plan; news and wider coverage adopted
 

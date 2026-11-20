@@ -48,7 +48,7 @@ Every page carries **RECORDED DEMO · DATA OF 19 NOVEMBER** and the stage screen
 
 ## Limits, stated plainly
 
-- **The agents are not running.** A live run needs your own Anthropic, Financial Modeling Prep and FRED keys and an SEC contact string in `.env` (see `.env.example`), and market hours for live quotes. The recorded video and the traces are the evidence that the agents run.
+- **The agents are not running.** A live run needs your own Anthropic, Financial Modeling Prep and FRED keys and an SEC contact string in `.env` (see `.env.example`), and market hours for live quotes. A Tradier token is optional: live option quotes come from Cboe first and from Tradier when Cboe does not answer. The recorded video and the traces are the evidence that the agents run.
 - **"Today" is 19 November 2026** and the market is treated as closed. The two checks that need fresh quotes read "could not be checked".
 - **Figures differ a little from a live run.** The other stocks' price histories (the pool) are not bundled, so the history-based figures use the stock's own history, and say so.
 - **The Critic's output exists only for the six recorded selections.** Change the expiration, raise the cost cap so a different strategy appears, or use NVDA, and the challenge stops with "no saved Critic output"; choose "Continue with the checklists only".

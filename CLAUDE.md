@@ -34,7 +34,7 @@
 > built on 19 November.** Stage 4 is tested, was checked on the replay app, and **ran live
 > once through the real app, all four stages, on AMZN ($0.20; after the close, so on the
 > snapshot).** Application code is in
-> `tradecraft/`, tests in `tests/` (373 pass), on the branch **`build/demo`**. `master`
+> `tradecraft/`, tests in `tests/` (376 pass), on the branch **`build/demo`**. `master`
 > is the approved design, untouched. Progress by day is in `docs/build-plan.md`, section
 > 6a. Commit locally at each working milestone; **never push** (the operator publishes on
 > Sunday, plan section 12).
@@ -93,7 +93,7 @@
 > step; settings in `config/stage3.json`. The operator's 22 rulings, and the choices the
 > build made beside them ("As built, for the operator to correct"), are in
 > `docs/decisions/2026-11-17-stage-3-contract-selection.md`. Legs leave out the DTE
-> criterion; **there is no override in stage 3**; events are shown, not filtered; the
+> criterion; **there is no override in stage 3**; events are shown, not filtered; **option quotes come from Cboe, then Tradier (`TRADIER_TOKEN`), then the snapshot, automatically, in stages 1, 3 and 4, and the screen names the source (operator decision, 20 November; `data/chain.py` `live`); a failure screen appears only when all three fail**; the
 > first-ranked candidate is `best_fit_id`. **The cost cap is an on-screen slider** (2% to
 > 10%, default 5%; operator decision, 19 November, after 35 of 72 candidates across 33
 > saved views were over the cap). **Ruled on 19 November (afternoon):** an expiration may serve a horizon from up to three

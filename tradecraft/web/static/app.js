@@ -90,7 +90,7 @@
     var g = v.state.gate || {}, mk = g.market || (st.home && st.home.market) || {};
     var snap = st.home && st.home.snapshot;
     $('#reqSub').textContent = 'Request opened ' + hm(v.opened_at) + ' · ' + (mk.open
-      ? 'market open · quotes delayed 15 minutes'
+      ? 'market open · ' + (g.source === 'snapshot' ? 'live quotes unavailable, on the snapshot' : g.provider === 'Tradier' ? 'quotes from Tradier, real-time' : 'quotes delayed 15 minutes')
       : 'market closed' + (snap ? ' · snapshot of ' + dayMonth(snap.taken_et) : ''));
     renderStages();
     var cur = current(), shown = st.review != null ? st.review : cur, name = shown > 3 ? 'end' : STAGES[shown][0];
@@ -241,7 +241,7 @@
       var ok = g.status === 'pass';
       chip.textContent = ok ? 'PASS' : 'FAIL'; chip.className = 'chip ' + (ok ? 'ok' : 'fl');
       $('#gHead').textContent = num(g.passing) + (g.passing === 1 ? ' contract passes' : ' contracts pass') + ' the liquidity screen';
-      if (g.source === 'live') { $('#gSrc').textContent = 'Live option chain, ' + hm(g.as_of) + ' ET, 15-minute delayed quotes'; line2.hidden = true; }
+      if (g.source === 'live') { $('#gSrc').textContent = 'Live option chain, ' + hm(g.as_of) + ' ET, ' + srcName(g); line2.textContent = srcNote(g).trim(); line2.hidden = !srcNote(g); }
       else {
         $('#gSrc').textContent = 'Snapshot of ' + dayMonth(g.as_of) + ', ' + hm(g.as_of) + ' ET · ' + (g.market && g.market.open ? 'live quotes unavailable' : 'market closed');
         line2.textContent = 'Provisional: based on the latest snapshot. The screen is re-run on live quotes when the market opens.'; line2.hidden = false;
@@ -748,9 +748,9 @@
     var kind = mine ? 'Your thesis' : view === 'range_bound' ? 'Range-bound thesis' : 'Directional thesis';
     var show = function (q, on) { $(q).hidden = !on; };
     var waiting = !x;
-    $('#cHead').textContent = kind + ', ' + days + '-day horizon' + (x && x.spot ? ' · spot ' + px(x.spot) + ' · quotes ' + hm(x.as_of) + ' ET' + (x.provisional ? ', ' + dayMonth(x.as_of) : ', 15-minute delayed') : '');
+    $('#cHead').textContent = kind + ', ' + days + '-day horizon' + (x && x.spot ? ' · spot ' + px(x.spot) + ' · quotes ' + hm(x.as_of) + ' ET' + (x.provisional ? ', ' + dayMonth(x.as_of) : ', ' + srcName(x)) : '');
     show('#cProv', x && x.provisional); show('#cProvLine', x && x.provisional);
-    if (x && x.provisional) $('#cProvLine').textContent = 'Snapshot of ' + dayMonth(x.as_of) + ', ' + hm(x.as_of) + ' ET · market closed. Provisional: every figure is from the latest snapshot, not from live quotes.';
+    if (x && x.provisional) $('#cProvLine').textContent = 'Snapshot of ' + dayMonth(x.as_of) + ', ' + hm(x.as_of) + ' ET · ' + (x.live_failed ? 'live quotes unavailable from Cboe and Tradier' : 'market closed') + '. Provisional: every figure is from the latest snapshot, not from live quotes.';
     var chosen = x && (x.expiry_options || []).filter(function (o) { return o.selected; })[0];
     show('#cMove', !!(x && chosen && x.typical_move_pct));
     if (x && chosen && x.typical_move_pct) $('#cMove').textContent = (x.implied_move_pct != null ? 'Implied move ±' + x.implied_move_pct + '% to the ' + dm(chosen.expiration) + ' expiration. ' : 'Implied move to the ' + dm(chosen.expiration) + ' expiration: not available. ') + 'The typical realized move over that period is ±' + x.typical_move_pct + '%.';
@@ -758,7 +758,7 @@
     var hasStrip = !!(x && (x.expiry_options || []).length);
     show('#cStrip', hasStrip); show('#cMain', ok); show('#cOut', !!x && (ok || (outcome === 'no_candidates' && ((x.filtered_out || []).length + (x.not_built || []).length) > 0))); show('#cLabels', ok);
     show('#cMsg', !ok); show('#cMsg2', false);
-    if (waiting) $('#cMsg').textContent = 'Opening the option chain and building the candidates.';
+    if (waiting) $('#cMsg').textContent = 'Opening the option chain (Cboe, then Tradier, then the latest snapshot) and building the candidates.';
     else if (!ok) {
       clear('#cMsg').appendChild(h('strong', '', outcome === 'source_failed' ? 'The option data could not be retrieved.' : x.message));
       var more = outcome === 'source_failed' ? 'Source that failed: ' + (x.failed_source || 'not known') + '. ' + x.message
@@ -821,6 +821,9 @@
     btn2(acts, 'Stop', ok ? '' : 'pri', function () { act('stop'); }, ro || waiting);
     if (ok) btn2(acts, 'Continue to the challenge with the ' + shortName(pick), 'pri', function () { act('continue', {selection: {id: pick.id, contracts: qty(pick)}}); }, ro);
   }
+  // The live source that answered: Cboe (15-minute delayed) or, when Cboe failed, Tradier.
+  function srcName(o) { return o && o.provider === 'Tradier' ? 'Tradier, real-time quotes' : 'Cboe, 15-minute delayed quotes'; }
+  function srcNote(o) { return o && o.provider === 'Tradier' && o.provider_fell_back ? ' Cboe could not be reached, so the quotes are from Tradier.' : ''; }
   function days_(n) { return n + (n === 1 ? ' day' : ' days'); }
   $('#mxl').addEventListener('input', function () {
     var n = parseFloat(this.value.replace(/[^0-9.]/g, ''));

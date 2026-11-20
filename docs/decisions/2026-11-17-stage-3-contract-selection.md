@@ -141,3 +141,33 @@ Once stage 3 ran, the count the amendment asked for was made on live chains: at 
 **The cost-cap control, as ruled:** a slider, 2% to 10%, steps of 0.5, default 5%, applied on release, **in the filters row in place of the static label.** It re-filters the candidates on screen without fetching the chain again. Each change is a decision record. (The first build had kept the static label and put the slider beside the row; the label is removed.)
 
 **Demo symbols:** SPY and AMZN both stay. Shortlist for the recording, final choice on the day: TGT, CSCO, PYPL, AMZN, GOOGL, MSFT, NVDA, SPY. Figures for each are in `docs/build-log.md`.
+
+## Option quotes: Cboe, then Tradier, then the snapshot (operator decision, 20 November 2026)
+
+On the morning of 20 November Cboe refused every request for the option chain (HTTP 403, a block page), so no request could pass stage 3 during market hours. The operator first decided that after the maximum retries the system should ask whether to use the latest snapshot; that was built and seen working. **The same morning the operator obtained a Tradier token and replaced that decision with this one:**
+
+> In the order of preference: Cboe, Tradier and then the snapshot. If Cboe fails the app falls back to Tradier automatically. The source changes automatically and is shown in the app. If both fail, fall back to the snapshot. The user should not see an error screen at all.
+
+- **Stages 1, 3 and 4** all read the live chain through one function (`tradecraft/data/chain.py`, `live`), which tries Cboe and then Tradier.
+- **Stage 3 now falls back to the snapshot on its own** when neither live source answers, as stage 1 already did. The question and the "Use the latest snapshot" button are withdrawn.
+- **The source is named on screen:** in the line under the symbol and on the stage 1 and stage 3 headings.
+
+**As built, for the operator to correct.**
+
+| Point | Choice made in the build |
+|---|---|
+| Wording, live | "Cboe, 15-minute delayed quotes" or "Tradier, real-time quotes". After a fall back stage 1 adds "Cboe could not be reached, so the quotes are from Tradier." |
+| Wording, snapshot in market hours | "Snapshot of [date], [time] ET · live quotes unavailable from Cboe and Tradier. Provisional: ..." |
+| When an error screen still appears | Only when all three fail (the symbol is not in the snapshot either), and for the developer switch `option_chain_fail_once`. Retry (up to three) and Stop, as before. Price history failing is unchanged |
+| "Real-time" | Tradier's quotes carried timestamps seconds old on the operator's token. The label is fixed text; it is not read from the feed |
+| What is fetched from Tradier | The underlying's last price, the expirations, then one request per expiration up to 190 days out (the snapshot holds 0 to 180), four at a time. Greeks and IV are Tradier's (mid IV), updated about hourly |
+| Limits | `api.tradier.com` is on the network allowlist at 100 requests a minute. The token is sent as a header to that host only, and is redacted from messages like the other keys |
+| No token | Without `TRADIER_TOKEN` in `.env` Tradier is skipped and the order is Cboe, then the snapshot |
+| Stage 4 | Its own fetch for C11 and check 11 uses the same order (Cboe, then Tradier). After a snapshot stage 3 those checks still read "could not be checked". Not seen on screen with this change |
+| Mixed sources | Stage 3 and stage 4 may use different live sources in one request if Cboe fails in between. Not handled specially |
+| The daily snapshot job | Untouched: still Cboe only |
+| Failure text | A source that answers with a web page in place of data shows the status alone ("HTTP 403"), not the page's markup (`tradecraft/net.py`) |
+
+**Seen on 20 November, market open, Cboe refusing.** Through the code: AMZN, SPY and MSFT each from Tradier in 1.1 to 1.6 seconds, with every contract carrying Greeks. Gate passes against the snapshot of 19 November: AMZN 17 (18), MSFT 29 (33), **SPY 169 (429): a large difference, not looked into.** On the replay app, MSFT: stage 1 and stage 3 both built on Tradier, the source named on each, no error screen. **Not seen:** through the real app; the snapshot leg on screen with this change (it is tested); stage 4.
+
+Tests: `test_the_live_chain_is_cboe_first_then_tradier`, `test_a_tradier_chain_has_the_same_shape_as_a_cboe_chain`, `test_market_open_and_no_live_chain_falls_back_to_the_snapshot`, `test_market_open_and_no_source_at_all_is_a_failure_naming_the_sources`.

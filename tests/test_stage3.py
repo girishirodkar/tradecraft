@@ -360,14 +360,86 @@ def test_the_step_reads_a_user_thesis(step):
     assert out["thesis_origin"] == "user" and out["candidates"][0]["structure"].startswith("Bear")
 
 
-def test_market_open_and_no_chain_is_a_failure_naming_the_source(step, monkeypatch):
+def test_market_open_and_no_live_chain_falls_back_to_the_snapshot(step, monkeypatch):
+    """Operator decision, 20 November 2026: Cboe, Tradier, then the snapshot; no failure screen."""
+    run_step, _, _ = step
+
+    def down(symbol, store_=None):
+        raise chain_data.ChainUnavailable("Cboe delayed quotes: HTTP 403; Tradier: timeout")
+    monkeypatch.setattr(chain_data, "live", down)
+    snap = synthetic_chain(dtes=(9, 30, 95))
+    snap["source"] = "snapshot"
+    monkeypatch.setattr(chain_data, "snapshot", lambda symbol: snap)
+    out = run_step()
+    assert out["outcome"] == "ok" and out["provisional"] and "HTTP 403" in out["live_failed"]
+
+
+def test_market_open_and_no_source_at_all_is_a_failure_naming_the_sources(step, monkeypatch):
     run_step, _, _ = step
 
     def down(symbol, store_=None):
         raise chain_data.ChainUnavailable("Cboe delayed quotes: timeout")
+
+    def none(symbol):
+        raise chain_data.ChainUnavailable("EXMP is not in the daily snapshot")
     monkeypatch.setattr(chain_data, "live", down)
+    monkeypatch.setattr(chain_data, "snapshot", none)
     out = run_step()
-    assert out["outcome"] == "source_failed" and "Cboe" in out["failed_source"]
+    assert out["outcome"] == "source_failed" and "Cboe" in out["failed_source"] and "snapshot" in out["failed_source"]
+
+
+def test_the_live_chain_is_cboe_first_then_tradier(monkeypatch):
+    cboe = {"source": "live", "provider": "Cboe", "contracts": [1]}
+    tradier = {"source": "live", "provider": "Tradier", "contracts": [1]}
+    monkeypatch.setattr(chain_data, "live_cboe", lambda s, st=None: cboe)
+    monkeypatch.setattr(chain_data, "live_tradier", lambda s, st=None: (_ for _ in ()).throw(AssertionError("not asked")))
+    assert chain_data.live("EXMP")["provider"] == "Cboe"                      # Tradier is not asked when Cboe answers
+
+    def refused(s, st=None):
+        raise chain_data.ChainUnavailable("Cboe delayed quotes: cboe.chain: HTTP 403")
+    monkeypatch.setattr(chain_data, "live_cboe", refused)
+    monkeypatch.setattr(chain_data, "live_tradier", lambda s, st=None: dict(tradier))
+    got = chain_data.live("EXMP")
+    assert got["provider"] == "Tradier" and "HTTP 403" in got["fell_back"]
+
+    def also(s, st=None):
+        raise chain_data.ChainUnavailable("Tradier: tradier.chain: HTTP 401")
+    monkeypatch.setattr(chain_data, "live_tradier", also)
+    with pytest.raises(chain_data.ChainUnavailable, match="HTTP 403.*HTTP 401"):
+        chain_data.live("EXMP")
+
+
+def test_a_tradier_chain_has_the_same_shape_as_a_cboe_chain(monkeypatch):
+    import json as _json
+    from tradecraft import net, settings
+    exp = (dt.date.today() + dt.timedelta(days=30)).isoformat()
+    far = (dt.date.today() + dt.timedelta(days=400)).isoformat()
+    occ = "EXMP" + dt.date.fromisoformat(exp).strftime("%y%m%d") + "P00250000"
+    asked = []
+
+    def get(url, params=None, **kw):
+        asked.append((url.rsplit("/", 1)[-1], dict(params or {}), kw.get("bearer")))
+        if url.endswith("quotes"):
+            return _json.dumps({"quotes": {"quote": {"symbol": "EXMP", "last": 251.18}}}).encode()
+        if url.endswith("expirations"):
+            return _json.dumps({"expirations": {"date": [exp, far]}}).encode()
+        return _json.dumps({"options": {"option": [
+            {"symbol": occ, "bid": 10.65, "ask": 10.95, "open_interest": 14701,
+             "greeks": {"mid_iv": 0.4203, "delta": -0.4284, "theta": -0.2142, "vega": 0.2766}}]}}).encode()
+    monkeypatch.setattr(net, "get", get)
+    monkeypatch.setattr(settings, "secret", lambda name: "t" if name == "TRADIER_TOKEN" else None)
+    monkeypatch.setattr(chain_data._census(), "standard_roots", lambda feed: {"EXMP"})
+    got = chain_data.live_tradier("EXMP")
+    assert got["source"] == "live" and got["provider"] == "Tradier" and got["spot"] == 251.18
+    assert [a[0] for a in asked] == ["quotes", "expirations", "chains"]       # the far expiration is not fetched
+    assert all(a[2] == "TRADIER_TOKEN" for a in asked)
+    c = got["contracts"][0]
+    assert (c["occ"], c["type"], c["strike"], c["bid"], c["ask"], c["open_interest"]) == (occ, "put", 250.0, 10.65, 10.95, 14701)
+    assert (c["iv"], c["delta"], c["theta"], c["vega"]) == (0.4203, -0.4284, -0.2142, 0.2766) and c["dte"] == 30
+    monkeypatch.setattr(settings, "secret", lambda name: None)
+    with pytest.raises(chain_data.ChainUnavailable, match="TRADIER_TOKEN is not set"):
+        chain_data.live_tradier("EXMP")
+
 
 
 def test_market_closed_uses_the_snapshot_as_provisional_or_says_wait(step, monkeypatch):
